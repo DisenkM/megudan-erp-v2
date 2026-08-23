@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <base target="_top">
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Gestión de Usuarios</title>
+
+
+  <!-- ========================================================
+       01. ESTILOS GENERALES
+       ======================================================== -->
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+
+      margin: 0;
+
+      padding: 0;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background: #f4f6f8;
+
+      color: #1f2937;
+
+    }
+
+
+    /* ========================================================
+       CONTENEDOR PRINCIPAL
+       ======================================================== */
+
+    .app {
+
+      min-height: 100vh;
+
+      display: flex;
+
+      flex-direction: column;
+
+    }
+
+
+    /* ========================================================
+       ENCABEZADO
+       ======================================================== */
+
+    .header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      padding: 18px 25px;
+
+      background: #374151;
+
+      color: #ffffff;
+
+    }
+
+
+    .header-title {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+    }
+
+
+    .header-icon {
+
+      font-size: 28px;
+
+    }
+
+
+    .header h1 {
+
+      margin: 0;
+
+      font-size: 22px;
+
+    }
+
+
+    .header p {
+
+      margin: 4px 0 0;
+
+      font-size: 13px;
+
+      opacity: 0.8;
+
+    }
+
+
+    /* ========================================================
+       NAVEGACIÓN POR PESTAÑAS
+       ======================================================== */
+
+    .tabs {
+
+      display: flex;
+
+      gap: 0;
+
+      background: #ffffff;
+
+      border-bottom: 1px solid #d1d5db;
+
+      overflow-x: auto;
+
+    }
+
+
+    .tab-button {
+
+      border: none;
+
+      background: transparent;
+
+      padding: 16px 24px;
+
+      cursor: pointer;
+
+      font-size: 14px;
+
+      font-weight: bold;
+
+      color: #6b7280;
+
+      border-bottom: 3px solid transparent;
+
+      white-space: nowrap;
+
+      transition: 0.2s;
+
+    }
+
+
+    .tab-button:hover {
+
+      background: #f9fafb;
+
+      color: #111827;
+
+    }
+
+
+    .tab-button.active {
+
+      color: #374151;
+
+      border-bottom-color: #374151;
+
+      background: #f9fafb;
+
+    }
+
+
+    /* ========================================================
+       CONTENIDO
+       ======================================================== */
+
+    .content {
+
+      flex: 1;
+
+      padding: 25px;
+
+    }
+
+
+    .tab-content {
+
+      display: none;
+
+    }
+
+
+    .tab-content.active {
+
+      display: block;
+
+    }
+
+
+    /* ========================================================
+       TARJETAS
+       ======================================================== */
+
+    .card {
+
+      background: #ffffff;
+
+      border: 1px solid #e5e7eb;
+
+      border-radius: 10px;
+
+      padding: 22px;
+
+      margin-bottom: 20px;
+
+      box-shadow:
+        0 2px 4px
+        rgba(0, 0, 0, 0.05);
+
+    }
+
+
+    .card-header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    .card-title {
+
+      margin: 0;
+
+      font-size: 18px;
+
+    }
+
+
+    /* ========================================================
+       BOTONES
+       ======================================================== */
+
+    .button {
+
+      border: none;
+
+      border-radius: 7px;
+
+      padding: 10px 16px;
+
+      cursor: pointer;
+
+      font-size: 14px;
+
+      font-weight: bold;
+
+      transition: 0.2s;
+
+    }
+
+
+    .button-primary {
+
+      background: #374151;
+
+      color: #ffffff;
+
+    }
+
+
+    .button-primary:hover {
+
+      background: #1f2937;
+
+    }
+
+
+    .button-secondary {
+
+      background: #e5e7eb;
+
+      color: #374151;
+
+    }
+
+
+    .button-secondary:hover {
+
+      background: #d1d5db;
+
+    }
+
+
+    .button-danger {
+
+      background: #b91c1c;
+
+      color: #ffffff;
+
+    }
+
+
+    .button-danger:hover {
+
+      background: #991b1b;
+
+    }
+
+
+    /* ========================================================
+       BARRA DE BÚSQUEDA
+       ======================================================== */
+
+    .search-container {
+
+      display: flex;
+
+      gap: 10px;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    .input {
+
+      width: 100%;
+
+      padding: 11px 12px;
+
+      border: 1px solid #d1d5db;
+
+      border-radius: 7px;
+
+      font-size: 14px;
+
+      outline: none;
+
+    }
+
+
+    .input:focus {
+
+      border-color: #374151;
+
+      box-shadow:
+        0 0 0 3px
+        rgba(55, 65, 81, 0.10);
+
+    }
+
+
+    /* ========================================================
+       TABLAS
+       ======================================================== */
+
+    .table-container {
+
+      width: 100%;
+
+      overflow-x: auto;
+
+    }
+
+
+    table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+
+      min-width: 750px;
+
+    }
+
+
+    th {
+
+      background: #f3f4f6;
+
+      padding: 12px;
+
+      text-align: left;
+
+      font-size: 12px;
+
+      color: #374151;
+
+      border-bottom: 1px solid #d1d5db;
+
+      white-space: nowrap;
+
+    }
+
+
+    td {
+
+      padding: 12px;
+
+      border-bottom: 1px solid #e5e7eb;
+
+      font-size: 13px;
+
+    }
+
+
+    tr:hover td {
+
+      background: #f9fafb;
+
+    }
+
+
+    /* ========================================================
+       ESTADOS
+       ======================================================== */
+
+    .badge {
+
+      display: inline-block;
+
+      padding: 5px 9px;
+
+      border-radius: 20px;
+
+      font-size: 11px;
+
+      font-weight: bold;
+
+    }
+
+
+    .badge-active {
+
+      background: #dcfce7;
+
+      color: #166534;
+
+    }
+
+
+    .badge-inactive {
+
+      background: #fee2e2;
+
+      color: #991b1b;
+
+    }
+
+
+    .badge-blocked {
+
+      background: #fef3c7;
+
+      color: #92400e;
+
+    }
+
+
+    .badge-session {
+
+      background: #dbeafe;
+
+      color: #1d4ed8;
+
+    }
+
+
+    /* ========================================================
+       ESTADO VACÍO
+       ======================================================== */
+
+    .empty-state {
+
+      text-align: center;
+
+      padding: 45px 20px;
+
+      color: #6b7280;
+
+    }
+
+
+    .empty-icon {
+
+      font-size: 42px;
+
+      margin-bottom: 10px;
+
+    }
+
+
+    /* ========================================================
+       MENSAJES
+       ======================================================== */
+
+    .message {
+
+      display: none;
+
+      padding: 12px 15px;
+
+      border-radius: 7px;
+
+      margin-bottom: 18px;
+
+      font-size: 14px;
+
+    }
+
+
+    .message.success {
+
+      display: block;
+
+      background: #dcfce7;
+
+      color: #166534;
+
+    }
+
+
+    .message.error {
+
+      display: block;
+
+      background: #fee2e2;
+
+      color: #991b1b;
+
+    }
+
+
+    /* ========================================================
+       RESPONSIVE
+       ======================================================== */
+
+    @media (max-width: 700px) {
+
+      .header {
+
+        padding: 15px;
+
+      }
+
+
+      .header h1 {
+
+        font-size: 18px;
+
+      }
+
+
+      .content {
+
+        padding: 15px;
+
+      }
+
+
+      .card {
+
+        padding: 15px;
+
+      }
+
+
+      .card-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+      }
+
+
+      .search-container {
+
+        flex-direction: column;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- ========================================================
+       02. CONTENEDOR PRINCIPAL
+       ======================================================== -->
+
+  <div class="app">
+
+
+    <!-- ======================================================
+         03. ENCABEZADO
+         ====================================================== -->
+
+    <header class="header">
+
+      <div class="header-title">
+
+        <div class="header-icon">
+          🔐
+        </div>
+
+        <div>
+
+          <h1>
+            Gestión de Seguridad
+          </h1>
+
+          <p>
+            Administración de usuarios, roles, permisos y sesiones
+          </p>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ======================================================
+         04. PESTAÑAS PRINCIPALES
+         ====================================================== -->
+
+    <nav class="tabs">
+
+      <button
+        class="tab-button active"
+        onclick="USR_CAMBIAR_PESTANA('usuarios')"
+      >
+        👤 Usuarios
+      </button>
+
+
+      <button
+        class="tab-button"
+        onclick="USR_CAMBIAR_PESTANA('roles')"
+      >
+        🛡️ Roles
+      </button>
+
+
+      <button
+        class="tab-button"
+        onclick="USR_CAMBIAR_PESTANA('permisos')"
+      >
+        🔑 Permisos
+      </button>
+
+
+      <button
+        class="tab-button"
+        onclick="USR_CAMBIAR_PESTANA('sesiones')"
+      >
+        🟢 Sesiones
+      </button>
+
+    </nav>
+
+
+    <!-- ======================================================
+         05. CONTENIDO PRINCIPAL
+         ====================================================== -->
+
+    <main class="content">
+
+
+      <!-- ====================================================
+           05.01 MENSAJES DEL SISTEMA
+           ==================================================== -->
+
+      <div id="USR_MENSAJE"></div>
+
+
+      <!-- ====================================================
+           06. PESTAÑA USUARIOS
+           ==================================================== -->
+
+      <section
+        id="tab-usuarios"
+        class="tab-content active"
+      >
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <h2 class="card-title">
+              👤 Gestión de Usuarios
+            </h2>
+
+            <button
+              class="button button-primary"
+              onclick="USR_NUEVO_USUARIO()"
+            >
+              + Nuevo Usuario
+            </button>
+
+          </div>
+
+
+          <div class="search-container">
+
+            <input
+              type="text"
+              id="USR_BUSCADOR_USUARIOS"
+              class="input"
+              placeholder="Buscar por usuario, nombre, correo o ID..."
+              oninput="USR_BUSCAR_USUARIOS()"
+            >
+
+          </div>
+
+
+          <div class="table-container">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>ID</th>
+                  <th>Usuario</th>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="USR_TABLA_USUARIOS">
+
+                <tr>
+
+                  <td colspan="7">
+
+                    <div class="empty-state">
+
+                      <div class="empty-icon">
+                        👤
+                      </div>
+
+                      <strong>
+                        Cargando usuarios...
+                      </strong>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ====================================================
+           07. PESTAÑA ROLES
+           ==================================================== -->
+
+      <section
+        id="tab-roles"
+        class="tab-content"
+      >
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <h2 class="card-title">
+              🛡️ Gestión de Roles
+            </h2>
+
+            <button
+              class="button button-primary"
+              onclick="USR_NUEVO_ROL()"
+            >
+              + Nuevo Rol
+            </button>
+
+          </div>
+
+
+          <div class="search-container">
+
+            <input
+              type="text"
+              id="USR_BUSCADOR_ROLES"
+              class="input"
+              placeholder="Buscar rol..."
+              oninput="USR_BUSCAR_ROLES()"
+            >
+
+          </div>
+
+
+          <div class="table-container">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>ID</th>
+                  <th>Nombre del Rol</th>
+                  <th>Descripción</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="USR_TABLA_ROLES">
+
+                <tr>
+
+                  <td colspan="5">
+
+                    <div class="empty-state">
+
+                      <div class="empty-icon">
+                        🛡️
+                      </div>
+
+                      <strong>
+                        Seleccione esta pestaña para cargar los roles.
+                      </strong>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ====================================================
+           08. PESTAÑA PERMISOS
+           ==================================================== -->
+
+      <section
+        id="tab-permisos"
+        class="tab-content"
+      >
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <h2 class="card-title">
+              🔑 Gestión de Permisos
+            </h2>
+
+            <button
+              class="button button-primary"
+              onclick="USR_NUEVO_PERMISO()"
+            >
+              + Asignar Permiso
+            </button>
+
+          </div>
+
+
+          <div class="search-container">
+
+            <input
+              type="text"
+              id="USR_BUSCADOR_PERMISOS"
+              class="input"
+              placeholder="Buscar por rol, módulo o acción..."
+              oninput="USR_BUSCAR_PERMISOS()"
+            >
+
+          </div>
+
+
+          <div class="table-container">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>ID</th>
+                  <th>Rol</th>
+                  <th>Módulo</th>
+                  <th>Acción</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="USR_TABLA_PERMISOS">
+
+                <tr>
+
+                  <td colspan="6">
+
+                    <div class="empty-state">
+
+                      <div class="empty-icon">
+                        🔑
+                      </div>
+
+                      <strong>
+                        Seleccione esta pestaña para cargar los permisos.
+                      </strong>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ====================================================
+           09. PESTAÑA SESIONES
+           ==================================================== -->
+
+      <section
+        id="tab-sesiones"
+        class="tab-content"
+      >
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <h2 class="card-title">
+              🟢 Control de Sesiones
+            </h2>
+
+            <button
+              class="button button-secondary"
+              onclick="USR_CARGAR_SESIONES()"
+            >
+              ↻ Actualizar
+            </button>
+
+          </div>
+
+
+          <div class="search-container">
+
+            <input
+              type="text"
+              id="USR_BUSCADOR_SESIONES"
+              class="input"
+              placeholder="Buscar por usuario, ID o estado..."
+              oninput="USR_BUSCAR_SESIONES()"
+            >
+
+          </div>
+
+
+          <div class="table-container">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>ID Sesión</th>
+                  <th>Usuario</th>
+                  <th>Inicio</th>
+                  <th>Última Actividad</th>
+                  <th>Expiración</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="USR_TABLA_SESIONES">
+
+                <tr>
+
+                  <td colspan="7">
+
+                    <div class="empty-state">
+
+                      <div class="empty-icon">
+                        🟢
+                      </div>
+
+                      <strong>
+                        Seleccione esta pestaña para cargar las sesiones.
+                      </strong>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+    </main>
+
+  </div>
+
+
+  <!-- ========================================================
+       10. JAVASCRIPT
+       ======================================================== -->
+
+  <script>
+
+
+    // ==========================================================
+    // 10.01 DATOS LOCALES
+    // Aquí se almacenarán temporalmente los datos obtenidos
+    // desde 23_SEGURIDAD.gs.
+    // ==========================================================
+
+    let USR_USUARIOS = [];
+
+    let USR_ROLES = [];
+
+    let USR_PERMISOS = [];
+
+    let USR_SESIONES = [];
+
+
+    // ==========================================================
+    // 10.02 INICIALIZAR FORMULARIO
+    // ==========================================================
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      function() {
+
+        USR_CARGAR_USUARIOS();
+
+      }
+    );
+
+
+    // ==========================================================
+    // 10.03 CAMBIAR PESTAÑA
+    // ==========================================================
+
+    function USR_CAMBIAR_PESTANA(nombrePestana) {
+
+
+      // --------------------------------------------------------
+      // OCULTAR CONTENIDO
+      // --------------------------------------------------------
+
+      document
+        .querySelectorAll(".tab-content")
+        .forEach(function(elemento) {
+
+          elemento.classList.remove("active");
+
+        });
+
+
+      // --------------------------------------------------------
+      // QUITAR ESTADO ACTIVO
+      // --------------------------------------------------------
+
+      document
+        .querySelectorAll(".tab-button")
+        .forEach(function(elemento) {
+
+          elemento.classList.remove("active");
+
+        });
+
+
+      // --------------------------------------------------------
+      // MOSTRAR PESTAÑA
+      // --------------------------------------------------------
+
+      const contenido =
+        document.getElementById(
+          "tab-" + nombrePestana
+        );
+
+      if (contenido) {
+
+        contenido.classList.add("active");
+
+      }
+
+
+      // --------------------------------------------------------
+      // ACTIVAR BOTÓN
+      // --------------------------------------------------------
+
+      const botones =
+        document.querySelectorAll(".tab-button");
+
+      botones.forEach(function(boton) {
+
+        const texto =
+          boton.textContent
+            .toLowerCase();
+
+        if (
+          texto.includes(nombrePestana)
+        ) {
+
+          boton.classList.add("active");
+
+        }
+
+      });
+
+
+      // --------------------------------------------------------
+      // CARGAR DATOS DEL MÓDULO
+      // --------------------------------------------------------
+
+      switch (nombrePestana) {
+
+        case "usuarios":
+
+          USR_CARGAR_USUARIOS();
+
+          break;
+
+
+        case "roles":
+
+          USR_CARGAR_ROLES();
+
+          break;
+
+
+        case "permisos":
+
+          USR_CARGAR_PERMISOS();
+
+          break;
+
+
+        case "sesiones":
+
+          USR_CARGAR_SESIONES();
+
+          break;
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // 10.04 MOSTRAR MENSAJE
+    // ==========================================================
+
+    function USR_MOSTRAR_MENSAJE(
+      mensaje,
+      tipo
+    ) {
+
+      const contenedor =
+        document.getElementById(
+          "USR_MENSAJE"
+        );
+
+      contenedor.innerHTML = `
+        <div class="message ${tipo}">
+          ${mensaje}
+        </div>
+      `;
+
+
+      setTimeout(
+        function() {
+
+          contenedor.innerHTML = "";
+
+        },
+        4000
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.05 CARGAR USUARIOS
+    // Se conectará con una función del servidor.
+    // ==========================================================
+
+    function USR_CARGAR_USUARIOS() {
+
+      console.log(
+        "Cargando usuarios..."
+      );
+
+      // Próxima conexión:
+      //
+      // google.script.run
+      //   .withSuccessHandler(...)
+      //   .withFailureHandler(...)
+      //   .SEG_LISTAR_USUARIOS();
+
+    }
+
+
+    // ==========================================================
+    // 10.06 CARGAR ROLES
+    // ==========================================================
+
+    function USR_CARGAR_ROLES() {
+
+      console.log(
+        "Cargando roles..."
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.07 CARGAR PERMISOS
+    // ==========================================================
+
+    function USR_CARGAR_PERMISOS() {
+
+      console.log(
+        "Cargando permisos..."
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.08 CARGAR SESIONES
+    // ==========================================================
+
+    function USR_CARGAR_SESIONES() {
+
+      console.log(
+        "Cargando sesiones..."
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.09 BUSCAR USUARIOS
+    // ==========================================================
+
+    function USR_BUSCAR_USUARIOS() {
+
+      const criterio =
+        document
+          .getElementById(
+            "USR_BUSCADOR_USUARIOS"
+          )
+          .value;
+
+      console.log(
+        "Buscar usuarios:",
+        criterio
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.10 BUSCAR ROLES
+    // ==========================================================
+
+    function USR_BUSCAR_ROLES() {
+
+      const criterio =
+        document
+          .getElementById(
+            "USR_BUSCADOR_ROLES"
+          )
+          .value;
+
+      console.log(
+        "Buscar roles:",
+        criterio
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.11 BUSCAR PERMISOS
+    // ==========================================================
+
+    function USR_BUSCAR_PERMISOS() {
+
+      const criterio =
+        document
+          .getElementById(
+            "USR_BUSCADOR_PERMISOS"
+          )
+          .value;
+
+      console.log(
+        "Buscar permisos:",
+        criterio
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.12 BUSCAR SESIONES
+    // ==========================================================
+
+    function USR_BUSCAR_SESIONES() {
+
+      const criterio =
+        document
+          .getElementById(
+            "USR_BUSCADOR_SESIONES"
+          )
+          .value;
+
+      console.log(
+        "Buscar sesiones:",
+        criterio
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.13 NUEVO USUARIO
+    // ==========================================================
+
+    function USR_NUEVO_USUARIO() {
+
+      USR_MOSTRAR_MENSAJE(
+        "Formulario de creación de usuario pendiente de conectar.",
+        "success"
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.14 NUEVO ROL
+    // ==========================================================
+
+    function USR_NUEVO_ROL() {
+
+      USR_MOSTRAR_MENSAJE(
+        "Formulario de creación de rol pendiente de conectar.",
+        "success"
+      );
+
+    }
+
+
+    // ==========================================================
+    // 10.15 NUEVO PERMISO
+    // ==========================================================
+
+    function USR_NUEVO_PERMISO() {
+
+      USR_MOSTRAR_MENSAJE(
+        "Asignación de permisos pendiente de conectar.",
+        "success"
+      );
+
+    }
+
+
+  </script>
+
+
+</body>
+
+</html>
