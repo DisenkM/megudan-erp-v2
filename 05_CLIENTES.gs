@@ -2,272 +2,136 @@
 // CLIENTES.gs
 // MÓDULO: CLIENTES
 // ============================================================
-//
-// FUNCIONES:
-// 01. Configuración del módulo
-// 02. Abrir formulario
-// 03. Generar ID
-// 04. Validar duplicados
-// 05. Obtener usuario y fecha
-// 06. Guardar cliente
-// 07. Buscar cliente
-// 08. Actualizar cliente
-// 09. Inactivar cliente
-// 10. Registrar historial
-//
-// HOJAS RELACIONADAS:
-// - CLI_MAESTRO
-// - CLI_HISTORIAL
-//
-// INTERFAZ:
-// - CLI_FORM.html
-// ============================================================
-
-
-// ============================================================
-// 01. CONFIGURACIÓN DEL MÓDULO
-// ============================================================
 
 const CLI_CONFIG = {
-
   HOJA_MAESTRO: "CLI_MAESTRO",
   HOJA_HISTORIAL: "CLI_HISTORIAL",
   FORMULARIO: "F1_CLI_FORM",
-
   PREFIJO_ID: "CLI",
   DIGITOS_ID: 6
-
 };
 
-
-// ============================================================
-// 02. ABRIR FORMULARIO DE CLIENTES
-// ============================================================
-
 function ABRIR_CLIENTES() {
-
   const html = HtmlService
     .createHtmlOutputFromFile(CLI_CONFIG.FORMULARIO)
     .setWidth(1200)
     .setHeight(800);
-
-  SpreadsheetApp.getUi().showModalDialog(
-    html,
-    "👥 Gestión de Clientes"
-  );
-
+  SpreadsheetApp.getUi().showModalDialog(html, "👥 Gestión de Clientes");
 }
 
-
-// ============================================================
-// 03. GENERAR NUEVO ID_CLIENTE
-// ============================================================
-
 function CLI_GENERAR_ID() {
-
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  const hoja = ss.getSheetByName(
-    CLI_CONFIG.HOJA_MAESTRO
-  );
-
-  if (!hoja) {
-    throw new Error(
-      "No existe la hoja " + CLI_CONFIG.HOJA_MAESTRO
-    );
-  }
-
+  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
+  if (!hoja) throw new Error("No existe la hoja " + CLI_CONFIG.HOJA_MAESTRO);
+  
   const ultimaFila = hoja.getLastRow();
-
-  if (ultimaFila < 2) {
-    return CLI_CONFIG.PREFIJO_ID + "-000001";
-  }
-
-  const ids = hoja
-    .getRange(2, 1, ultimaFila - 1, 1)
-    .getValues()
-    .flat();
-
+  if (ultimaFila < 2) return CLI_CONFIG.PREFIJO_ID + "-000001";
+  
+  const ids = hoja.getRange(2, 1, ultimaFila - 1, 1).getValues().flat();
   let mayorNumero = 0;
-
   ids.forEach(function(id) {
-
     if (!id) return;
-
     const partes = String(id).split("-");
     const numero = Number(partes[1]);
-
     if (!isNaN(numero) && numero > mayorNumero) {
       mayorNumero = numero;
     }
-
   });
-
-  const siguienteNumero = mayorNumero + 1;
-
-  return (
-    CLI_CONFIG.PREFIJO_ID +
-    "-" +
-    String(siguienteNumero).padStart(
-      CLI_CONFIG.DIGITOS_ID,
-      "0"
-    )
-  );
-
+  return CLI_CONFIG.PREFIJO_ID + "-" + String(mayorNumero + 1).padStart(CLI_CONFIG.DIGITOS_ID, "0");
 }
 
+/**
+ * Calcula el Dígito de Verificación (DV) oficial para Colombia (Algoritmo DIAN/Siigo).
+ * Expuesta para llamadas asíncronas desde el Frontend HTML.
+ */
+function CLI_CALCULAR_DV(nit) {
+  if (!nit || isNaN(nit)) return "";
+  const factores = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+  let suma = 0;
+  const temp = nit.toString().trim();
+  for (let i = 0; i < temp.length; i++) {
+    suma += parseInt(temp.charAt(temp.length - 1 - i), 10) * factores[i];
+  }
+  const residuo = suma % 11;
+  return residuo > 1 ? 11 - residuo : residuo;
+}
 
-// ============================================================
-// 04. VALIDAR CLIENTE DUPLICADO
-// ============================================================
-
-function CLI_VALIDAR_DUPLICADO(
-  tipoDocumento,
-  numeroDocumento,
-  idClienteActual
-) {
-
+function CLI_VALIDAR_DUPLICADO(tipoDocumento, numeroDocumento, idClienteActual) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
+  if (!hoja) throw new Error("No existe la hoja CLI_MAESTRO.");
+  if (hoja.getLastRow() < 2) return false;
 
-  const hoja = ss.getSheetByName(
-    CLI_CONFIG.HOJA_MAESTRO
-  );
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+  const idxId = encabezados.indexOf("ID_CLIENTE");
+  const idxTipo = encabezados.indexOf("TIPO_DOCUMENTO");
+  const idxNumero = encabezados.indexOf("NUMERO_DOCUMENTO");
 
-  if (!hoja) {
-    throw new Error("No existe la hoja CLI_MAESTRO.");
+  if (idxId === -1 || idxTipo === -1 || idxNumero === -1) {
+    throw new Error("Faltan columnas requeridas en CLI_MAESTRO.");
   }
 
-  if (hoja.getLastRow() < 2) {
-    return false;
-  }
-
-  const encabezados = hoja
-    .getRange(1, 1, 1, hoja.getLastColumn())
-    .getValues()[0];
-
-  const indiceId =
-    encabezados.indexOf("ID_CLIENTE");
-
-  const indiceTipo =
-    encabezados.indexOf("TIPO_DOCUMENTO");
-
-  const indiceNumero =
-    encabezados.indexOf("NUMERO_DOCUMENTO");
-
-  if (
-    indiceId === -1 ||
-    indiceTipo === -1 ||
-    indiceNumero === -1
-  ) {
-    throw new Error(
-      "Faltan columnas requeridas en CLI_MAESTRO."
-    );
-  }
-
-  const datos = hoja
-    .getRange(
-      2,
-      1,
-      hoja.getLastRow() - 1,
-      hoja.getLastColumn()
-    )
-    .getValues();
-
+  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
   return datos.some(function(fila) {
-
-    const esMismoCliente =
-      String(fila[indiceId]) ===
-      String(idClienteActual || "");
-
-    if (esMismoCliente) {
-      return false;
-    }
-
-    return (
-      String(fila[indiceTipo]) ===
-      String(tipoDocumento) &&
-      String(fila[indiceNumero]) ===
-      String(numeroDocumento)
-    );
-
+    if (String(fila[idxId]) === String(idClienteActual || "")) return false;
+    return (String(fila[idxTipo]) === String(tipoDocumento) && String(fila[idxNumero]) === String(numeroDocumento));
   });
-
 }
-
-
-// ============================================================
-// 05. UTILIDADES DEL MÓDULO
-// ============================================================
 
 function CLI_OBTENER_USUARIO_ACTUAL() {
-
-  return (
-    Session.getActiveUser().getEmail() ||
-    "USUARIO_SISTEMA"
-  );
-
+  return Session.getActiveUser().getEmail() || "USUARIO_SISTEMA";
 }
-
 
 function CLI_OBTENER_FECHA_ACTUAL() {
   return new Date();
 }
 
-
-// ============================================================
-// 06. GUARDAR NUEVO CLIENTE
-// ============================================================
-
+/**
+ * Guarda un nuevo cliente aplicando validaciones estrictas de DIAN y Siigo
+ */
 function CLI_GUARDAR_CLIENTE(datos) {
+  if (!datos) throw new Error("No se recibieron datos del cliente.");
 
-  if (!datos) {
-    throw new Error(
-      "No se recibieron datos del cliente."
-    );
-  }
-
-  const obligatorios = [
-    "TIPO_PERSONA",
-    "TIPO_DOCUMENTO",
-    "NUMERO_DOCUMENTO",
-    "TIPO_CLIENTE",
-    "PAIS"
-  ];
-
+  // Validaciones de obligatoriedad estructural
+  const obligatorios = ["TIPO_PERSONA", "TIPO_DOCUMENTO", "NUMERO_DOCUMENTO", "TIPO_CLIENTE", "PAIS"];
   obligatorios.forEach(function(campo) {
-
-    if (
-      !datos[campo] ||
-      String(datos[campo]).trim() === ""
-    ) {
-      throw new Error(
-        "El campo " + campo + " es obligatorio."
-      );
+    if (!datos[campo] || String(datos[campo]).trim() === "") {
+      throw new Error("El campo " + campo + " es obligatorio.");
     }
-
   });
 
-  const duplicado = CLI_VALIDAR_DUPLICADO(
-    datos.TIPO_DOCUMENTO,
-    datos.NUMERO_DOCUMENTO,
-    null
-  );
+  // Validaciones dinámicas por tipo de persona (Natural vs Jurídica)
+  if (datos.TIPO_PERSONA === "PERSONA_JURIDICA") {
+    if (!datos.RAZON_SOCIAL || datos.RAZON_SOCIAL.trim() === "") {
+      throw new Error("La Razón Social es obligatoria para Personas Jurídicas.");
+    }
+    // Limpiar campos exclusivos de persona natural
+    datos.PRIMER_NOMBRE = "";
+    datos.SEGUNDO_NOMBRE = "";
+    datos.PRIMER_APELLIDO = "";
+    datos.SEGUNDO_APELLIDO = "";
+  } else if (datos.TIPO_PERSONA === "PERSONA_NATURAL") {
+    if (!datos.PRIMER_NOMBRE || datos.PRIMER_NOMBRE.trim() === "" || !datos.PRIMER_APELLIDO || datos.PRIMER_APELLIDO.trim() === "") {
+      throw new Error("El Primer Nombre y Primer Apellido son obligatorios para Personas Naturales.");
+    }
+    // Autocomponer Razón Social a partir de los nombres (Para mantener integridad comercial y fiscal)
+    datos.RAZON_SOCIAL = (datos.PRIMER_NOMBRE + " " + (datos.SEGUNDO_NOMBRE || "") + " " + datos.PRIMER_APELLIDO + " " + (datos.SEGUNDO_APELLIDO || "")).replace(/\s+/g, ' ').trim();
+  }
 
-  if (duplicado) {
-    throw new Error(
-      "Ya existe un cliente con este documento."
-    );
+  // Asegurar el cálculo del Dígito de Verificación si el tipo de documento es NIT
+  if (datos.TIPO_DOCUMENTO === "NIT") {
+    datos.DIGITO_VERIFICACION = CLI_CALCULAR_DV(datos.NUMERO_DOCUMENTO);
+  } else {
+    datos.DIGITO_VERIFICACION = "";
+  }
+
+  if (CLI_VALIDAR_DUPLICADO(datos.TIPO_DOCUMENTO, datos.NUMERO_DOCUMENTO, null)) {
+    throw new Error("Ya existe un cliente con este documento.");
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  const hoja = ss.getSheetByName(
-    CLI_CONFIG.HOJA_MAESTRO
-  );
-
-  if (!hoja) {
-    throw new Error("No existe la hoja CLI_MAESTRO.");
-  }
+  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
+  if (!hoja) throw new Error("No existe la hoja CLI_MAESTRO.");
 
   const idCliente = CLI_GENERAR_ID();
   const fecha = CLI_OBTENER_FECHA_ACTUAL();
@@ -279,30 +143,15 @@ function CLI_GUARDAR_CLIENTE(datos) {
   datos.USUARIO_CREACION = usuario;
   datos.USUARIO_ACTUALIZACION = usuario;
 
-  const encabezados = hoja
-    .getRange(1, 1, 1, hoja.getLastColumn())
-    .getValues()[0];
-
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
   const nuevaFila = encabezados.map(function(campo) {
-    return datos[campo] !== undefined
-      ? datos[campo]
-      : "";
+    return datos[campo] !== undefined ? datos[campo] : "";
   });
 
   hoja.appendRow(nuevaFila);
 
   CLI_REGISTRAR_HISTORIAL(
-    idCliente,
-    "CREACION",
-    "CREAR",
-    "",
-    "",
-    "",
-    "CLIENTES",
-    idCliente,
-    usuario,
-    "ACTIVO",
-    "Cliente creado correctamente."
+    idCliente, "CREACION", "CREAR", "", "", "", "CLIENTES", idCliente, usuario, "ACTIVO", "Cliente creado correctamente."
   );
 
   return {
@@ -310,605 +159,177 @@ function CLI_GUARDAR_CLIENTE(datos) {
     mensaje: "Cliente registrado correctamente.",
     idCliente: idCliente
   };
-
 }
 
-// =============================================================
-// 07. BUSCAR CLIENTE
-// =============================================================
-// FUNCIÓN:
-// Busca un cliente registrado en CLI_MAESTRO utilizando:
-//
-// - ID_CLIENTE
-// - NIT
-// - CC
-// - Cualquier número de documento registrado
-// - RAZÓN SOCIAL
-//
-// CRITERIOS DE BÚSQUEDA:
-//
-// ID_CLIENTE          → Coincidencia exacta
-// NUMERO_DOCUMENTO    → Coincidencia exacta
-// RAZON_SOCIAL        → Coincidencia parcial
-// ==============================================================
+function CLI_BUSCAR_CLIENTE(criterio) {
+  criterio = String(criterio || "").trim();
+  if (!criterio) throw new Error("Ingrese un ID de cliente, NIT, CC o razón social.");
 
-  function CLI_BUSCAR_CLIENTE(criterio) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
+  if (!hoja) throw new Error("No existe la hoja " + CLI_CONFIG.HOJA_MAESTRO + ".");
 
+  const ultimaFila = hoja.getLastRow();
+  const ultimaColumna = hoja.getLastColumn();
+  if (ultimaFila < 2) return null;
 
-    // ==========================================================
-    // 07.01 VALIDAR CRITERIO DE BÚSQUEDA
-    // ==========================================================
+  const encabezados = hoja.getRange(1, 1, 1, ultimaColumna).getValues()[0].map(function(e) {
+    return String(e).trim().toUpperCase();
+  });
 
-    criterio = String(criterio || "").trim();
+  const registros = hoja.getRange(2, 1, ultimaFila - 1, ultimaColumna).getDisplayValues();
 
-    if (!criterio) {
-
-      throw new Error(
-        "Ingrese un ID de cliente, NIT, CC o razón social."
-      );
-
-    }
-
-
-    // ==========================================================
-    // 07.02 OBTENER HOJA MAESTRA DE CLIENTES
-    // ==========================================================
-
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    const hoja = ss.getSheetByName(
-      CLI_CONFIG.HOJA_MAESTRO
-    );
-
-    if (!hoja) {
-
-      throw new Error(
-        "No existe la hoja " + CLI_CONFIG.HOJA_MAESTRO + "."
-      );
-
-    }
-
-
-    // ==========================================================
-    // 07.03 VALIDAR QUE EXISTAN CLIENTES REGISTRADOS
-    // ==========================================================
-
-    const ultimaFila = hoja.getLastRow();
-    const ultimaColumna = hoja.getLastColumn();
-
-    if (ultimaFila < 2) {
-
-      return null;
-
-    }
-
-
-    // ==========================================================
-    // 07.04 OBTENER ENCABEZADOS DE CLI_MAESTRO
-    // ==========================================================
-    // Se convierten a mayúsculas para evitar problemas de
-    // comparación entre los nombres de las columnas.
-    // ==========================================================
-
-    const encabezados = hoja
-      .getRange(1, 1, 1, ultimaColumna)
-      .getDisplayValues()[0]
-      .map(function(encabezado) {
-
-        return String(encabezado)
-          .trim()
-          .toUpperCase();
-
-      });
-
-
-    // ==========================================================
-    // 07.05 OBTENER REGISTROS DE CLIENTES
-    // ==========================================================
-    // Se utiliza getDisplayValues() para conservar los valores
-    // tal como se muestran en Google Sheets.
-    // ==========================================================
-
-    const registros = hoja
-      .getRange(
-        2,
-        1,
-        ultimaFila - 1,
-        ultimaColumna
-      )
-      .getDisplayValues();
-
-
-    // ==========================================================
-    // 07.06 NORMALIZAR TEXTO
-    // ==========================================================
-    // Convierte a mayúsculas y elimina espacios innecesarios.
-    // ==========================================================
-
-    function normalizarTexto(valor) {
-
-      return String(valor || "")
-        .trim()
-        .toUpperCase()
-        .replace(/\s+/g, " ");
-
-    }
-
-
-    // ==========================================================
-    // 07.07 NORMALIZAR DOCUMENTO
-    // ==========================================================
-    // Permite encontrar el mismo documento aunque esté escrito:
-    //
-    // 123456789
-    // 123.456.789
-    // 123 456 789
-    // 123-456-789
-    // ==========================================================
-
-    function normalizarDocumento(valor) {
-
-      return String(valor || "")
-        .trim()
-        .replace(/[.\s,\-]/g, "");
-
-    }
-
-
-    // ==========================================================
-    // 07.08 PREPARAR CRITERIOS DE BÚSQUEDA
-    // ==========================================================
-
-    const criterioTexto = normalizarTexto(criterio);
-
-    const criterioDocumento = normalizarDocumento(criterio);
-
-
-    // ==========================================================
-    // 07.09 IDENTIFICAR COLUMNAS NECESARIAS
-    // ==========================================================
-
-    const idxIdCliente =
-      encabezados.indexOf("ID_CLIENTE");
-
-    const idxDocumento =
-      encabezados.indexOf("NUMERO_DOCUMENTO");
-
-    const idxRazonSocial =
-      encabezados.indexOf("RAZON_SOCIAL");
-
-
-    // ==========================================================
-    // 07.10 VALIDAR ESTRUCTURA DE CLI_MAESTRO
-    // ==========================================================
-
-    if (idxIdCliente === -1) {
-
-      throw new Error(
-        "No se encontró la columna ID_CLIENTE en CLI_MAESTRO."
-      );
-
-    }
-
-    if (idxDocumento === -1) {
-
-      throw new Error(
-        "No se encontró la columna NUMERO_DOCUMENTO en CLI_MAESTRO."
-      );
-
-    }
-
-    if (idxRazonSocial === -1) {
-
-      throw new Error(
-        "No se encontró la columna RAZON_SOCIAL en CLI_MAESTRO."
-      );
-
-    }
-
-
-    // ==========================================================
-    // 07.11 BUSCAR CLIENTE
-    // ==========================================================
-    // PRIORIDAD DE BÚSQUEDA:
-    //
-    // 1. ID_CLIENTE       → Coincidencia exacta
-    // 2. NIT / CC         → Coincidencia exacta
-    // 3. RAZÓN SOCIAL     → Coincidencia parcial
-    // ==========================================================
-
-    const filaEncontrada = registros.find(function(fila) {
-
-
-      // ========================================================
-      // 07.11.01 OBTENER VALORES DE LA FILA
-      // ========================================================
-
-      const idCliente =
-        normalizarTexto(fila[idxIdCliente]);
-
-      const documento =
-        normalizarDocumento(fila[idxDocumento]);
-
-      const razonSocial =
-        normalizarTexto(fila[idxRazonSocial]);
-
-
-      // ========================================================
-      // 07.11.02 BUSCAR POR ID_CLIENTE
-      // ========================================================
-      // Ejemplo:
-      //
-      // CLI-000001
-      // ========================================================
-
-      if (idCliente === criterioTexto) {
-
-        return true;
-
-      }
-
-
-      // ========================================================
-      // 07.11.03 BUSCAR POR NIT, CC O DOCUMENTO
-      // ========================================================
-      // NIT y CC se encuentran en NUMERO_DOCUMENTO.
-      //
-      // La coincidencia es exacta para evitar encontrar
-      // documentos incorrectos.
-      // ========================================================
-
-      if (documento === criterioDocumento) {
-
-        return true;
-
-      }
-
-
-      // ========================================================
-      // 07.11.04 BUSCAR POR RAZÓN SOCIAL
-      // ========================================================
-      // Permite búsquedas parciales.
-      //
-      // Ejemplo:
-      //
-      // CONSTRUCTORA ABC
-      //
-      // Encuentra:
-      //
-      // CONSTRUCTORA ABC S.A.S.
-      // ========================================================
-
-      if (razonSocial.includes(criterioTexto)) {
-
-        return true;
-
-      }
-
-
-      // ========================================================
-      // 07.11.05 NO EXISTE COINCIDENCIA
-      // ========================================================
-
-      return false;
-
-    });
-
-
-    // ==========================================================
-    // 07.12 CLIENTE NO ENCONTRADO
-    // ==========================================================
-
-    if (!filaEncontrada) {
-
-      return null;
-
-    }
-
-
-    // ==========================================================
-    // 07.13 CONVERTIR FILA EN OBJETO
-    // ==========================================================
-    // Convierte la fila encontrada en un objeto utilizando los
-    // encabezados de CLI_MAESTRO como propiedades.
-    // ==========================================================
-
-    const cliente = {};
-
-    encabezados.forEach(function(campo, indice) {
-
-      cliente[campo] =
-        filaEncontrada[indice];
-
-    });
-
-
-    // ==========================================================
-    // 07.14 DEVOLVER CLIENTE AL HTML
-    // ==========================================================
-    // El resultado es enviado a F1_CLI_FORM mediante:
-    //
-    // google.script.run
-    //   .CLI_BUSCAR_CLIENTE(criterio)
-    // ==========================================================
-
-    return cliente;
-
+  function normalizarTexto(valor) {
+    return String(valor || "").trim().toUpperCase().replace(/\s+/g, " ");
   }
 
-
-// ============================================================
-// 08. ACTUALIZAR CLIENTE
-// ============================================================
-
-  function CLI_ACTUALIZAR_CLIENTE(datos) {
-
-    if (!datos || !datos.ID_CLIENTE) {
-      throw new Error(
-        "No se indicó el ID del cliente."
-      );
-    }
-
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    const hoja = ss.getSheetByName(
-      CLI_CONFIG.HOJA_MAESTRO
-    );
-
-    if (!hoja || hoja.getLastRow() < 2) {
-      throw new Error(
-        "No existen clientes registrados."
-      );
-    }
-
-    const encabezados = hoja
-      .getRange(1, 1, 1, hoja.getLastColumn())
-      .getValues()[0];
-
-    const registros = hoja
-      .getRange(
-        2,
-        1,
-        hoja.getLastRow() - 1,
-        hoja.getLastColumn()
-      )
-      .getValues();
-
-    const indiceId = encabezados.indexOf("ID_CLIENTE");
-
-    const indiceRegistro = registros.findIndex(function(fila) {
-
-      return String(fila[indiceId]) ===
-        String(datos.ID_CLIENTE);
-
-    });
-
-    if (indiceRegistro === -1) {
-      throw new Error(
-        "No se encontró el cliente."
-      );
-    }
-
-    const datosAnteriores =
-      registros[indiceRegistro];
-
-    const duplicado = CLI_VALIDAR_DUPLICADO(
-      datos.TIPO_DOCUMENTO,
-      datos.NUMERO_DOCUMENTO,
-      datos.ID_CLIENTE
-    );
-
-    if (duplicado) {
-      throw new Error(
-        "Ya existe otro cliente con este documento."
-      );
-    }
-
-    const usuario =
-      CLI_OBTENER_USUARIO_ACTUAL();
-
-    datos.FECHA_ACTUALIZACION =
-      CLI_OBTENER_FECHA_ACTUAL();
-
-    datos.USUARIO_ACTUALIZACION =
-      usuario;
-
-    const indiceFechaCreacion =
-      encabezados.indexOf("FECHA_CREACION");
-
-    const indiceUsuarioCreacion =
-      encabezados.indexOf("USUARIO_CREACION");
-
-    if (indiceFechaCreacion !== -1) {
-      datos.FECHA_CREACION =
-        datosAnteriores[indiceFechaCreacion];
-    }
-
-    if (indiceUsuarioCreacion !== -1) {
-      datos.USUARIO_CREACION =
-        datosAnteriores[indiceUsuarioCreacion];
-    }
-
-    const nuevaFila = encabezados.map(
-      function(campo, indice) {
-
-        return datos[campo] !== undefined
-          ? datos[campo]
-          : datosAnteriores[indice];
-
-      }
-    );
-
-    hoja
-      .getRange(
-        indiceRegistro + 2,
-        1,
-        1,
-        nuevaFila.length
-      )
-      .setValues([nuevaFila]);
-
-    encabezados.forEach(function(campo, indice) {
-
-      if (
-        String(datosAnteriores[indice]) !==
-        String(nuevaFila[indice]) &&
-        campo !== "FECHA_ACTUALIZACION" &&
-        campo !== "USUARIO_ACTUALIZACION"
-      ) {
-
-        CLI_REGISTRAR_HISTORIAL(
-          datos.ID_CLIENTE,
-          "MODIFICACION",
-          "EDITAR",
-          campo,
-          datosAnteriores[indice],
-          nuevaFila[indice],
-          "CLIENTES",
-          datos.ID_CLIENTE,
-          usuario,
-          "ACTIVO",
-          "Campo modificado: " + campo
-        );
-
-      }
-
-    });
-
-    return {
-      ok: true,
-      mensaje: "Cliente actualizado correctamente.",
-      idCliente: datos.ID_CLIENTE
-    };
-
+  function normalizarDocumento(valor) {
+    return String(valor || "").trim().replace(/[.\s,\-]/g, "");
   }
 
+  const criterioTexto = normalizarTexto(criterio);
+  const criterioDocumento = normalizarDocumento(criterio);
 
-// ============================================================
-// 09. INACTIVAR CLIENTE
-// ============================================================
+  const idxIdCliente = encabezados.indexOf("ID_CLIENTE");
+  const idxDocumento = encabezados.indexOf("NUMERO_DOCUMENTO");
+  const idxRazonSocial = encabezados.indexOf("RAZON_SOCIAL");
 
-function CLI_INACTIVAR_CLIENTE(idCliente) {
-
-  const cliente = CLI_BUSCAR_CLIENTE(idCliente);
-
-  if (!cliente) {
-    throw new Error("Cliente no encontrado.");
+  if (idxIdCliente === -1 || idxDocumento === -1 || idxRazonSocial === -1) {
+    throw new Error("Faltan columnas requeridas en CLI_MAESTRO.");
   }
 
-  if (cliente.ESTADO_CLIENTE === "INACTIVO") {
-    throw new Error("El cliente ya está inactivo.");
+  const filaEncontrada = registros.find(function(fila) {
+    const idCliente = normalizarTexto(fila[idxIdCliente]);
+    const documento = normalizarDocumento(fila[idxDocumento]);
+    const razonSocial = normalizarTexto(fila[idxRazonSocial]);
+
+    if (idCliente === criterioTexto) return true;
+    if (documento === criterioDocumento) return true;
+    if (razonSocial.includes(criterioTexto)) return true;
+    return false;
+  });
+
+  if (!filaEncontrada) return null;
+
+  const cliente = {};
+  encabezados.forEach(function(campo, indice) {
+    cliente[campo] = filaEncontrada[indice];
+  });
+
+  return cliente;
+}
+
+function CLI_ACTUALIZAR_CLIENTE(datos) {
+  if (!datos || !datos.ID_CLIENTE) throw new Error("No se indicó el ID del cliente.");
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
+  if (!hoja || hoja.getLastRow() < 2) throw new Error("No existen clientes registrados.");
+
+  // Validaciones dinámicas por tipo de persona antes de actualizar
+  if (datos.TIPO_PERSONA === "PERSONA_JURIDICA") {
+    if (!datos.RAZON_SOCIAL || datos.RAZON_SOCIAL.trim() === "") {
+      throw new Error("La Razón Social es obligatoria para Personas Jurídicas.");
+    }
+    datos.PRIMER_NOMBRE = "";
+    datos.SEGUNDO_NOMBRE = "";
+    datos.PRIMER_APELLIDO = "";
+    datos.SEGUNDO_APELLIDO = "";
+  } else if (datos.TIPO_PERSONA === "PERSONA_NATURAL") {
+    if (!datos.PRIMER_NOMBRE || datos.PRIMER_NOMBRE.trim() === "" || !datos.PRIMER_APELLIDO || datos.PRIMER_APELLIDO.trim() === "") {
+      throw new Error("El Primer Nombre y Primer Apellido son obligatorios para Personas Naturales.");
+    }
+    datos.RAZON_SOCIAL = (datos.PRIMER_NOMBRE + " " + (datos.SEGUNDO_NOMBRE || "") + " " + datos.PRIMER_APELLIDO + " " + (datos.SEGUNDO_APELLIDO || "")).replace(/\s+/g, ' ').trim();
   }
 
-  cliente.ESTADO_CLIENTE = "INACTIVO";
+  // Actualizar el DV si el documento es NIT
+  if (datos.TIPO_DOCUMENTO === "NIT") {
+    datos.DIGITO_VERIFICACION = CLI_CALCULAR_DV(datos.NUMERO_DOCUMENTO);
+  } else {
+    datos.DIGITO_VERIFICACION = "";
+  }
 
-  CLI_ACTUALIZAR_CLIENTE(cliente);
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const idxId = encabezados.indexOf("ID_CLIENTE");
+  const idxRegistro = registros.findIndex(function(fila) {
+    return String(fila[idxId]) === String(datos.ID_CLIENTE);
+  });
+
+  if (idxId === -1 || idxRegistro === -1) throw new Error("No se encontró el cliente.");
+
+  const datosAnteriores = registros[idxRegistro];
+
+  if (CLI_VALIDAR_DUPLICADO(datos.TIPO_DOCUMENTO, datos.NUMERO_DOCUMENTO, datos.ID_CLIENTE)) {
+    throw new Error("Ya existe otro cliente con este documento.");
+  }
+
+  const usuario = CLI_OBTENER_USUARIO_ACTUAL();
+  datos.FECHA_ACTUALIZACION = CLI_OBTENER_FECHA_ACTUAL();
+  datos.USUARIO_ACTUALIZACION = usuario;
+
+  const idxFechaCreacion = encabezados.indexOf("FECHA_CREACION");
+  const idxUsuarioCreacion = encabezados.indexOf("USUARIO_CREACION");
+  if (idxFechaCreacion !== -1) datos.FECHA_CREACION = datosAnteriores[idxFechaCreacion];
+  if (idxUsuarioCreacion !== -1) datos.USUARIO_CREACION = datosAnteriores[idxUsuarioCreacion];
+
+  const nuevaFila = encabezados.map(function(campo, indice) {
+    return datos[campo] !== undefined ? datos[campo] : datosAnteriores[indice];
+  });
+
+  hoja.getRange(idxRegistro + 2, 1, 1, nuevaFila.length).setValues([nuevaFila]);
+
+  encabezados.forEach(function(campo, indice) {
+    if (String(datosAnteriores[indice]) !== String(nuevaFila[indice]) && campo !== "FECHA_ACTUALIZACION" && campo !== "USUARIO_ACTUALIZACION") {
+      CLI_REGISTRAR_HISTORIAL(
+        datos.ID_CLIENTE, "MODIFICACION", "EDITAR", campo, datosAnteriores[indice], nuevaFila[indice], "CLIENTES", datos.ID_CLIENTE, usuario, "ACTIVO", "Campo modificado: " + campo
+      );
+    }
+  });
 
   return {
     ok: true,
-    mensaje: "Cliente inactivado correctamente."
+    mensaje: "Cliente actualizado correctamente.",
+    idCliente: datos.ID_CLIENTE
   };
-
 }
 
+function CLI_INACTIVAR_CLIENTE(idCliente) {
+  const cliente = CLI_BUSCAR_CLIENTE(idCliente);
+  if (!cliente) throw new Error("Cliente no encontrado.");
+  if (cliente.ESTADO_CLIENTE === "INACTIVO") throw new Error("El cliente ya está inactivo.");
+  cliente.ESTADO_CLIENTE = "INACTIVO";
+  CLI_ACTUALIZAR_CLIENTE(cliente);
+  return { ok: true, mensaje: "Cliente inactivado correctamente." };
+}
 
-// ============================================================
-// 10. REGISTRAR HISTORIAL Y AUDITORÍA
-// ============================================================
-
-function CLI_REGISTRAR_HISTORIAL(
-  idCliente,
-  tipoEvento,
-  accion,
-  campoModificado,
-  valorAnterior,
-  valorNuevo,
-  moduloOrigen,
-  idRegistroOrigen,
-  usuario,
-  estadoEvento,
-  observaciones
-) {
-
+function CLI_REGISTRAR_HISTORIAL(idCliente, tipoEvento, accion, campoModificado, valorAnterior, valorNuevo, moduloOrigen, idRegistroOrigen, usuario, estadoEvento, observaciones) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_HISTORIAL);
+  if (!hoja) throw new Error("No existe la hoja CLI_HISTORIAL.");
 
-  const hoja = ss.getSheetByName(
-    CLI_CONFIG.HOJA_HISTORIAL
-  );
-
-  if (!hoja) {
-    throw new Error(
-      "No existe la hoja CLI_HISTORIAL."
-    );
-  }
-
-  const consecutivo =
-    Math.max(hoja.getLastRow() - 1, 0) + 1;
-
+  const consecutivo = Math.max(hoja.getLastRow() - 1, 0) + 1;
   const evento = {
-
-    ID_HISTORIAL:
-      "HIS-" + String(consecutivo).padStart(6, "0"),
-
-    ID_CLIENTE:
-      idCliente,
-
-    TIPO_EVENTO:
-      tipoEvento,
-
-    FECHA_HORA:
-      CLI_OBTENER_FECHA_ACTUAL(),
-
-    USUARIO:
-      usuario,
-
-    ACCION:
-      accion,
-
-    CAMPO_MODIFICADO:
-      campoModificado,
-
-    VALOR_ANTERIOR:
-      valorAnterior,
-
-    VALOR_NUEVO:
-      valorNuevo,
-
-    MOTIVO_ORIGEN:
-      "",
-
-    MODULO_ORIGEN:
-      moduloOrigen,
-
-    ID_REGISTRO_ORIGEN:
-      idRegistroOrigen,
-
-    IP_USUARIO:
-      "",
-
-    ESTADO_EVENTO:
-      estadoEvento,
-
-    OBSERVACIONES:
-      observaciones
-
+    ID_HISTORIAL: "HIS-" + String(consecutivo).padStart(6, "0"),
+    ID_CLIENTE: idCliente,
+    TIPO_EVENTO: tipoEvento,
+    FECHA_HORA: CLI_OBTENER_FECHA_ACTUAL(),
+    USUARIO: usuario,
+    ACCION: accion,
+    CAMPO_MODIFICADO: campoModificado,
+    VALOR_ANTERIOR: valorAnterior,
+    VALOR_NUEVO: valorNuevo,
+    MOTIVO_ORIGEN: "",
+    MODULO_ORIGEN: moduloOrigen,
+    ID_REGISTRO_ORIGEN: idRegistroOrigen,
+    IP_USUARIO: "",
+    ESTADO_EVENTO: estadoEvento,
+    OBSERVACIONES: observaciones
   };
 
-  const encabezados = hoja
-    .getRange(1, 1, 1, hoja.getLastColumn())
-    .getValues()[0];
-
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
   const fila = encabezados.map(function(campo) {
-    return evento[campo] !== undefined
-      ? evento[campo]
-      : "";
+    return evento[campo] !== undefined ? evento[campo] : "";
   });
-
   hoja.appendRow(fila);
-
 }
-
-
-// ============================================================
-// 11. FIN DEL MÓDULO CLIENTES
-// ============================================================

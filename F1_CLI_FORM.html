@@ -4,1862 +4,738 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Gestión de Clientes</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+      background: #f3f4f6; color: #111827;
     }
-
-    /* =========================================================
-       CONTENEDOR PRINCIPAL
-       ========================================================= */
-
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* =========================================================
-       ENCABEZADO
-       ========================================================= */
-
+    .app { max-width: 1200px; margin: 0 auto; padding: 20px; }
     .header {
-      background: #111827;
-      color: white;
-      padding: 20px 24px;
-      border-radius: 12px 12px 0 0;
+      background: #111827; color: white;
+      padding: 20px 24px; border-radius: 12px 12px 0 0;
     }
-
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .header p {
-      margin: 6px 0 0;
-      color: #d1d5db;
-      font-size: 13px;
-    }
-
-    /* =========================================================
-       BARRA DE ACCIONES
-       ========================================================= */
-
+    .header h1 { margin: 0; font-size: 24px; }
+    .header p { margin: 6px 0 0; color: #d1d5db; font-size: 13px; }
     .toolbar {
-      background: white;
-      padding: 14px 20px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      background: white; padding: 14px 20px;
+      display: flex; gap: 10px; flex-wrap: wrap;
       border-bottom: 1px solid #e5e7eb;
     }
-
     button {
-      border: none;
-      border-radius: 7px;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
+      border: none; border-radius: 7px;
+      padding: 10px 16px; font-size: 13px;
+      font-weight: bold; cursor: pointer; transition: 0.2s;
     }
-
-    button:hover {
-      opacity: 0.88;
+    button:hover { opacity: 0.88; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-warning { background: #d97706; color: white; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-secondary { background: #6b7280; color: white; }
+    .search-area { background: white; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
+    .search-box { display: flex; gap: 10px; max-width: 700px; }
+    .section { background: white; margin-top: 14px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .section-title { background: #f9fafb; padding: 13px 18px; font-weight: bold; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    .section-content { padding: 18px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .field { display: flex; flex-direction: column; }
+    .field.full { grid-column: 1 / -1; }
+    .field.two { grid-column: span 2; }
+    label { font-size: 12px; font-weight: bold; margin-bottom: 6px; color: #374151; }
+    input, select, textarea {
+      width: 100%; padding: 9px 10px;
+      border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: 13px; background: white; color: #111827; outline: none;
     }
-
-    .btn-primary {
-      background: #2563eb;
-      color: white;
+    input:focus, select:focus, textarea:focus {
+      border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.10);
     }
+    input[readonly] { background: #f3f4f6; color: #6b7280; }
+    textarea { min-height: 80px; resize: vertical; }
+    .message { display: none; padding: 10px 14px; margin-top: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+    .message.success { background: #dcfce7; color: #166534; }
+    .message.error { background: #fee2e2; color: #991b1b; }
+    .message.info { background: #dbeafe; color: #1e40af; }
+    .footer { margin-top: 14px; padding: 15px; text-align: right; font-size: 11px; color: #6b7280; }
 
-    .btn-success {
-      background: #16a34a;
-      color: white;
+    /* Estilos Especiales para Responsabilidades Fiscales (Estilo Siigo) */
+    .responsabilidad-card {
+      border: 1px solid #d1d5db; border-radius: 8px;
+      padding: 15px; background-color: #f9fafb; margin-top: 10px;
     }
-
-    .btn-warning {
-      background: #d97706;
-      color: white;
+    .responsabilidad-grid {
+      display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px;
     }
+    .checkbox-item { display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; }
+    .checkbox-item input { width: auto; cursor: pointer; }
 
-    .btn-danger {
-      background: #dc2626;
-      color: white;
-    }
-
-    .btn-secondary {
-      background: #6b7280;
-      color: white;
-    }
-
-    /* =========================================================
-       BUSCADOR
-       ========================================================= */
-
-    .search-area {
-      background: white;
-      padding: 16px 20px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .search-box {
-      display: flex;
-      gap: 10px;
-      max-width: 700px;
-    }
-
-    /* =========================================================
-       SECCIONES
-       ========================================================= */
-
-    .section {
-      background: white;
-      margin-top: 14px;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-    }
-
-    .section-title {
-      background: #f9fafb;
-      padding: 13px 18px;
-      font-weight: bold;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 14px;
-    }
-
-    .section-content {
-      padding: 18px;
-    }
-
-    /* =========================================================
-       FORMULARIO
-       ========================================================= */
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .field.full {
-      grid-column: 1 / -1;
-    }
-
-    .field.two {
-      grid-column: span 2;
-    }
-
-    label {
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 6px;
-      color: #374151;
-    }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-      padding: 9px 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 13px;
-      background: white;
-      color: #111827;
-      outline: none;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.10);
-    }
-
-    input[readonly] {
-      background: #f3f4f6;
-      color: #6b7280;
-    }
-
-    textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-
-    /* =========================================================
-       ESTADO
-       ========================================================= */
-
-    .status {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: bold;
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    /* =========================================================
-       PIE
-       ========================================================= */
-
-    .footer {
-      margin-top: 14px;
-      padding: 15px;
-      text-align: right;
-      font-size: 11px;
-      color: #6b7280;
-    }
-
-    /* =========================================================
-       MENSAJES
-       ========================================================= */
-
-    .message {
-      display: none;
-      padding: 10px 14px;
-      margin-top: 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .message.success {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .message.error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .message.info {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    /* =========================================================
-       RESPONSIVE
-       ========================================================= */
-
-    @media (max-width: 900px) {
-      .form-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
+    @media (max-width: 900px) { .form-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 600px) {
-      .app {
-        padding: 10px;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .field.two,
-      .field.full {
-        grid-column: auto;
-      }
-
-      .search-box {
-        flex-direction: column;
-      }
-
-      .toolbar {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
+      .app { padding: 10px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.two, .field.full { grid-column: auto; }
+      .search-box, .toolbar { flex-direction: column; }
+      button { width: 100%; }
     }
   </style>
 </head>
-
 <body>
-
-<div class="app">
-
-  <!-- =======================================================
-       ENCABEZADO
-       ======================================================= -->
-
-  <div class="header">
-    <h1>👥 Gestión de Clientes</h1>
-    <p>ERP Operativo · Módulo de Clientes</p>
-  </div>
-
-
-  <!-- =======================================================
-       BARRA DE ACCIONES
-       ======================================================= -->
-
-  <div class="toolbar">
-
-    <button class="btn-primary" onclick="nuevoCliente()">
-      🆕 Nuevo
-    </button>
-
-    <button class="btn-success" onclick="guardarCliente()">
-      💾 Guardar
-    </button>
-
-    <button class="btn-warning" onclick="editarCliente()">
-      ✏️ Actualizar
-    </button>
-
-    <button class="btn-secondary" onclick="limpiarFormulario()">
-      🧹 Limpiar
-    </button>
-
-    <button class="btn-danger" onclick="inactivarCliente()">
-      🚫 Inactivar
-    </button>
-
-  </div>
-
-
-  <!-- =======================================================
-       BUSCADOR
-       ======================================================= -->
-
-  <div class="search-area">
-
-    <label for="buscarCliente">
-      🔎 Buscar cliente por documento, ID o nombre
-    </label>
-
-    <div class="search-box">
-
-      <input
-        type="text"
-        id="buscarCliente"
-        placeholder="Digite NIT, CC, ID o razón social..."
-      >
-
-      <button
-        class="btn-primary"
-        onclick="buscarCliente()">
-        🔍 Buscar
-      </button>
-
+  <div class="app">
+    <div class="header">
+      <h1>👥 Gestión de Clientes</h1>
+      <p>ERP Operativo · Módulo de Clientes</p>
     </div>
 
-    <div id="mensaje" class="message"></div>
-
-  </div>
-
-
-  <!-- =======================================================
-       DATOS DE IDENTIFICACIÓN
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      👤 DATOS DE IDENTIFICACIÓN
+    <div class="toolbar">
+      <button class="btn-primary" onclick="nuevoCliente()">🆕 Nuevo</button>
+      <button class="btn-success" onclick="guardarCliente()">💾 Guardar</button>
+      <button class="btn-warning" onclick="editarCliente()">✏️ Actualizar</button>
+      <button class="btn-secondary" onclick="limpiarFormulario()">🧹 Limpiar</button>
+      <button class="btn-danger" onclick="inactivarCliente()">🚫 Inactivar</button>
     </div>
 
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>ID Cliente</label>
-          <input
-            type="text"
-            id="ID_CLIENTE"
-            readonly
-            placeholder="Automático">
-        </div>
-
-        <div class="field">
-          <label>Tipo de Persona *</label>
-
-          <select id="TIPO_PERSONA">
-            <option value="">Seleccione...</option>
-            <option value="PERSONA_NATURAL">Persona Natural</option>
-            <option value="PERSONA_JURIDICA">Persona Jurídica</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Tipo de Documento *</label>
-
-          <select id="TIPO_DOCUMENTO">
-            <option value="">Seleccione...</option>
-            <option value="CC">Cédula de Ciudadanía</option>
-            <option value="NIT">NIT</option>
-            <option value="CE">Cédula de Extranjería</option>
-            <option value="PASAPORTE">Pasaporte</option>
-            <option value="PEP">PEP</option>
-            <option value="PPT">PPT</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Número de Documento *</label>
-          <input
-            type="text"
-            id="NUMERO_DOCUMENTO"
-            placeholder="Número de documento">
-        </div>
-
-        <div class="field">
-          <label>Dígito de Verificación</label>
-          <input
-            type="text"
-            id="DIGITO_VERIFICACION"
-            maxlength="1"
-            placeholder="DV">
-        </div>
-
-        <div class="field two">
-          <label>Razón Social</label>
-          <input
-            type="text"
-            id="RAZON_SOCIAL"
-            placeholder="Razón social">
-        </div>
-
-        <div class="field">
-          <label>Nombre Comercial</label>
-          <input
-            type="text"
-            id="NOMBRE_COMERCIAL"
-            placeholder="Nombre comercial">
-        </div>
-
-        <div class="field">
-          <label>Primer Nombre</label>
-          <input
-            type="text"
-            id="PRIMER_NOMBRE">
-        </div>
-
-        <div class="field">
-          <label>Segundo Nombre</label>
-          <input
-            type="text"
-            id="SEGUNDO_NOMBRE">
-        </div>
-
-        <div class="field">
-          <label>Primer Apellido</label>
-          <input
-            type="text"
-            id="PRIMER_APELLIDO">
-        </div>
-
-        <div class="field">
-          <label>Segundo Apellido</label>
-          <input
-            type="text"
-            id="SEGUNDO_APELLIDO">
-        </div>
-
-        <div class="field">
-          <label>Tipo de Cliente *</label>
-
-          <select id="TIPO_CLIENTE">
-            <option value="">Seleccione...</option>
-            <option value="NACIONAL">Nacional</option>
-            <option value="INTERNACIONAL">Internacional</option>
-            <option value="MAYORISTA">Mayorista</option>
-            <option value="MINORISTA">Minorista</option>
-            <option value="EMPRESARIAL">Empresarial</option>
-          </select>
-        </div>
-
+    <div class="search-area">
+      <label for="buscarCliente">🔎 Buscar cliente por documento, ID o nombre</label>
+      <div class="search-box">
+        <input type="text" id="buscarCliente" placeholder="Digite NIT, CC, ID o razón social...">
+        <button class="btn-primary" onclick="buscarCliente()">🔍 Buscar</button>
       </div>
-
+      <div id="mensaje" class="message"></div>
     </div>
 
-  </div>
+    <!-- DATOS DE IDENTIFICACIÓN -->
+    <div class="section">
+      <div class="section-title">👤 DATOS DE IDENTIFICACIÓN</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="field">
+            <label>ID Cliente</label>
+            <input type="text" id="ID_CLIENTE" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label>Tipo de Persona *</label>
+            <select id="TIPO_PERSONA" onchange="toggleCamposPersona()">
+              <option value="">Seleccione...</option>
+              <option value="PERSONA_NATURAL">Persona Natural</option>
+              <option value="PERSONA_JURIDICA">Persona Jurídica</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de Documento *</label>
+            <select id="TIPO_DOCUMENTO" onchange="calcularDV()">
+              <option value="">Seleccione...</option>
+              <option value="CC">Cédula de Ciudadanía</option>
+              <option value="NIT">NIT</option>
+              <option value="CE">Cédula de Extranjería</option>
+              <option value="PASAPORTE">Pasaporte</option>
+              <option value="PEP">PEP</option>
+              <option value="PPT">PPT</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Número de Documento *</label>
+            <input type="text" id="NUMERO_DOCUMENTO" placeholder="Número de documento" oninput="calcularDV()">
+          </div>
+          <div class="field">
+            <label>Dígito de Verificación (DV)</label>
+            <input type="text" id="DIGITO_VERIFICACION" readonly placeholder="Calculado automáticamente">
+          </div>
 
+          <!-- Campos Dinámicos para Persona Jurídica -->
+          <div class="field two" id="div_razon_social">
+            <label>Razón Social *</label>
+            <input type="text" id="RAZON_SOCIAL" placeholder="Razón social">
+          </div>
+          <div class="field" id="div_nombre_comercial">
+            <label>Nombre Comercial</label>
+            <input type="text" id="NOMBRE_COMERCIAL" placeholder="Nombre comercial">
+          </div>
 
-  <!-- =======================================================
-       INFORMACIÓN TRIBUTARIA
-       ======================================================= -->
+          <!-- Campos Dinámicos para Persona Natural -->
+          <div class="field" id="div_primer_nombre">
+            <label>Primer Nombre *</label>
+            <input type="text" id="PRIMER_NOMBRE">
+          </div>
+          <div class="field" id="div_segundo_nombre">
+            <label>Segundo Nombre</label>
+            <input type="text" id="SEGUNDO_NOMBRE">
+          </div>
+          <div class="field" id="div_primer_apellido">
+            <label>Primer Apellido *</label>
+            <input type="text" id="PRIMER_APELLIDO">
+          </div>
+          <div class="field" id="div_segundo_apellido">
+            <label>Segundo Apellido</label>
+            <input type="text" id="SEGUNDO_APELLIDO">
+          </div>
 
-  <div class="section">
-
-    <div class="section-title">
-      🧾 INFORMACIÓN TRIBUTARIA
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>Responsabilidad IVA</label>
-
-          <select id="RESPONSABILIDAD_IVA">
-            <option value="">Seleccione...</option>
-            <option value="RESPONSABLE_IVA">Responsable de IVA</option>
-            <option value="NO_RESPONSABLE_IVA">No responsable de IVA</option>
-          </select>
+          <div class="field">
+            <label>Tipo de Cliente *</label>
+            <select id="TIPO_CLIENTE">
+              <option value="">Seleccione...</option>
+              <option value="NACIONAL">Nacional</option>
+              <option value="INTERNACIONAL">Internacional</option>
+              <option value="MAYORISTA">Mayorista</option>
+              <option value="MINORISTA">Minorista</option>
+              <option value="EMPRESARIAL">Empresarial</option>
+            </select>
+          </div>
         </div>
-
-        <div class="field">
-          <label>Responsabilidad Fiscal</label>
-
-          <input
-            type="text"
-            id="RESPONSABILIDAD_FISCAL"
-            placeholder="Responsabilidades fiscales">
-        </div>
-
-        <div class="field">
-          <label>Régimen Fiscal</label>
-
-          <select id="REGIMEN_FISCAL">
-            <option value="">Seleccione...</option>
-            <option value="ORDINARIO">Ordinario</option>
-            <option value="SIMPLE">SIMPLE</option>
-            <option value="ESPECIAL">Especial</option>
-          </select>
-        </div>
-
       </div>
-
     </div>
 
-  </div>
+    <!-- INFORMACIÓN TRIBUTARIA -->
+    <div class="section">
+      <div class="section-title">🧾 INFORMACIÓN TRIBUTARIA</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="field">
+            <label>Responsabilidad IVA *</label>
+            <select id="RESPONSABILIDAD_IVA">
+              <option value="">Seleccione...</option>
+              <option value="RESPONSABLE_IVA">Responsable de IVA</option>
+              <option value="NO_RESPONSABLE_IVA">No responsable de IVA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Régimen Fiscal *</label>
+            <select id="REGIMEN_FISCAL">
+              <option value="">Seleccione...</option>
+              <option value="ORDINARIO">Ordinario</option>
+              <option value="SIMPLE">SIMPLE</option>
+              <option value="ESPECIAL">Especial</option>
+            </select>
+          </div>
 
-
-  <!-- =======================================================
-       DATOS DE CONTACTO
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      📞 DATOS DE CONTACTO
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field full">
-          <label>Dirección</label>
-          <input
-            type="text"
-            id="DIRECCION"
-            placeholder="Dirección principal">
-        </div>
-
-        <div class="field">
-          <label>Ciudad</label>
-          <input
-            type="text"
-            id="CIUDAD"
-            placeholder="Ciudad">
-        </div>
-
-        <div class="field">
-          <label>Departamento</label>
-          <input
-            type="text"
-            id="DEPARTAMENTO"
-            placeholder="Departamento">
-        </div>
-
-        <div class="field">
-          <label>País *</label>
-          <input
-            type="text"
-            id="PAIS"
-            value="COLOMBIA">
-        </div>
-
-        <div class="field">
-          <label>Teléfono</label>
-          <input
-            type="text"
-            id="TELEFONO">
-        </div>
-
-        <div class="field">
-          <label>Celular</label>
-          <input
-            type="text"
-            id="CELULAR">
-        </div>
-
-        <div class="field">
-          <label>Correo</label>
-          <input
-            type="email"
-            id="CORREO"
-            placeholder="correo@empresa.com">
-        </div>
-
-        <div class="field">
-          <label>Contacto Principal</label>
-          <input
-            type="text"
-            id="CONTACTO_PRINCIPAL">
-        </div>
-
-        <div class="field">
-          <label>Cargo del Contacto</label>
-          <input
-            type="text"
-            id="CARGO_CONTACTO">
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =======================================================
-       CONDICIONES COMERCIALES
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      💰 CONDICIONES COMERCIALES
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>Forma de Pago</label>
-
-          <select id="FORMA_PAGO">
-            <option value="">Seleccione...</option>
-            <option value="CONTADO">Contado</option>
-            <option value="CREDITO">Crédito</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Método de Pago</label>
-
-          <select id="METODO_PAGO">
-            <option value="">Seleccione...</option>
-            <option value="EFECTIVO">Efectivo</option>
-            <option value="TRANSFERENCIA">Transferencia</option>
-            <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
-            <option value="TARJETA_DEBITO">Tarjeta Débito</option>
-            <option value="CHEQUE">Cheque</option>
-            <option value="OTRO">Otro</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Plazo de Pago (días)</label>
-
-          <input
-            type="number"
-            id="PLAZO_PAGO_DIAS"
-            min="0"
-            value="0">
-        </div>
-
-        <div class="field">
-          <label>Límite de Crédito</label>
-
-          <input
-            type="number"
-            id="LIMITE_CREDITO"
-            min="0"
-            step="0.01"
-            value="0">
-        </div>
-
-        <div class="field">
-          <label>Vendedor Asignado</label>
-          <input
-            type="text"
-            id="VENDEDOR_ASIGNADO">
-        </div>
-
-        <div class="field">
-          <label>Centro de Costo</label>
-          <input
-            type="text"
-            id="CENTRO_COSTO">
-        </div>
-
-        <div class="field">
-          <label>Obra Principal</label>
-          <input
-            type="text"
-            id="OBRA_PRINCIPAL">
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =======================================================
-       CONFIGURACIÓN CONTABLE
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      📚 CONFIGURACIÓN CONTABLE
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field two">
-
-          <label>Cuenta Contable del Cliente</label>
-
-          <input
-            type="text"
-            id="CUENTA_CONTABLE_CLIENTE"
-            placeholder="Cuenta contable">
+          <!-- Responsabilidades Fiscales DIAN / Siigo (Checkbox dinámico) -->
+          <div class="field full">
+            <label>Responsabilidad Fiscal (DIAN)</label>
+            <input type="hidden" id="RESPONSABILIDAD_FISCAL">
             
+            <div class="responsabilidad-card">
+              <span style="font-size: 11px; color: #6b7280;">Verifica la responsabilidad en el RUT de tu cliente, mínimo asignar R-99-PN.</span>
+              <div class="responsabilidad-grid">
+                <label class="checkbox-item">
+                  <input type="checkbox" name="resp_fiscal" value="O-13" onchange="consolidarResponsabilidades()">
+                  <strong>O-13</strong> - Gran contribuyente
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="resp_fiscal" value="O-15" onchange="consolidarResponsabilidades()">
+                  <strong>O-15</strong> - Autorretenedor
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="resp_fiscal" value="O-23" onchange="consolidarResponsabilidades()">
+                  <strong>O-23</strong> - Agente de retención IVA
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="resp_fiscal" value="O-47" onchange="consolidarResponsabilidades()">
+                  <strong>O-47</strong> - Régimen simple de tributación
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="resp_fiscal" value="R-99-PN" checked onchange="consolidarResponsabilidades()">
+                  <strong>R-99-PN</strong> - No aplica - Otros
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div class="field">
-
-          <label>Estado del Cliente *</label>
-
-          <select id="ESTADO_CLIENTE">
-            <option value="ACTIVO">Activo</option>
-            <option value="INACTIVO">Inactivo</option>
-            <option value="BLOQUEADO">Bloqueado</option>
-          </select>
-
-        </div>
-
       </div>
-
     </div>
 
-  </div>
-
-
-  <!-- =======================================================
-       OBSERVACIONES
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      📝 OBSERVACIONES
-    </div>
-
-    <div class="section-content">
-
-      <div class="field">
-
-        <label>Observaciones</label>
-
-        <textarea
-          id="OBSERVACIONES"
-          placeholder="Información adicional del cliente..."></textarea>
-
+    <!-- DATOS DE CONTACTO -->
+    <div class="section">
+      <div class="section-title">📞 DATOS DE CONTACTO</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Dirección *</label>
+            <input type="text" id="DIRECCION" placeholder="Dirección principal">
+          </div>
+          <div class="field">
+            <label>Ciudad *</label>
+            <input type="text" id="CIUDAD" placeholder="Ciudad">
+          </div>
+          <div class="field">
+            <label>Departamento *</label>
+            <input type="text" id="DEPARTAMENTO" placeholder="Departamento">
+          </div>
+          <div class="field">
+            <label>País *</label>
+            <input type="text" id="PAIS" value="COLOMBIA">
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="text" id="TELEFONO">
+          </div>
+          <div class="field">
+            <label>Celular</label>
+            <input type="text" id="CELULAR">
+          </div>
+          <div class="field">
+            <label>Correo *</label>
+            <input type="email" id="CORREO" placeholder="correo@empresa.com">
+          </div>
+          <div class="field">
+            <label>Contacto Principal</label>
+            <input type="text" id="CONTACTO_PRINCIPAL">
+          </div>
+          <div class="field">
+            <label>Cargo del Contacto</label>
+            <input type="text" id="CARGO_CONTACTO">
+          </div>
+        </div>
       </div>
-
     </div>
 
-  </div>
-
-
-  <!-- =======================================================
-       CONTROL
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      🔐 CONTROL DEL REGISTRO
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>Fecha de Creación</label>
-          <input
-            type="text"
-            id="FECHA_CREACION"
-            readonly
-            placeholder="Automático">
+    <!-- CONDICIONES COMERCIALES -->
+    <div class="section">
+      <div class="section-title">💰 CONDICIONES COMERCIALES</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="field">
+            <label>Forma de Pago *</label>
+            <select id="FORMA_PAGO">
+              <option value="">Seleccione...</option>
+              <option value="CONTADO">Contado</option>
+              <option value="CREDITO">Crédito</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Método de Pago *</label>
+            <select id="METODO_PAGO">
+              <option value="">Seleccione...</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TRANSFERENCIA">Transferencia</option>
+              <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+              <option value="TARJETA_DEBITO">Tarjeta Débito</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="OTRO">Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Plazo de Pago (días)</label>
+            <input type="number" id="PLAZO_PAGO_DIAS" min="0" value="0">
+          </div>
+          <div class="field">
+            <label>Límite de Crédito</label>
+            <input type="number" id="LIMITE_CREDITO" min="0" step="0.01" value="0">
+          </div>
+          <div class="field">
+            <label>Vendedor Asignado</label>
+            <input type="text" id="VENDEDOR_ASIGNADO">
+          </div>
+          <div class="field">
+            <label>Centro de Costo</label>
+            <input type="text" id="CENTRO_COSTO">
+          </div>
+          <div class="field">
+            <label>Obra Principal</label>
+            <input type="text" id="OBRA_PRINCIPAL">
+          </div>
         </div>
-
-        <div class="field">
-          <label>Fecha de Actualización</label>
-          <input
-            type="text"
-            id="FECHA_ACTUALIZACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
-        <div class="field">
-          <label>Usuario Creación</label>
-          <input
-            type="text"
-            id="USUARIO_CREACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
-        <div class="field">
-          <label>Usuario Actualización</label>
-          <input
-            type="text"
-            id="USUARIO_ACTUALIZACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
       </div>
-
     </div>
 
+    <!-- CONFIGURACIÓN CONTABLE -->
+    <div class="section">
+      <div class="section-title">📚 CONFIGURACIÓN CONTABLE</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="field two">
+            <label>Cuenta Contable del Cliente</label>
+            <input type="text" id="CUENTA_CONTABLE_CLIENTE" placeholder="Cuenta contable" value="130505">
+          </div>
+          <div class="field">
+            <label>Estado del Cliente *</label>
+            <select id="ESTADO_CLIENTE">
+              <option value="ACTIVO">Activo</option>
+              <option value="INACTIVO">Inactivo</option>
+              <option value="BLOQUEADO">Bloqueado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBSERVACIONES -->
+    <div class="section">
+      <div class="section-title">📝 OBSERVACIONES</div>
+      <div class="section-content">
+        <div class="field">
+          <label>Observaciones</label>
+          <textarea id="OBSERVACIONES" placeholder="Información adicional del cliente..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL -->
+    <div class="section">
+      <div class="section-title">🔐 CONTROL DEL REGISTRO</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="field">
+            <label>Fecha de Creación</label>
+            <input type="text" id="FECHA_CREACION" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label>Fecha de Actualización</label>
+            <input type="text" id="FECHA_ACTUALIZACION" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label>Usuario Creación</label>
+            <input type="text" id="USUARIO_CREACION" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label>Usuario Actualización</label>
+            <input type="text" id="USUARIO_ACTUALIZACION" readonly placeholder="Automático">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">ERP Operativo · Módulo Clientes · CLI_FORM</div>
   </div>
 
-
-  <!-- =======================================================
-       PIE
-       ======================================================= -->
-
-  <div class="footer">
-    ERP Operativo · Módulo Clientes · CLI_FORM
-  </div>
-
-</div>
-
-
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
-
-    <script>
-
-  // ==========================================================
-  // 01. ESTADO DEL FORMULARIO
-  // ==========================================================
-
-  let CLI_MODO = "NUEVO";
-
-  let CLI_PROCESANDO = false;
-
-
-  // ==========================================================
-  // 02. INICIALIZAR FORMULARIO
-  // ==========================================================
-
-  document.addEventListener("DOMContentLoaded", function() {
-
-    limpiarFormulario();
-
-    nuevoCliente();
-
-  });
-
-
-  // ==========================================================
-  // 03. NUEVO CLIENTE
-  // ==========================================================
-
-  function nuevoCliente() {
-
-    if (CLI_PROCESANDO) return;
-
-    limpiarFormulario();
-
-    CLI_MODO = "NUEVO";
-
-    google.script.run
-      .withSuccessHandler(function(idCliente) {
-
-        document
-          .getElementById("ID_CLIENTE")
-          .value = idCliente;
-
-        mostrarMensaje(
-          "Formulario listo para registrar un nuevo cliente.",
-          "info"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        manejarError(error);
-
-      })
-      .CLI_GENERAR_ID();
-
-  }
-
-
-  // ==========================================================
-  // 04. GUARDAR CLIENTE
-  // ==========================================================
-
-  function guardarCliente() {
-
-    if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // VALIDAR FORMULARIO
-    // --------------------------------------------------------
-
-    if (!validarFormulario()) {
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // VALIDAR MODO
-    // --------------------------------------------------------
-
-    if (CLI_MODO === "EDICION") {
-
-      mostrarMensaje(
-        "Este cliente ya existe. Use el botón ACTUALIZAR.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // OBTENER DATOS
-    // --------------------------------------------------------
-
-    const datos =
-      obtenerDatosFormulario();
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
-    CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Guardando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // ENVIAR A APPS SCRIPT
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-
-        CLI_PROCESANDO = false;
-
-        CLI_MODO = "EDICION";
-
-
-        // ----------------------------------------------------
-        // ASEGURAR ID DEVUELTO
-        // ----------------------------------------------------
-
-        if (resultado.idCliente) {
-
-          document
-            .getElementById("ID_CLIENTE")
-            .value = resultado.idCliente;
-
-        }
-
-
-        mostrarMensaje(
-          resultado.mensaje ||
-          "Cliente registrado correctamente.",
-          "success"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_GUARDAR_CLIENTE(datos);
-
-  }
-
-
-  // ==========================================================
-  // 05. BUSCAR CLIENTE
-  // ==========================================================
-
-  function buscarCliente() {
-
-    if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // OBTENER CRITERIO
-    // --------------------------------------------------------
-
-    const criterio =
-      document
-        .getElementById("buscarCliente")
-        .value
-        .trim();
-
-
-    // --------------------------------------------------------
-    // VALIDAR
-    // --------------------------------------------------------
-
-    if (!criterio) {
-
-      mostrarMensaje(
-        "Digite un documento, ID o nombre para buscar.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
-    CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Buscando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // BUSCAR EN CLI_MAESTRO
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(cliente) {
-
-        CLI_PROCESANDO = false;
-
-
-        // ----------------------------------------------------
-        // CLIENTE NO ENCONTRADO
-        // ----------------------------------------------------
-
-        if (!cliente) {
-
-          mostrarMensaje(
-            "No se encontró ningún cliente con ese criterio.",
-            "error"
-          );
-
-          return;
-
-        }
-
-
-        // ----------------------------------------------------
-        // CARGAR CLIENTE
-        // ----------------------------------------------------
-
-        cargarCliente(cliente);
-
-        CLI_MODO = "EDICION";
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_BUSCAR_CLIENTE(criterio);
-
-  }
-
-
-  // ==========================================================
-  // 06. ACTUALIZAR CLIENTE
-  // ==========================================================
-
-  function editarCliente() {
-
-    if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // OBTENER ID
-    // --------------------------------------------------------
-
-    const idCliente =
-      document
-        .getElementById("ID_CLIENTE")
-        .value
-        .trim();
-
-
-    // --------------------------------------------------------
-    // VALIDAR CLIENTE
-    // --------------------------------------------------------
-
-    if (!idCliente) {
-
-      mostrarMensaje(
-        "Primero debe buscar o cargar un cliente.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // VALIDAR FORMULARIO
-    // --------------------------------------------------------
-
-    if (!validarFormulario()) {
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // OBTENER DATOS
-    // --------------------------------------------------------
-
-    const datos =
-      obtenerDatosFormulario();
-
-
-    // --------------------------------------------------------
-    // CONFIRMAR
-    // --------------------------------------------------------
-
-    const confirmar =
-      confirm(
-        "¿Desea actualizar la información del cliente " +
-        idCliente +
-        "?"
-      );
-
-
-    if (!confirmar) {
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
-    CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Actualizando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // ENVIAR A APPS SCRIPT
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-
-        CLI_PROCESANDO = false;
-
-        CLI_MODO = "EDICION";
-
-        mostrarMensaje(
-          resultado.mensaje ||
-          "Cliente actualizado correctamente.",
-          "success"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_ACTUALIZAR_CLIENTE(datos);
-
-  }
-
-
-  // ==========================================================
-  // 07. INACTIVAR CLIENTE
-  // ==========================================================
-
-  function inactivarCliente() {
-
-    if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // OBTENER ID
-    // --------------------------------------------------------
-
-    const idCliente =
-      document
-        .getElementById("ID_CLIENTE")
-        .value
-        .trim();
-
-
-    // --------------------------------------------------------
-    // VALIDAR
-    // --------------------------------------------------------
-
-    if (!idCliente) {
-
-      mostrarMensaje(
-        "Primero debe buscar o cargar un cliente.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // CONFIRMAR
-    // --------------------------------------------------------
-
-    const confirmar =
-      confirm(
-        "¿Está seguro de que desea inactivar el cliente " +
-        idCliente +
-        "?"
-      );
-
-
-    if (!confirmar) {
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
-    CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Inactivando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // ENVIAR A APPS SCRIPT
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-
-        CLI_PROCESANDO = false;
-
-        document
-          .getElementById("ESTADO_CLIENTE")
-          .value = "INACTIVO";
-
-
-        mostrarMensaje(
-          resultado.mensaje ||
-          "Cliente inactivado correctamente.",
-          "success"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_INACTIVAR_CLIENTE(idCliente);
-
-  }
-
-
-  // ==========================================================
-  // 08. LIMPIAR FORMULARIO
-  // ==========================================================
-
-  function limpiarFormulario() {
-
-    const campos =
-      document.querySelectorAll(
-        "input:not([readonly]), select, textarea"
-      );
-
-
-    campos.forEach(function(campo) {
-
-      // ------------------------------------------------------
-      // VALORES POR DEFECTO
-      // ------------------------------------------------------
-
-      if (campo.id === "PAIS") {
-
-        campo.value = "COLOMBIA";
-
-      }
-
-      else if (campo.id === "ESTADO_CLIENTE") {
-
-        campo.value = "ACTIVO";
-
-      }
-
-      else if (
-        campo.id === "PLAZO_PAGO_DIAS" ||
-        campo.id === "LIMITE_CREDITO"
-      ) {
-
-        campo.value = "0";
-
-      }
-
-      else {
-
-        campo.value = "";
-
-      }
-
+  <script>
+    let CLI_MODO = "NUEVO";
+    let CLI_PROCESANDO = false;
+
+    document.addEventListener("DOMContentLoaded", function() {
+      limpiarFormulario();
+      nuevoCliente();
     });
 
+    /**
+     * Alterna la visualización obligatoria de campos según Tipo de Persona (DIAN)
+     */
+    function toggleCamposPersona() {
+      const tipoPersona = document.getElementById("TIPO_PERSONA").value;
+      const rSocial = document.getElementById("div_razon_social");
+      const nComercial = document.getElementById("div_nombre_comercial");
+      const pNombre = document.getElementById("div_primer_nombre");
+      const sNombre = document.getElementById("div_segundo_nombre");
+      const pApellido = document.getElementById("div_primer_apellido");
+      const sApellido = document.getElementById("div_segundo_apellido");
 
-    // --------------------------------------------------------
-    // CAMPOS AUTOMÁTICOS
-    // --------------------------------------------------------
-
-    const automaticos = [
-
-      "ID_CLIENTE",
-      "FECHA_CREACION",
-      "FECHA_ACTUALIZACION",
-      "USUARIO_CREACION",
-      "USUARIO_ACTUALIZACION"
-
-    ];
-
-
-    automaticos.forEach(function(id) {
-
-      const elemento =
-        document.getElementById(id);
-
-      if (elemento) {
-
-        elemento.value = "";
-
+      if (tipoPersona === "PERSONA_JURIDICA") {
+        rSocial.style.display = "flex";
+        nComercial.style.display = "flex";
+        pNombre.style.display = "none";
+        sNombre.style.display = "none";
+        pApellido.style.display = "none";
+        sApellido.style.display = "none";
+      } else if (tipoPersona === "PERSONA_NATURAL") {
+        rSocial.style.display = "none";
+        nComercial.style.display = "none";
+        pNombre.style.display = "flex";
+        sNombre.style.display = "flex";
+        pApellido.style.display = "flex";
+        sApellido.style.display = "flex";
+      } else {
+        rSocial.style.display = "none";
+        nComercial.style.display = "none";
+        pNombre.style.display = "none";
+        sNombre.style.display = "none";
+        pApellido.style.display = "none";
+        sApellido.style.display = "none";
       }
-
-    });
-
-
-    // --------------------------------------------------------
-    // BUSCADOR
-    // --------------------------------------------------------
-
-    document
-      .getElementById("buscarCliente")
-      .value = "";
-
-
-    // --------------------------------------------------------
-    // ESTADO
-    // --------------------------------------------------------
-
-    CLI_MODO = "NUEVO";
-
-    ocultarMensaje();
-
-  }
-
-
-  // ==========================================================
-  // 09. VALIDAR FORMULARIO
-  // ==========================================================
-
-  function validarFormulario() {
-
-    const tipoPersona =
-      obtenerValor("TIPO_PERSONA");
-
-    const tipoDocumento =
-      obtenerValor("TIPO_DOCUMENTO");
-
-    const documento =
-      obtenerValor("NUMERO_DOCUMENTO");
-
-    const tipoCliente =
-      obtenerValor("TIPO_CLIENTE");
-
-    const pais =
-      obtenerValor("PAIS");
-
-
-    // --------------------------------------------------------
-    // TIPO DE PERSONA
-    // --------------------------------------------------------
-
-    if (!tipoPersona) {
-
-      mostrarMensaje(
-        "Seleccione el tipo de persona.",
-        "error"
-      );
-
-      enfocarCampo("TIPO_PERSONA");
-
-      return false;
-
     }
 
+    /**
+     * Calcula asíncronamente el Dígito de Verificación llamando al backend
+     */
+    function calcularDV() {
+      const tipoDoc = document.getElementById("TIPO_DOCUMENTO").value;
+      const numDoc = document.getElementById("NUMERO_DOCUMENTO").value.trim();
+      const dvField = document.getElementById("DIGITO_VERIFICACION");
 
-    // --------------------------------------------------------
-    // TIPO DE DOCUMENTO
-    // --------------------------------------------------------
-
-    if (!tipoDocumento) {
-
-      mostrarMensaje(
-        "Seleccione el tipo de documento.",
-        "error"
-      );
-
-      enfocarCampo("TIPO_DOCUMENTO");
-
-      return false;
-
+      if (tipoDoc === "NIT" && numDoc && !isNaN(numDoc)) {
+        google.script.run
+          .withSuccessHandler(function(dv) {
+            dvField.value = dv;
+          })
+          .CLI_CALCULAR_DV(numDoc);
+      } else {
+        dvField.value = "";
+      }
     }
 
-
-    // --------------------------------------------------------
-    // DOCUMENTO
-    // --------------------------------------------------------
-
-    if (!documento) {
-
-      mostrarMensaje(
-        "Digite el número de documento.",
-        "error"
-      );
-
-      enfocarCampo("NUMERO_DOCUMENTO");
-
-      return false;
-
+    /**
+     * Concatena los checkboxes seleccionados en una sola cadena para CLI_MAESTRO
+     */
+    function consolidarResponsabilidades() {
+      const checkboxes = document.querySelectorAll('input[name="resp_fiscal"]:checked');
+      const seleccionadas = Array.from(checkboxes).map(cb => cb.value);
+      document.getElementById("RESPONSABILIDAD_FISCAL").value = seleccionadas.join(", ");
     }
 
-
-    // --------------------------------------------------------
-    // TIPO DE CLIENTE
-    // --------------------------------------------------------
-
-    if (!tipoCliente) {
-
-      mostrarMensaje(
-        "Seleccione el tipo de cliente.",
-        "error"
-      );
-
-      enfocarCampo("TIPO_CLIENTE");
-
-      return false;
-
+    /**
+     * Restaura visualmente las responsabilidades en checkboxes tras realizar una búsqueda
+     */
+    function marcarResponsabilidadesCheckboxes(valorString) {
+      const seleccionadas = String(valorString || "").split(",").map(item => item.trim());
+      const checkboxes = document.querySelectorAll('input[name="resp_fiscal"]');
+      checkboxes.forEach(cb => {
+        cb.checked = seleccionadas.includes(cb.value);
+      });
     }
 
-
-    // --------------------------------------------------------
-    // PAÍS
-    // --------------------------------------------------------
-
-    if (!pais) {
-
-      mostrarMensaje(
-        "Digite el país.",
-        "error"
-      );
-
-      enfocarCampo("PAIS");
-
-      return false;
-
+    function nuevoCliente() {
+      if (CLI_PROCESANDO) return;
+      limpiarFormulario();
+      CLI_MODO = "NUEVO";
+      google.script.run
+        .withSuccessHandler(function(idCliente) {
+          document.getElementById("ID_CLIENTE").value = idCliente;
+          mostrarMensaje("Formulario listo para registrar un nuevo cliente.", "info");
+        })
+        .withFailureHandler(function(error) {
+          manejarError(error);
+        })
+        .CLI_GENERAR_ID();
     }
 
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // 10. OBTENER DATOS DEL FORMULARIO
-  // ==========================================================
-
-  function obtenerDatosFormulario() {
-
-    const datos = {};
-
-
-    // --------------------------------------------------------
-    // OBTENER TODOS LOS CAMPOS CON ID
-    // --------------------------------------------------------
-
-    const campos =
-      document.querySelectorAll(
-        "input[id], select[id], textarea[id]"
-      );
-
-
-    campos.forEach(function(campo) {
-
-      // No enviamos el buscador como información del cliente.
-      if (campo.id === "buscarCliente") {
+    function guardarCliente() {
+      if (CLI_PROCESANDO) return;
+      if (!validarFormulario()) return;
+      if (CLI_MODO === "EDICION") {
+        mostrarMensaje("Este cliente ya existe. Use el botón ACTUALIZAR.", "error");
         return;
       }
+      consolidarResponsabilidades();
+      const datos = obtenerDatosFormulario();
+      CLI_PROCESANDO = true;
+      mostrarMensaje("Guardando cliente...", "info");
 
-
-      // ------------------------------------------------------
-      // VALOR
-      // ------------------------------------------------------
-
-      let valor =
-        campo.value;
-
-
-      // ------------------------------------------------------
-      // LIMPIAR ESPACIOS EN TEXTOS
-      // ------------------------------------------------------
-
-      if (
-        campo.type !== "number"
-      ) {
-
-        valor =
-          String(valor || "").trim();
-
-      }
-
-
-      datos[campo.id] =
-        valor;
-
-    });
-
-
-    return datos;
-
-  }
-
-
-  // ==========================================================
-  // 11. CARGAR CLIENTE EN EL FORMULARIO
-  // ==========================================================
-
-  function cargarCliente(datos) {
-
-    if (!datos) {
-
-      mostrarMensaje(
-        "No se encontró el cliente.",
-        "error"
-      );
-
-      return;
-
+      google.script.run
+        .withSuccessHandler(function(resultado) {
+          CLI_PROCESANDO = false;
+          CLI_MODO = "EDICION";
+          if (resultado.idCliente) {
+            document.getElementById("ID_CLIENTE").value = resultado.idCliente;
+          }
+          mostrarMensaje(resultado.mensaje || "Cliente registrado correctamente.", "success");
+        })
+        .withFailureHandler(function(error) {
+          CLI_PROCESANDO = false;
+          manejarError(error);
+        })
+        .CLI_GUARDAR_CLIENTE(datos);
     }
 
+    function buscarCliente() {
+      if (CLI_PROCESANDO) return;
+      const criterio = document.getElementById("buscarCliente").value.trim();
+      if (!criterio) {
+        mostrarMensaje("Digite un documento, ID o nombre para buscar.", "error");
+        return;
+      }
+      CLI_PROCESANDO = true;
+      mostrarMensaje("Buscando cliente...", "info");
 
-    // --------------------------------------------------------
-    // RECORRER DATOS RECIBIDOS
-    // --------------------------------------------------------
+      google.script.run
+        .withSuccessHandler(function(cliente) {
+          CLI_PROCESANDO = false;
+          if (!cliente) {
+            mostrarMensaje("No se encontró ningún cliente con ese criterio.", "error");
+            return;
+          }
+          cargarCliente(cliente);
+          marcarResponsabilidadesCheckboxes(cliente.RESPONSABILIDAD_FISCAL);
+          toggleCamposPersona();
+          CLI_MODO = "EDICION";
+        })
+        .withFailureHandler(function(error) {
+          CLI_PROCESANDO = false;
+          manejarError(error);
+        })
+        .CLI_BUSCAR_CLIENTE(criterio);
+    }
 
-    Object.keys(datos).forEach(
-      function(campo) {
+    function editarCliente() {
+      if (CLI_PROCESANDO) return;
+      const idCliente = document.getElementById("ID_CLIENTE").value.trim();
+      if (!idCliente) {
+        mostrarMensaje("Primero debe buscar o cargar un cliente.", "error");
+        return;
+      }
+      if (!validarFormulario()) return;
+      const confirmar = confirm("¿Desea actualizar la información del cliente " + idCliente + "?");
+      if (!confirmar) return;
 
-        const elemento =
-          document.getElementById(campo);
+      consolidarResponsabilidades();
+      const datos = obtenerDatosFormulario();
+      CLI_PROCESANDO = true;
+      mostrarMensaje("Actualizando cliente...", "info");
 
+      google.script.run
+        .withSuccessHandler(function(resultado) {
+          CLI_PROCESANDO = false;
+          CLI_MODO = "EDICION";
+          mostrarMensaje(resultado.mensaje || "Cliente actualizado correctamente.", "success");
+        })
+        .withFailureHandler(function(error) {
+          CLI_PROCESANDO = false;
+          manejarError(error);
+        })
+        .CLI_ACTUALIZAR_CLIENTE(datos);
+    }
 
-        if (!elemento) {
-          return;
+    function inactivarCliente() {
+      if (CLI_PROCESANDO) return;
+      const idCliente = document.getElementById("ID_CLIENTE").value.trim();
+      if (!idCliente) {
+        mostrarMensaje("Primero debe buscar o cargar un cliente.", "error");
+        return;
+      }
+      const confirmar = confirm("¿Está seguro de que desea inactivar el cliente " + idCliente + "?");
+      if (!confirmar) return;
+
+      CLI_PROCESANDO = true;
+      mostrarMensaje("Inactivando cliente...", "info");
+
+      google.script.run
+        .withSuccessHandler(function(resultado) {
+          CLI_PROCESANDO = false;
+          document.getElementById("ESTADO_CLIENTE").value = "INACTIVO";
+          mostrarMensaje(resultado.mensaje || "Cliente inactivado correctamente.", "success");
+        })
+        .withFailureHandler(function(error) {
+          CLI_PROCESANDO = false;
+          manejarError(error);
+        })
+        .CLI_INACTIVAR_CLIENTE(idCliente);
+    }
+
+    function limpiarFormulario() {
+      const campos = document.querySelectorAll("input:not([readonly]), select, textarea");
+      campos.forEach(function(campo) {
+        if (campo.id === "PAIS") campo.value = "COLOMBIA";
+        else if (campo.id === "ESTADO_CLIENTE") campo.value = "ACTIVO";
+        else if (campo.id === "PLAZO_PAGO_DIAS" || campo.id === "LIMITE_CREDITO") campo.value = "0";
+        else campo.value = "";
+      });
+
+      const automaticos = ["ID_CLIENTE", "FECHA_CREACION", "FECHA_ACTUALIZACION", "USUARIO_CREACION", "USUARIO_ACTUALIZACION"];
+      automaticos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+
+      const checkboxes = document.querySelectorAll('input[name="resp_fiscal"]');
+      checkboxes.forEach(cb => {
+        cb.checked = cb.value === "R-99-PN";
+      });
+
+      document.getElementById("buscarCliente").value = "";
+      CLI_MODO = "NUEVO";
+      toggleCamposPersona();
+      ocultarMensaje();
+    }
+
+    function validarFormulario() {
+      const tipoPersona = obtenerValor("TIPO_PERSONA");
+      const tipoDocumento = obtenerValor("TIPO_DOCUMENTO");
+      const documento = obtenerValor("NUMERO_DOCUMENTO");
+      const tipoCliente = obtenerValor("TIPO_CLIENTE");
+      const pais = obtenerValor("PAIS");
+
+      if (!tipoPersona) { mostrarMensaje("Seleccione el tipo de persona.", "error"); enfocarCampo("TIPO_PERSONA"); return false; }
+      if (!tipoDocumento) { mostrarMensaje("Seleccione el tipo de documento.", "error"); enfocarCampo("TIPO_DOCUMENTO"); return false; }
+      if (!documento) { mostrarMensaje("Digite el número de documento.", "error"); enfocarCampo("NUMERO_DOCUMENTO"); return false; }
+      
+      if (tipoPersona === "PERSONA_JURIDICA" && !obtenerValor("RAZON_SOCIAL")) {
+        mostrarMensaje("La Razón Social es obligatoria para Personas Jurídicas.", "error");
+        enfocarCampo("RAZON_SOCIAL");
+        return false;
+      }
+      if (tipoPersona === "PERSONA_NATURAL") {
+        if (!obtenerValor("PRIMER_NOMBRE")) { mostrarMensaje("El Primer Nombre es obligatorio.", "error"); enfocarCampo("PRIMER_NOMBRE"); return false; }
+        if (!obtenerValor("PRIMER_APELLIDO")) { mostrarMensaje("El Primer Apellido es obligatorio.", "error"); enfocarCampo("PRIMER_APELLIDO"); return false; }
+      }
+
+      if (!tipoCliente) { mostrarMensaje("Seleccione el tipo de cliente.", "error"); enfocarCampo("TIPO_CLIENTE"); return false; }
+      if (!pais) { mostrarMensaje("Digite el país.", "error"); enfocarCampo("PAIS"); return false; }
+      return true;
+    }
+
+    function obtenerDatosFormulario() {
+      const datos = {};
+      const campos = document.querySelectorAll("input[id], select[id], textarea[id]");
+      campos.forEach(function(campo) {
+        if (campo.id === "buscarCliente") return;
+        let valor = campo.value;
+        if (campo.type !== "number") {
+          valor = String(valor || "").trim();
         }
+        datos[campo.id] = valor;
+      });
+      return datos;
+    }
 
-
-        let valor =
-          datos[campo];
-
-
-        // ----------------------------------------------------
-        // FORMATEAR FECHAS
-        // ----------------------------------------------------
-
-        if (
-          campo === "FECHA_CREACION" ||
-          campo === "FECHA_ACTUALIZACION"
-        ) {
-
-          valor =
-            formatearFecha(valor);
-
+    function cargarCliente(datos) {
+      if (!datos) { mostrarMensaje("No se encontró el cliente.", "error"); return; }
+      Object.keys(datos).forEach(function(campo) {
+        const el = document.getElementById(campo);
+        if (!el) return;
+        let valor = datos[campo];
+        if (campo === "FECHA_CREACION" || campo === "FECHA_ACTUALIZACION") {
+          valor = formatearFecha(valor);
         }
+        el.value = valor ?? "";
+      });
+      CLI_MODO = "EDICION";
+      mostrarMensaje("Cliente cargado correctamente: " + (datos.ID_CLIENTE || ""), "success");
+    }
 
+    function obtenerValor(id) {
+      const el = document.getElementById(id);
+      return el ? String(el.value || "").trim() : "";
+    }
 
-        elemento.value =
-          valor ?? "";
+    function enfocarCampo(id) {
+      const el = document.getElementById(id);
+      if (el) el.focus();
+    }
 
+    function formatearFecha(valor) {
+      if (!valor) return "";
+      const fecha = new Date(valor);
+      if (isNaN(fecha.getTime())) return valor;
+      const dia = String(fecha.getDate()).padStart(2, "0");
+      const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+      const anio = fecha.getFullYear();
+      const hora = String(fecha.getHours()).padStart(2, "0");
+      const minuto = String(fecha.getMinutes()).padStart(2, "0");
+      return dia + "/" + mes + "/" + anio + " " + hora + ":" + minuto;
+    }
+
+    function manejarError(error) {
+      CLI_PROCESANDO = false;
+      let m = "Ocurrió un error inesperado.";
+      if (error) {
+        if (typeof error === "string") m = error;
+        else if (error.message) m = error.message;
       }
-    );
-
-
-    CLI_MODO = "EDICION";
-
-
-    mostrarMensaje(
-      "Cliente cargado correctamente: " +
-      (datos.ID_CLIENTE || ""),
-      "success"
-    );
-
-  }
-
-
-  // ==========================================================
-  // 12. UTILIDADES DE CAMPOS
-  // ==========================================================
-
-  function obtenerValor(id) {
-
-    const elemento =
-      document.getElementById(id);
-
-    return elemento
-      ? String(elemento.value || "").trim()
-      : "";
-
-  }
-
-
-  function enfocarCampo(id) {
-
-    const elemento =
-      document.getElementById(id);
-
-    if (elemento) {
-
-      elemento.focus();
-
+      mostrarMensaje(m, "error");
+      console.error(error);
     }
 
-  }
-
-
-  // ==========================================================
-  // 13. FORMATEAR FECHAS
-  // ==========================================================
-
-  function formatearFecha(valor) {
-
-    if (!valor) {
-      return "";
+    function mostrarMensaje(texto, tipo) {
+      const m = document.getElementById("mensaje");
+      m.textContent = texto;
+      m.className = "message " + tipo;
+      m.style.display = "block";
+      m.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
-
-    const fecha =
-      new Date(valor);
-
-
-    if (isNaN(fecha.getTime())) {
-
-      return valor;
-
+    function ocultarMensaje() {
+      const m = document.getElementById("mensaje");
+      m.style.display = "none"; m.textContent = ""; m.className = "message";
     }
-
-
-    const dia =
-      String(fecha.getDate())
-        .padStart(2, "0");
-
-    const mes =
-      String(fecha.getMonth() + 1)
-        .padStart(2, "0");
-
-    const anio =
-      fecha.getFullYear();
-
-    const hora =
-      String(fecha.getHours())
-        .padStart(2, "0");
-
-    const minuto =
-      String(fecha.getMinutes())
-        .padStart(2, "0");
-
-
-    return (
-      dia + "/" +
-      mes + "/" +
-      anio + " " +
-      hora + ":" +
-      minuto
-    );
-
-  }
-
-
-  // ==========================================================
-  // 14. MANEJO DE ERRORES
-  // ==========================================================
-
-  function manejarError(error) {
-
-    CLI_PROCESANDO = false;
-
-
-    let mensaje =
-      "Ocurrió un error inesperado.";
-
-
-    if (error) {
-
-      if (typeof error === "string") {
-
-        mensaje = error;
-
-      }
-
-      else if (error.message) {
-
-        mensaje = error.message;
-
-      }
-
-    }
-
-
-    mostrarMensaje(
-      mensaje,
-      "error"
-    );
-
-
-    console.error(error);
-
-  }
-
-
-  // ==========================================================
-  // 15. MENSAJES
-  // ==========================================================
-
-  function mostrarMensaje(texto, tipo) {
-
-    const mensaje =
-      document.getElementById("mensaje");
-
-
-    mensaje.textContent =
-      texto;
-
-
-    mensaje.className =
-      "message " + tipo;
-
-
-    mensaje.style.display =
-      "block";
-
-
-    // --------------------------------------------------------
-    // SUBIR AL MENSAJE PARA VER EL RESULTADO
-    // --------------------------------------------------------
-
-    mensaje.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest"
-    });
-
-  }
-
-
-  function ocultarMensaje() {
-
-    const mensaje =
-      document.getElementById("mensaje");
-
-
-    mensaje.style.display =
-      "none";
-
-
-    mensaje.textContent =
-      "";
-
-
-    mensaje.className =
-      "message";
-
-  }
-
-
-  // ==========================================================
-  // 16. FIN DEL FORMULARIO
-  // ==========================================================
-
-</script>
-
+  </script>
 </body>
 </html>

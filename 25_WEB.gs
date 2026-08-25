@@ -5,42 +5,24 @@
 // ============================================================
 
 
-  // ============================================================
-  // 01. CONFIGURACIÓN DEL MÓDULO WEB
-  // ============================================================
+// ============================================================
+// 01. CONFIGURACIÓN DEL MÓDULO WEB (Nombres de archivos reales)
+// ============================================================
+const WEB_CONFIG = {
+  
+  // VISTAS HTML - Corregidos para coincidir con tu proyecto
+  LOGIN: "F3_WEB_LOGIN",          // <-- Cambia "F2_LOGIN" por "F3_WEB_LOGIN"
+  DASHBOARD: "F4_WEB_DASHBOARD",  // <-- Cambia "F3_DASHBOARD" por "F4_WEB_DASHBOARD"
 
-  const WEB_CONFIG = {
+  // RUTAS PRINCIPALES
+  RUTA_LOGIN: "login",
+  RUTA_DASHBOARD: "dashboard",
 
-    // ----------------------------------------------------------
-    // VISTAS HTML
-    // ----------------------------------------------------------
-
-    LOGIN: "F2_LOGIN",
-
-    DASHBOARD: "F3_DASHBOARD",
-
-
-    // ----------------------------------------------------------
-    // RUTAS PRINCIPALES
-    // ----------------------------------------------------------
-
-    RUTA_LOGIN: "login",
-
-    RUTA_DASHBOARD: "dashboard",
-
-
-    // ----------------------------------------------------------
-    // CONFIGURACIÓN DE INTERFAZ
-    // ----------------------------------------------------------
-
-    TITULO_ERP: "ERP",
-
-    ANCHO_LOGIN: 1200,
-
-    ALTO_LOGIN: 800
-
-  };
-
+  // CONFIGURACIÓN DE INTERFAZ
+  TITULO_ERP: "MEGUDAN ERP",
+  ANCHO_LOGIN: 1200,
+  ALTO_LOGIN: 800
+};
 
   // ============================================================
   // 02. PUNTO DE ENTRADA DE LA APLICACIÓN WEB
@@ -141,7 +123,6 @@
   // ============================================================
   // 04. MOSTRAR DASHBOARD
   // Carga el panel principal del ERP.
-  //
   // Por ahora valida únicamente que se haya recibido un token.
   // La validación completa de sesión se realizará utilizando
   // el módulo 23_SEGURIDAD.gs.
