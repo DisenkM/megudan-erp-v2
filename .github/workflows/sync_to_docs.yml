@@ -17,7 +17,7 @@ jobs:
           # Creamos el archivo temporal inicial
           echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > "REPOSITORIOS-GITHUB 2026.txt"
           
-          # CORREGIDO: Usamos "! -name" para ignorar por completo el archivo que estamos escribiendo
+          # Buscamos TODO tipo de archivo en la rama main, excluyendo ocultos y el de salida
           find . -type f ! -path '*/.*' ! -name "REPOSITORIOS-GITHUB 2026.txt" | while read -r file; do
             
             # Verificamos si el archivo contiene texto legible
@@ -32,9 +32,9 @@ jobs:
       - name: Subir y Convertir a Google Docs único
         uses: adityak74/google-drive-upload-git-action@main
         with:
-          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+          # CORREGIDO: Usamos "credentials_json" en lugar de "credentials" para que acepte tu secreto tal como está
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
           filename: "REPOSITORIOS-GITHUB 2026.txt"
           folderId: "16h3KIgT3XeiAbt6U4r3OV5Yao0RTw"
           name: "REPOSITORIOS-GITHUB 2026"
           overwrite: "true"
-
