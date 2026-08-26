@@ -14,11 +14,11 @@ jobs:
 
       - name: Fusionar absolutamente todos los archivos legibles en uno solo
         run: |
-          # Creamos el archivo temporal directamente con el nombre final
+          # Creamos el archivo temporal inicial
           echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > "REPOSITORIOS-GITHUB 2026.txt"
           
-          # Buscamos TODO tipo de archivo en la rama main, excluyendo ocultos (.git, etc)
-          find . -type f ! -path '*/.*' | while read -r file; do
+          # CORREGIDO: Usamos "! -name" para ignorar por completo el archivo que estamos escribiendo
+          find . -type f ! -path '*/.*' ! -name "REPOSITORIOS-GITHUB 2026.txt" | while read -r file; do
             
             # Verificamos si el archivo contiene texto legible
             if file "$file" | grep -qE 'text|empty|JSON'; then
@@ -35,5 +35,6 @@ jobs:
           credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
           filename: "REPOSITORIOS-GITHUB 2026.txt"
           folderId: "16h3KIgT3XeiAbt6U4r3OV5Yao0RTw"
-          name: "REPOSITORIOS-GITHUB 2026" # Nombre final del documento en Drive
+          name: "REPOSITORIOS-GITHUB 2026"
           overwrite: "true"
+
