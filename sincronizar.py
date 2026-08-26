@@ -8,27 +8,37 @@ def main():
     # 1. Fusionar contenido de los archivos legibles
     consolidado = "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===\n"
     
+    # CORREGIDO: Buscamos de forma directa en el directorio actual sin rompernos con rutas del servidor
     for root, dirs, files in os.walk("."):
-        # Ignorar carpetas ocultas (como .git o .github)
-        if any(part.startswith(".") for part in root.split(os.sep)):
-            continue
-            
+        # Filtrar de forma segura para ignorar carpetas ocultas del sistema de GitHub (.git, .github)
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        
         for file in files:
-            # Evitar leer el propio script de sincronización
-            if file == "sincronizar.py":
+            # Evitar leer archivos de configuración y el propio script de Python
+            if file in ["sincronizar.py", "package-lock.json", "package.json"]:
                 continue
                 
             filepath = os.path.join(root, file)
+            # Limpiamos la ruta estética para el documento final (ej: ./src/codigo.gs)
+            clean_path = os.path.relpath(filepath, ".")
+            
             try:
-                # Validar si el archivo es de texto legible
+                # Validar si el archivo es de texto legible o códigos .gs / .js / .md
                 result = subprocess.run(["file", filepath], capture_output=True, text=True)
-                if "text" in result.stdout or "empty" in result.stdout or "JSON" in result.stdout:
+                es_texto = "text" in result.stdout or "empty" in result.stdout or "JSON" in result.stdout
+                es_codigo = file.endswith(('.gs', '.js', '.md', '.txt', '.json', '.html'))
+                
+                if es_texto or es_codigo:
                     with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                        consolidado += f"\n\n=========================================\n"
-                        consolidado += f" RUTA DEL ARCHIVO: {filepath}\n"
-                        consolidado += f"=========================================\n\n"
-                        consolidado += f.read() + "\n"
-            except Exception:
+                        contenido = f.read().strip()
+                        # Solo agregamos el archivo si realmente tiene código o letras adentro
+                        if contenido:
+                            consolidado += f"\n\n=========================================\n"
+                            consolidado += f" RUTA DEL ARCHIVO: ./{clean_path}\n"
+                            consolidado += f"=========================================\n\n"
+                            consolidado += contenido + "\n"
+            except Exception as e:
+                print(f"No se pudo leer el archivo {clean_path}: {str(e)}")
                 continue
 
     # 2. Autenticarse en Google Drive y Docs
@@ -57,7 +67,7 @@ def main():
     end_index = doc.get("body").get("content")[-1].get("endIndex")
 
     requests = []
-    # Si el documento tiene texto previo, lo borramos (dejando el caracter mínimo 1)
+    # Si el documento tiene texto previo, lo borramos (dejando el carácter mínimo 1)
     if end_index > 2:
         requests.append({"deleteContentRange": {"range": {"startIndex": 1, "endIndex": end_index - 1}}})
         
