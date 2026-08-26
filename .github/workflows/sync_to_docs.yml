@@ -5,7 +5,6 @@ on:
     branches:
       - main
 
-
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -15,13 +14,11 @@ jobs:
 
       - name: Fusionar absolutamente todos los archivos legibles en uno solo
         run: |
-          # Creamos el archivo temporal inicial
+          # Creamos el archivo base temporal
           echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > "REPOSITORIOS-GITHUB 2026.txt"
           
           # Buscamos todo tipo de archivo en la rama main, excluyendo ocultos y el de salida
           find . -type f ! -path '*/.*' ! -name "REPOSITORIOS-GITHUB 2026.txt" | while read -r file; do
-            
-            # Verificamos si el archivo contiene texto legible
             if file "$file" | grep -qE 'text|empty|JSON'; then
               echo -e "\n\n=========================================" >> "REPOSITORIOS-GITHUB 2026.txt"
               echo -e " RUTA DEL ARCHIVO: $file" >> "REPOSITORIOS-GITHUB 2026.txt"
@@ -30,20 +27,12 @@ jobs:
             fi
           done
 
-      # PASO CLAVE NUEVO: Convierte tu JSON crudo a Base64 dinámicamente y lo guarda en una variable temporal
-      - name: Preparar Credenciales Base64
-        id: b64_auth
-        run: |
-          B64_DATA=$(echo '${{ secrets.GOOGLE_CREDENTIALS }}' | base64 -w 0)
-          echo "::add-mask::$B64_DATA"
-          echo "encoded_creds=$B64_DATA" >> $GITHUB_OUTPUT
-
-      - name: Subir y Convertir a Google Docs único
-        uses: adityak74/google-drive-upload-git-action@main
+      - name: Subir y Forzar Reemplazo en Google Docs
+        uses: skofgar/google-drive-upload-action@v1
         with:
-          # Usamos el parámetro correcto alimentado por el paso de conversión anterior
-          credentials: ${{ steps.b64_auth.outputs.encoded_creds }}
+          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
           filename: "REPOSITORIOS-GITHUB 2026.txt"
           folderId: "16h3KIgT3XeiAbt6U4r3OV5Yao0RTw-zC"
-          name: "REPOSITORIOS-GITHUB 2026"
-          overwrite: "true"
+          overwrite: true
+          # Forzamos la actualización del documento de procesamiento de texto existente
+          mimeType: "application/vnd.google-apps.document"
