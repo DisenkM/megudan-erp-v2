@@ -17,7 +17,7 @@ jobs:
           # Creamos el archivo temporal inicial
           echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > "REPOSITORIOS-GITHUB 2026.txt"
           
-          # Buscamos TODO tipo de archivo en la rama main, excluyendo ocultos y el de salida
+          # Buscamos todo tipo de archivo en la rama main, excluyendo ocultos y el de salida
           find . -type f ! -path '*/.*' ! -name "REPOSITORIOS-GITHUB 2026.txt" | while read -r file; do
             
             # Verificamos si el archivo contiene texto legible
@@ -29,11 +29,19 @@ jobs:
             fi
           done
 
+      # PASO CLAVE NUEVO: Convierte tu JSON crudo a Base64 dinámicamente y lo guarda en una variable temporal
+      - name: Preparar Credenciales Base64
+        id: b64_auth
+        run: |
+          B64_DATA=$(echo '${{ secrets.GOOGLE_CREDENTIALS }}' | base64 -w 0)
+          echo "::add-mask::$B64_DATA"
+          echo "encoded_creds=$B64_DATA" >> $GITHUB_OUTPUT
+
       - name: Subir y Convertir a Google Docs único
         uses: adityak74/google-drive-upload-git-action@main
         with:
-          # CORREGIDO: Usamos "credentials_json" en lugar de "credentials" para que acepte tu secreto tal como está
-          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+          # Usamos el parámetro correcto alimentado por el paso de conversión anterior
+          credentials: ${{ steps.b64_auth.outputs.encoded_creds }}
           filename: "REPOSITORIOS-GITHUB 2026.txt"
           folderId: "16h3KIgT3XeiAbt6U4r3OV5Yao0RTw"
           name: "REPOSITORIOS-GITHUB 2026"
