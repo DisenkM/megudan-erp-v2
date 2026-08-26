@@ -1,9 +1,9 @@
-name: Sincronizar a Google Docs
+name: Fusionar Todo el Repositorio a un solo Google Doc
 
 on:
   push:
     branches:
-      - main  # Cambia a "master" si tu rama principal se llama así
+      - main
 
 jobs:
   sync:
@@ -12,11 +12,31 @@ jobs:
       - name: Clonar repositorio
         uses: actions/checkout@v4
 
-      - name: Subir y Convertir a Google Docs
+      - name: Fusionar absolutamente todos los archivos legibles en uno solo
+        run: |
+          # Creamos el archivo base con un título claro
+          echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > repositorio_completo.txt
+          
+          # Buscamos TODO tipo de archivo (-type f) en la rama main
+          # Excluimos la carpeta oculta de GitHub (.github) para no incluir este propio script
+          find . -type f ! -path '*/.*' | while read -r file; do
+            
+            # Verificamos rápidamente si el archivo contiene texto legible antes de meterlo
+            # Esto evita que se rompa con imágenes, PDFs o archivos binarios pesados
+            if file "$file" | grep -qE 'text|empty|JSON'; then
+              echo -e "\n\n=========================================" >> repositorio_completo.txt
+              echo -e " RUTA DEL ARCHIVO: $file" >> repositorio_completo.txt
+              echo -e "=========================================\n" >> repositorio_completo.txt
+              cat "$file" >> repositorio_completo.txt
+            fi
+          done
+
+      - name: Subir y Convertir a Google Docs único
         uses: adityasshari/upload-to-drive@v2
         with:
           credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
-          filename: 'README.md' # <- Pon aquí el archivo de tu repo que quieres mandar a Docs (ej. README.md)
-          folderId: 'TU_ID_DE_CARPETA_DE_GOOGLE_DRIVE' # <- REEMPLAZA ESTO
-          overwrite: true
+          filename: 'REPOSITORIOS-GITHUB 2026' # Este será el único nombre en tu Google Drive
+          folderId: '16h3KIgT3XeiAbt6U4r3OV5Yao0RTw'
+          overwrite: true # Actualiza exactamente este archivo sin tocar el resto de tu carpeta
           convertToGoogleDocs: true
+
