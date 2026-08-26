@@ -14,20 +14,18 @@ jobs:
 
       - name: Fusionar absolutamente todos los archivos legibles en uno solo
         run: |
-          # Creamos el archivo base con un título claro
-          echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > repositorio_completo.txt
+          # 1. CORREGIDO: Creamos el archivo directamente con el nombre que quieres en Drive
+          echo "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===" > "REPOSITORIOS-GITHUB 2026.txt"
           
-          # Buscamos TODO tipo de archivo (-type f) en la rama main
-          # Excluimos la carpeta oculta de GitHub (.github) para no incluir este propio script
+          # Buscamos TODO tipo de archivo en la rama main
           find . -type f ! -path '*/.*' | while read -r file; do
             
-            # Verificamos rápidamente si el archivo contiene texto legible antes de meterlo
-            # Esto evita que se rompa con imágenes, PDFs o archivos binarios pesados
+            # Verificamos si el archivo contiene texto legible
             if file "$file" | grep -qE 'text|empty|JSON'; then
-              echo -e "\n\n=========================================" >> repositorio_completo.txt
-              echo -e " RUTA DEL ARCHIVO: $file" >> repositorio_completo.txt
-              echo -e "=========================================\n" >> repositorio_completo.txt
-              cat "$file" >> repositorio_completo.txt
+              echo -e "\n\n=========================================" >> "REPOSITORIOS-GITHUB 2026.txt"
+              echo -e " RUTA DEL ARCHIVO: $file" >> "REPOSITORIOS-GITHUB 2026.txt"
+              echo -e "=========================================\n" >> "REPOSITORIOS-GITHUB 2026.txt"
+              cat "$file" >> "REPOSITORIOS-GITHUB 2026.txt"
             fi
           done
 
@@ -35,8 +33,8 @@ jobs:
         uses: adityasshari/upload-to-drive@v2
         with:
           credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
-          filename: 'REPOSITORIOS-GITHUB 2026' # Este será el único nombre en tu Google Drive
+          # 2. CORREGIDO: Ahora el nombre coincide exactamente con el archivo físico creado arriba
+          filename: 'REPOSITORIOS-GITHUB 2026.txt' 
           folderId: '16h3KIgT3XeiAbt6U4r3OV5Yao0RTw'
-          overwrite: true # Actualiza exactamente este archivo sin tocar el resto de tu carpeta
+          overwrite: true 
           convertToGoogleDocs: true
-
