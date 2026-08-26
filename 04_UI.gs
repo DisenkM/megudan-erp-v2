@@ -1,13 +1,9 @@
-/**************************************************************
-* 04_UI.gs
-* RESPONSABILIDAD:
-* - Administrar la identidad visual de Google Sheets.
-* - Colorear las pestañas físicas del libro ERP de forma automática según módulo.
-**************************************************************/
+// ============================================================
+// 04. UI - APARIENCIA Y DISEÑO VISUAL
+// ARCHIVO: 04_UI.gs
+// RESPONSABILIDAD: Coloreado e identidad visual de las pestañas de Sheets
+// ============================================================
 
-// ============================================================
-// 01. PALETA DE COLORES POR GRUPO MODULAR (ÚNICA FUENTE)
-// ============================================================
 const COLORES_ERP = {
   CONFIGURACION: "#6B7280",
   CLIENTES: "#2563EB",
@@ -27,88 +23,152 @@ const COLORES_ERP = {
   MENU: "#111827"
 };
 
-// ============================================================
-// 02. ASOCIACIÓN DE HOJAS FÍSICAS A CADA GRUPO
-// ============================================================
 const HOJAS_ERP = {
   CONFIGURACION: [
-    "CFG_EMPRESA", "CFG_SISTEMA", "CFG_DOCUMENTOS", "CFG_IMPUESTOS", 
-    "CFG_CONTABILIDAD", "CFG_INVENTARIO", "CFG_COSTOS"
+    "CFG_EMPRESA",
+    "CFG_SISTEMA",
+    "CFG_DOCUMENTOS",
+    "CFG_IMPUESTOS",
+    "CFG_CONTABILIDAD",
+    "CFG_INVENTARIO",
+    "CFG_COSTOS"
   ],
   CLIENTES: [
-    "CLI_MAESTRO", "CLI_HISTORIAL"
+    "CLI_MAESTRO",
+    "CLI_HISTORIAL"
   ],
   PROVEEDORES: [
-    "PROV_MAESTRO", "PROV_FORM", "PROV_HISTORIAL"
+    "PROV_MAESTRO",
+    "PROV_FORM",
+    "PROV_HISTORIAL"
   ],
   PRODUCTOS: [
-    "PROD_MAESTRO", "PROD_CATEGORIAS", "PROD_UNIDADES", "PROD_TIPOS", "PROD_PRECIOS"
+    "PROD_MAESTRO",
+    "PROD_CATEGORIAS",
+    "PROD_UNIDADES",
+    "PROD_TIPOS",
+    "PROD_PRECIOS"
   ],
   OBRAS: [
-    "OBR_MAESTRO", "OBR_PRESUPUESTO", "OBR_AVANCE", "OBR_RECURSOS"
+    "OBR_MAESTRO",
+    "OBR_PRESUPUESTO",
+    "OBR_AVANCE",
+    "OBR_RECURSOS"
   ],
   VENTAS: [
-    "VEN_CABECERA", "VEN_DETALLE", "VEN_DOCUMENTOS", "VEN_HISTORIAL"
+    "VEN_CABECERA",
+    "VEN_DETALLE",
+    "VEN_DOCUMENTOS",
+    "VEN_HISTORIAL"
   ],
   COMPRAS: [
-    "COM_CABECERA", "COM_DETALLE", "COM_DOCUMENTOS", "COM_HISTORIAL"
+    "COM_CABECERA",
+    "COM_DETALLE",
+    "COM_DOCUMENTOS",
+    "COM_HISTORIAL"
   ],
   INVENTARIO: [
-    "INV_MOVIMIENTOS", "INV_SALDOS", "INV_KARDEX", "INV_AJUSTES", "INV_TRASLADOS"
+    "INV_MOVIMIENTOS",
+    "INV_SALDOS",
+    "INV_KARDEX",
+    "INV_AJUSTES",
+    "INV_TRASLADOS"
   ],
   INGRESOS: [
-    "ING_MOVIMIENTOS", "ING_RECAUDOS", "ING_HISTORIAL"
+    "ING_MOVIMIENTOS",
+    "ING_RECAUDOS",
+    "ING_HISTORIAL"
   ],
   COSTOS: [
-    "COS_MOVIMIENTOS", "COS_CATEGORIAS", "COS_HISTORIAL"
+    "COS_MOVIMIENTOS",
+    "COS_CATEGORIAS",
+    "COS_HISTORIAL"
   ],
   GASTOS: [
-    "GAS_MOVIMIENTOS", "GAS_CATEGORIAS", "GAS_HISTORIAL"
+    "GAS_MOVIMIENTOS",
+    "GAS_CATEGORIAS",
+    "GAS_HISTORIAL"
   ],
   CARTERA: [
-    "CAR_CUENTAS", "CAR_RECAUDOS", "CAR_VENCIMIENTOS", "CAR_HISTORIAL"
+    "CAR_CUENTAS",
+    "CAR_RECAUDOS",
+    "CAR_VENCIMIENTOS",
+    "CAR_HISTORIAL"
   ],
   CUENTAS_POR_PAGAR: [
-    "CXP_CUENTAS", "CXP_PAGOS", "CXP_VENCIMIENTOS", "CXP_HISTORIAL"
+    "CXP_CUENTAS",
+    "CXP_PAGOS",
+    "CXP_VENCIMIENTOS",
+    "CXP_HISTORIAL"
   ],
   TESORERIA: [
-    "TES_CUENTAS", "TES_MOVIMIENTOS", "TES_PAGOS", "TES_RECAUDOS", "TES_CONCILIACION"
+    "TES_CUENTAS",
+    "TES_MOVIMIENTOS",
+    "TES_PAGOS",
+    "TES_RECAUDOS",
+    "TES_CONCILIACION"
   ],
   SEGURIDAD: [
-    "USR_USUARIOS", "USR_ROLES", "USR_PERMISOS", "USR_SESIONES", "USR_AUDITORIA"
+    "USR_USUARIOS",
+    "USR_ROLES",
+    "USR_PERMISOS",
+    "USR_SESIONES",
+    "USR_AUDITORIA"
   ]
 };
 
-// ============================================================
-// 03. APLICAR COLORES DE PESTAÑAS AUTOMÁTICAMENTE
-// ============================================================
+/**
+ * Colorea de forma segura y automatizada las pestañas físicas de Sheets.
+ */
 function COLOREAR_TODAS_LAS_PESTANAS() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let coloreadas = 0;
-  let noEncontradas = [];
+  const noEncontradas = [];
 
-  Object.entries(HOJAS_ERP).forEach(function([modulo, hojas]) {
+  Object.keys(HOJAS_ERP).forEach(function(modulo) {
     const color = COLORES_ERP[modulo];
+    const hojas = HOJAS_ERP[modulo];
+
     hojas.forEach(function(nombreHoja) {
-      const hoja = ss.getSheetByName(nombreHoja);
-      if (hoja) {
-        hoja.setTabColor(color);
-        coloreadas++;
-      } else {
-        noEncontradas.push(nombreHoja);
+      try {
+        const hoja = ss.getSheetByName(nombreHoja);
+        if (hoja) {
+          hoja.setTabColor(color);
+          coloreadas++;
+        } else {
+          noEncontradas.push(nombreHoja);
+        }
+      } catch (e) {
+        console.error("No se pudo colorear la pestaña '" + nombreHoja + "': " + e.toString());
       }
     });
   });
 
-  const menu = ss.getSheetByName("🏠MENU");
-  if (menu) {
-    menu.setTabColor(COLORES_ERP.MENU);
-    coloreadas++;
+  // Colorear hoja unificada de inicio de forma segura
+  try {
+    const menu = ss.getSheetByName("🏠MENU");
+    if (menu) {
+      menu.setTabColor(COLORES_ERP.MENU);
+      coloreadas++;
+    } else {
+      noEncontradas.push("🏠MENU");
+    }
+  } catch (e) {
+    console.error("No se pudo colorear la pestaña '🏠MENU': " + e.toString());
   }
 
   SpreadsheetApp.flush();
-  console.log("Pestañas coloreadas de manera exitosa: " + coloreadas);
+  REGISTRAR_RESULTADO_COLORES(coloreadas, noEncontradas);
+}
+
+function REGISTRAR_RESULTADO_COLORES(coloreadas, noEncontradas) {
+  console.log("=================================");
+  console.log("🎨 COLORES DEL ERP APLICADOS");
+  console.log("=================================");
+  console.log("Pestañas coloreadas: " + coloreadas);
+  console.log("Hojas no encontradas: " + noEncontradas.length);
   if (noEncontradas.length > 0) {
-    console.info("Hojas que no se han creado en el libro: " + noEncontradas.join(", "));
+    console.warn("Hojas parametrizadas no existentes físicamente: " + noEncontradas.join(", "));
   }
+  console.log("=================================");
 }

@@ -1,38 +1,84 @@
-/**************************************************************
-* 01_CORE.gs
-* RESPONSABILIDAD:
-* - Definir el punto de enlace y eventos globales de Google Sheets.
-* - Generar el menú nativo superior para el lanzamiento de los formularios modal.
-**************************************************************/
+// ============================================================
+// 01. CORE - NAVEGACIÓN Y CONFIGURACIÓN DE INTERFAZ SPREADSHEET
+// ARCHIVO: 01_CORE.gs
+// RESPONSABILIDAD: Menús personalizados, diálogos modales y utilidades de UI seguras
+// ============================================================
 
-// ============================================================
-// 01. EVENTOS GLOBALES DE GOOGLE SHEETS
-// ============================================================
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu("FORMULARIOS")
-    .addItem("👥 Abrir Formulario de Clientes", "ABRIR_CLIENTES")
-    .addItem("👤 Abrir Gestión de Usuarios", "ABRIR_USUARIOS")
-    .addToUi();
+/**
+ * Genera de forma segura el menú personalizado en Google Sheets.
+ * Es invocado por el disparador central onOpen() en 22_TRIGGERS.gs.
+ */
+function CORE_onOpen() {
+  const ui = CORE_OBTENER_UI();
+  if (!ui) {
+    console.log("onOpen ejecutado en contexto sin interfaz gráfica (Headless).");
+    return;
+  }
+  try {
+    ui.createMenu("FORMULARIOS")
+      .addItem("👥 Abrir Clientes", "ABRIR_CLIENTES")
+      .addItem("👤 Abrir Gestión de Usuarios", "ABRIR_USUARIOS")
+      .addToUi();
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("CORE_onOpen", "CORE", error);
+    }
+  }
 }
 
-// ============================================================
-// 02. LANZADORES DE FORMULARIOS MODALES (FRONTEND)
-// ============================================================
+/**
+ * Abre la ventana modal del Formulario de Clientes de forma segura.
+ */
 function ABRIR_CLIENTES() {
-  // Asegúrate de que el archivo HTML se llame exactamente "F1_CLI_FORM"
-  const html = HtmlService
-    .createHtmlOutputFromFile("F1_CLI_FORM")
-    .setWidth(1200)
-    .setHeight(800);
-  SpreadsheetApp.getUi().showModalDialog(html, "👥 Gestión de Clientes - MEGUDAN");
+  const ui = CORE_OBTENER_UI();
+  if (!ui) {
+    console.warn("Spreadsheet UI no disponible.");
+    return;
+  }
+  try {
+    const html = HtmlService.createHtmlOutputFromFile("F1_CLI_FORM")
+      .setWidth(1200)
+      .setHeight(800);
+    ui.showModalDialog(html, "👥 Gestión de Clientes");
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("ABRIR_CLIENTES", "CORE", error);
+    }
+    ui.alert("Error", "No se pudo abrir el formulario de clientes: " + error.message, ui.ButtonSet.OK);
+  }
 }
 
+/**
+ * Abre el panel de Gestión de Usuarios y Seguridad de forma segura.
+ */
 function ABRIR_USUARIOS() {
-  // Asegúrate de que el archivo HTML se llame exactamente "F2_USR_GESTION"
-  const html = HtmlService
-    .createHtmlOutputFromFile("F2_USR_GESTION")
-    .setWidth(1200)
-    .setHeight(800);
-  SpreadsheetApp.getUi().showModalDialog(html, "🔐 Control de Seguridad y Usuarios");
+  const ui = CORE_OBTENER_UI();
+  if (!ui) {
+    console.warn("Spreadsheet UI no disponible.");
+    return;
+  }
+  try {
+    const html = HtmlService.createHtmlOutputFromFile("F2_USR_GESTION")
+      .setWidth(1200)
+      .setHeight(800);
+    ui.showModalDialog(html, "🔐 Gestión de Seguridad y Control de Acceso");
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("ABRIR_USUARIOS", "CORE", error);
+    }
+    ui.alert("Error", "No se pudo abrir la gestión de seguridad: " + error.message, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Obtiene el objeto UI de Google Sheets de forma segura.
+ * Evita el error fatal "Cannot call SpreadsheetApp.getUi() from this context"
+ * retornando null en hilos automatizados o peticiones web.
+ */
+function CORE_OBTENER_UI() {
+  try {
+    return SpreadsheetApp.getUi();
+  } catch (e) {
+    return null;
+  }
 }

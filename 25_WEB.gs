@@ -1,55 +1,43 @@
-/// ============================================================
-// 25. WEB
-// Aplicación web del ERP.
-// Gestiona el acceso mediante enlace, rutas y vistas HTML.
+// ============================================================
+// 25. WEB - SISTEMA DE ENRUTAMIENTO Y RENDERIZADO WEB APP
+// ARCHIVO: 25_WEB.gs
+// RESPONSABILIDAD: Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs
 // ============================================================
 
-// ============================================================
-// 01. CONFIGURACIÓN DEL MÓDULO WEB (Nombres de archivos reales)
-// ============================================================
 const WEB_CONFIG = {
-  // VISTAS HTML - Corregido para coincidir exactamente con tu repositorio de GitHub
   LOGIN: "F3_WEB_LOGIN",
   DASHBOARD: "F4_WEB_DASHBOARD",
-
-  // RUTAS PRINCIPALES
+  
   RUTA_LOGIN: "login",
   RUTA_DASHBOARD: "dashboard",
-
-  // CONFIGURACIÓN DE INTERFAZ
+  
   TITULO_ERP: "MEGUDAN ERP",
   ANCHO_LOGIN: 1200,
   ALTO_LOGIN: 800
 };
 
-// ============================================================
-// 02. PUNTO DE ENTRADA DE LA APLICACIÓN WEB
-// Esta función se ejecuta cuando un usuario abre el enlace
-// de la aplicación web.
-// ============================================================
-function doGet(e) {
+/**
+ * Procesa la petición GET de la Web App delegada desde 22_TRIGGERS.gs.
+ */
+function WEB_doGet(e) {
   const parametros = e && e.parameter ? e.parameter : {};
   const ruta = String(parametros.ruta || WEB_CONFIG.RUTA_LOGIN).trim().toLowerCase();
 
   switch (ruta) {
-    // LOGIN
     case WEB_CONFIG.RUTA_LOGIN:
       return WEB_MOSTRAR_LOGIN();
 
-    // DASHBOARD
     case WEB_CONFIG.RUTA_DASHBOARD:
       return WEB_MOSTRAR_DASHBOARD(parametros);
 
-    // RUTA NO ENCONTRADA
     default:
       return WEB_MOSTRAR_ERROR("La página solicitada no existe.");
   }
 }
 
-// ============================================================
-// 03. MOSTRAR LOGIN
-// Carga la página de inicio de sesión.
-// ============================================================
+/**
+ * Carga la pantalla de inicio de sesión (F3_WEB_LOGIN).
+ */
 function WEB_MOSTRAR_LOGIN() {
   return HtmlService
     .createTemplateFromFile(WEB_CONFIG.LOGIN)
@@ -58,11 +46,9 @@ function WEB_MOSTRAR_LOGIN() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ============================================================
-// 04. MOSTRAR DASHBOARD
-// Carga el panel principal del ERP si el token es válido.
-// Conectado con la lógica de 23_SEGURIDAD.gs.
-// ============================================================
+/**
+ * Carga el Dashboard Principal (F4_WEB_DASHBOARD) validando previamente el token.
+ */
 function WEB_MOSTRAR_DASHBOARD(parametros) {
   const tokenSesion = String(parametros.token || "").trim();
 
@@ -70,16 +56,15 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
     return WEB_REDIRECCION_LOGIN("Debe iniciar sesión.");
   }
 
-  // VALIDAR SESIÓN con el backend de 23_SEGURIDAD.gs
+  // Validación robusta cruzada de sesión contra 23_SEGURIDAD.gs
   const validacion = SEG_VALIDAR_SESION(tokenSesion);
   if (!validacion.VALIDA) {
     return WEB_REDIRECCION_LOGIN(validacion.MENSAJE);
   }
 
-  // CARGAR DASHBOARD (F4_WEB_DASHBOARD)
   const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.DASHBOARD);
-
-  // ENVIAR DATOS A LA VISTA
+  
+  // Inyección segura de variables asíncronas de sesión
   plantilla.TOKEN_SESION = tokenSesion;
   plantilla.ID_USUARIO = validacion.SESION.ID_USUARIO;
   plantilla.USUARIO = validacion.SESION.USUARIO;
@@ -90,10 +75,9 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ============================================================
-// 05. REDIRECCIÓN AL LOGIN
-// Muestra una página intermedia que redirige al usuario.
-// ============================================================
+/**
+ * Genera la pantalla intermedia que fuerza la redirección JavaScript al login.
+ */
 function WEB_REDIRECCION_LOGIN(mensaje) {
   const mensajeSeguro = String(mensaje || "Debe iniciar sesión.").replace(/"/g, "&quot;");
   const html = `
@@ -113,16 +97,12 @@ function WEB_REDIRECCION_LOGIN(mensaje) {
     </body>
     </html>
   `;
-
-  return HtmlService
-    .createHtmlOutput(html)
-    .setTitle(WEB_CONFIG.TITULO_ERP + " | Redirigiendo");
+  return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Redirigiendo");
 }
 
-// ============================================================
-// 06. MOSTRAR ERROR WEB
-// Muestra una página básica cuando ocurre un error de navegación.
-// ============================================================
+/**
+ * Genera una página de error web uniforme.
+ */
 function WEB_MOSTRAR_ERROR(mensaje) {
   const html = `
     <!DOCTYPE html>
@@ -137,23 +117,5 @@ function WEB_MOSTRAR_ERROR(mensaje) {
     </body>
     </html>
   `;
-
-  return HtmlService
-    .createHtmlOutput(html)
-    .setTitle(WEB_CONFIG.TITULO_ERP + " | Error");
-}
-
-// ============================================================
-// 07. ABRIR LOGIN DESDE GOOGLE SHEETS
-// Permite abrir el formulario de login desde el menú de Sheets.
-// ============================================================
-function WEB_ABRIR_LOGIN() {
-  const html = HtmlService
-    .createHtmlOutputFromFile(WEB_CONFIG.LOGIN)
-    .setWidth(WEB_CONFIG.ANCHO_LOGIN)
-    .setHeight(WEB_CONFIG.ALTO_LOGIN);
-  
-  SpreadsheetApp
-    .getUi()
-    .showModalDialog(html, WEB_CONFIG.TITULO_ERP + " | Iniciar sesión");
+  return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Error");
 }

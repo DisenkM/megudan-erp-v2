@@ -1315,7 +1315,7 @@ function SEG_REGISTRAR_AUDITORIA(datos) {
     const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, registro);
     hoja.appendRow(nuevaFila);
   } catch (error) {
-    console.error("Error al registrar auditoría en USR_AUDITORIA: " + error.toString());
+    if (typeof LOG_REGISTRAR_ERROR === "function") { LOG_REGISTRAR_ERROR("SEG_REGISTRAR_AUDITORIA", "SEGURIDAD", error); } else { console.error(error); }
   }
 }
 
@@ -1384,7 +1384,7 @@ function SEG_OBTENER_ROLES() {
     SEG_INICIALIZAR_ROLES_PREDEFINIDOS(); // Autopoblar si está vacía
     return SEG_LISTAR_ROLES();
   } catch (error) {
-    console.error("Error en SEG_OBTENER_ROLES: " + error.toString());
+    if (typeof LOG_REGISTRAR_ERROR === "function") { LOG_REGISTRAR_ERROR("SEG_OBTENER_ROLES", "SEGURIDAD", error); } else { console.error(error); }
     throw new Error("No se pudieron cargar los roles de la base de datos.");
   }
 }
@@ -1401,7 +1401,7 @@ function SEG_OBTENER_PERMISOS() {
       return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
     });
   } catch (error) {
-    console.error("Error en SEG_OBTENER_PERMISOS: " + error.toString());
+    if (typeof LOG_REGISTRAR_ERROR === "function") { LOG_REGISTRAR_ERROR("SEG_OBTENER_PERMISOS", "SEGURIDAD", error); } else { console.error(error); }
     throw new Error("No se pudieron cargar los permisos de la base de datos.");
   }
 }
@@ -1589,7 +1589,7 @@ function SEG_APROBAR_USUARIO(idUsuario, idRol, usuarioActualizador) {
       MENSAJE: "Usuario '" + resultadoRol.USUARIO.USUARIO + "' aprobado con éxito. Rol asignado: " + rol.NOMBRE_ROL + "."
     };
   } catch (error) {
-    console.error("Error en SEG_APROBAR_USUARIO: " + error.toString());
+    if (typeof LOG_REGISTRAR_ERROR === "function") { LOG_REGISTRAR_ERROR("SEG_APROBAR_USUARIO", "SEGURIDAD", error); } else { console.error(error); }
     throw new Error(error.message || error.toString());
   }
 }
