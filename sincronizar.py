@@ -1,0 +1,71 @@
+import os
+import json
+import subprocess
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
+def main():
+    # 1. Fusionar contenido de los archivos legibles
+    consolidado = "=== CONSOLIDADO COMPLETO DEL REPOSITORIO ===\n"
+    
+    for root, dirs, files in os.walk("."):
+        # Ignorar carpetas ocultas (como .git o .github)
+        if any(part.startswith(".") for part in root.split(os.sep)):
+            continue
+            
+        for file in files:
+            # Evitar leer el propio script de sincronización
+            if file == "sincronizar.py":
+                continue
+                
+            filepath = os.path.join(root, file)
+            try:
+                # Validar si el archivo es de texto legible
+                result = subprocess.run(["file", filepath], capture_output=True, text=True)
+                if "text" in result.stdout or "empty" in result.stdout or "JSON" in result.stdout:
+                    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                        consolidado += f"\n\n=========================================\n"
+                        consolidado += f" RUTA DEL ARCHIVO: {filepath}\n"
+                        consolidado += f"=========================================\n\n"
+                        consolidado += f.read() + "\n"
+            except Exception:
+                continue
+
+    # 2. Autenticarse en Google Drive y Docs
+    creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+    creds = service_account.Credentials.from_service_account_info(creds_dict)
+    drive_service = build("drive", "v3", credentials=creds)
+    docs_service = build("docs", "v1", credentials=creds)
+
+    # 3. Buscar el Google Doc existente creado por el usuario en la carpeta
+    folder_id = os.environ["FOLDER_ID"]
+    doc_name = os.environ["DOCUMENT_NAME"]
+    
+    query = f"name = '{doc_name}' and '{folder_id}' in parents and mimeType = 'application/vnd.google-apps.document' and trashed = false"
+    results = drive_service.files().list(q=query, spaces="drive", fields="files(id)").execute()
+    items = results.get("files", [])
+
+    if not items:
+        print(f"Error: No se encontró el documento de Google Docs llamado '{doc_name}' en la carpeta.")
+        exit(1)
+        
+    doc_id = items[0]["id"]
+    print(f"Documento encontrado con ID: {doc_id}")
+
+    # 4. Vaciar el contenido viejo e inyectar el nuevo consolidado
+    doc = docs_service.documents().get(documentId=doc_id).execute()
+    end_index = doc.get("body").get("content")[-1].get("endIndex")
+
+    requests = []
+    # Si el documento tiene texto previo, lo borramos (dejando el caracter mínimo 1)
+    if end_index > 2:
+        requests.append({"deleteContentRange": {"range": {"startIndex": 1, "endIndex": end_index - 1}}})
+        
+    # Insertamos todo el repositorio unificado
+    requests.append({"insertText": {"location": {"index": 1}, "text": consolidado}})
+
+    docs_service.documents().batchUpdate(documentId=doc_id, body={"requests": requests}).execute()
+    print("¡Sincronización completada con éxito!")
+
+if __name__ == "__main__":
+    main()
