@@ -1,133 +1,71 @@
 /**************************************************************
- * 03_MENU.gs
- * ERP OPERATIVO
- *
- * RESPONSABILIDAD:
- * - Administrar la navegación interna del ERP.
- * - Crear y actualizar hipervínculos del 🏠MENU.
- * - Detectar las hojas existentes.
- *
- * ESTE ARCHIVO NO:
- * - Crea hojas.
- * - Elimina hojas.
- * - Modifica columnas.
- * - Colorea pestañas.
- * - Abre formularios HTML.
- **************************************************************/
+* 03_MENU.gs
+* RESPONSABILIDAD:
+* - Administrar la navegación del ERP mediante enlaces dinámicos en Sheets.
+* - Escanear la pestaña 🏠MENU para inyectar enlaces asíncronos en tiempo real.
+**************************************************************/
 
 // ============================================================
-// 01. CONFIGURACIÓN
+// 01. CONFIGURACIÓN DEL MÓDULO DE MENÚ NAVEGABLE
 // ============================================================
 const MENU_CONFIG = {
-  // Nombre de la hoja principal de navegación
   NOMBRE_MENU: "🏠MENU",
-  
-  // Símbolo que identifica una opción navegable
   SIMBOLO_ENLACE: "↳"
 };
 
 // ============================================================
-// 02. ACTUALIZAR MENÚ
-// Recorre la columna A del 🏠MENU y crea los hipervínculos
-// hacia las hojas existentes del ERP.
+// 02. ACTUALIZAR ENLACES DEL MENÚ EN GOOGLE SHEETS
 // ============================================================
 function ACTUALIZAR_MENU() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  // Obtener la hoja del menú
   const menu = ss.getSheetByName(MENU_CONFIG.NOMBRE_MENU);
-  if (!menu) {
-    throw new Error("No existe la hoja " + MENU_CONFIG.NOMBRE_MENU + ".");
-  }
   
+  if (!menu) {
+    throw new Error("No existe la hoja de Menú principal.");
+  }
+
   const ultimaFila = menu.getLastRow();
   if (ultimaFila < 1) {
-    throw new Error("La hoja " + MENU_CONFIG.NOMBRE_MENU + " está vacía.");
+    throw new Error("El Menú de navegación se encuentra vacío.");
   }
-  
-  let enlaces = 0;
-  const noEncontradas = [];
-  
-  // Recorrer la columna A del menú
+
+  let enlacesCreados = 0;
+  let noEncontradas = [];
+
   for (let fila = 1; fila <= ultimaFila; fila++) {
     const celda = menu.getRange(fila, 1);
     const texto = celda.getDisplayValue();
-    
-    // Ignorar celdas vacías
-    if (!texto) {
+
+    if (!texto || !texto.includes(MENU_CONFIG.SIMBOLO_ENLACE)) {
       continue;
     }
-    
-    // Identificar opciones navegables
-    if (!texto.includes(MENU_CONFIG.SIMBOLO_ENLACE)) {
-      continue;
-    }
-    
-    // Obtener el nombre real de la hoja destino
-    const nombreHoja = OBTENER_NOMBRE_HOJA_MENU(texto);
-    if (!nombreHoja) {
-      continue;
-    }
-    
-    // Buscar la hoja de destino en el libro activo
+
+    // Extraer y limpiar el nombre físico de la pestaña
+    const nombreHoja = texto.replace(/↳/g, "").trim().replace(/\s+/g, " ");
     const hojaDestino = ss.getSheetByName(nombreHoja);
+
     if (!hojaDestino) {
       noEncontradas.push(nombreHoja);
       continue;
     }
-    
-    // Obtener el ID único de la pestaña (gid)
-    const gid = hojaDestino.getSheetId();
-    
-    // Construir la URL interna de navegación
-    const url = ss.getUrl() + "#gid=" + gid;
-    
-    // Crear el hipervínculo utilizando RichTextValue para máxima compatibilidad regional
+
+    const url = ss.getUrl() + "#gid=" + hojaDestino.getSheetId();
     const textoVisible = MENU_CONFIG.SIMBOLO_ENLACE + " " + nombreHoja;
+
+    // RichTextValue para máxima legibilidad e independencia de fórmulas locales
     const enlace = SpreadsheetApp.newRichTextValue()
       .setText(textoVisible)
       .setLinkUrl(url)
       .build();
-    
+
     celda.setRichTextValue(enlace);
-    enlaces++;
+    enlacesCreados++;
   }
-  
+
   SpreadsheetApp.flush();
-  REGISTRAR_RESULTADO_MENU(enlaces, noEncontradas);
-}
-
-// ============================================================
-// 03. OBTENER NOMBRE DE HOJA DEL MENÚ
-// Elimina el símbolo ↳ y los espacios extras para extraer el nombre
-// ============================================================
-function OBTENER_NOMBRE_HOJA_MENU(texto) {
-  if (!texto) {
-    return "";
-  }
-  
-  let nombre = String(texto);
-  nombre = nombre.replace(/↳/g, ""); // Quitar símbolo de navegación
-  nombre = nombre.trim();             // Eliminar espacios extremos
-  nombre = nombre.replace(/\s+/g, " "); // Normalizar espacios internos
-  
-  return nombre;
-}
-
-// ============================================================
-// 04. REGISTRAR RESULTADO DE LA NAVEGACIÓN
-// Muestra en el registro el resultado detallado de la sincronización.
-// ============================================================
-function REGISTRAR_RESULTADO_MENU(enlaces, noEncontradas) {
-  console.log("=================================");
-  console.log("🔗 ACTUALIZACIÓN DEL MENÚ ERP");
-  console.log("=================================");
-  console.log("Enlaces creados o actualizados: " + enlaces);
-  console.log("Hojas no encontradas: " + noEncontradas.length);
-  
+  console.log("=== Sincronización de navegación finalizada ===");
+  console.log("Enlaces creados exitosamente: " + enlacesCreados);
   if (noEncontradas.length > 0) {
-    console.log("Hojas no encontradas:");
-    console.log(noEncontradas.join(", "));
+    console.warn("Hojas no encontradas físicamente: " + noEncontradas.join(", "));
   }
-  console.log("=================================");
 }

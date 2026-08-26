@@ -1,24 +1,12 @@
 /**************************************************************
- * 04_UI.gs
- * ERP OPERATIVO
- *
- * RESPONSABILIDAD:
- * - Administrar la apariencia visual de las pestañas de Google Sheets.
- * - Aplicar colores profesionales por módulo.
- * - Identificar las hojas físicas de cada módulo.
- * - Colorear automáticamente las pestañas existentes.
- *
- * ESTE ARCHIVO NO:
- * - Crea hojas.
- * - Elimina hojas.
- * - Crea hipervínculos.
- * - Abre formularios HTML.
- * - Modifica datos operativos.
- * - Gestiona usuarios, roles o permisos.
- **************************************************************/
+* 04_UI.gs
+* RESPONSABILIDAD:
+* - Administrar la identidad visual de Google Sheets.
+* - Colorear las pestañas físicas del libro ERP de forma automática según módulo.
+**************************************************************/
 
 // ============================================================
-// 01. CONFIGURACIÓN DE COLORES
+// 01. PALETA DE COLORES POR GRUPO MODULAR (ÚNICA FUENTE)
 // ============================================================
 const COLORES_ERP = {
   CONFIGURACION: "#6B7280",
@@ -40,132 +28,67 @@ const COLORES_ERP = {
 };
 
 // ============================================================
-// 02. HOJAS POR MÓDULO
-// Solo se incluyen hojas físicas de Google Sheets.
-// NO se incluyen archivos .gs ni formularios .html.
+// 02. ASOCIACIÓN DE HOJAS FÍSICAS A CADA GRUPO
 // ============================================================
 const HOJAS_ERP = {
-  // CONFIGURACIÓN
   CONFIGURACION: [
-    "CFG_EMPRESA",
-    "CFG_SISTEMA",
-    "CFG_DOCUMENTOS",
-    "CFG_IMPUESTOS",
-    "CFG_CONTABILIDAD",
-    "CFG_INVENTARIO",
-    "CFG_COSTOS"
+    "CFG_EMPRESA", "CFG_SISTEMA", "CFG_DOCUMENTOS", "CFG_IMPUESTOS", 
+    "CFG_CONTABILIDAD", "CFG_INVENTARIO", "CFG_COSTOS"
   ],
-  // CLIENTES
   CLIENTES: [
-    "CLI_MAESTRO",
-    "CLI_HISTORIAL"
+    "CLI_MAESTRO", "CLI_HISTORIAL"
   ],
-  // PROVEEDORES
   PROVEEDORES: [
-    "PROV_MAESTRO",
-    "PROV_FORM",
-    "PROV_HISTORIAL"
+    "PROV_MAESTRO", "PROV_FORM", "PROV_HISTORIAL"
   ],
-  // PRODUCTOS
   PRODUCTOS: [
-    "PROD_MAESTRO",
-    "PROD_CATEGORIAS",
-    "PROD_UNIDADES",
-    "PROD_TIPOS",
-    "PROD_PRECIOS"
+    "PROD_MAESTRO", "PROD_CATEGORIAS", "PROD_UNIDADES", "PROD_TIPOS", "PROD_PRECIOS"
   ],
-  // OBRAS
   OBRAS: [
-    "OBR_MAESTRO",
-    "OBR_PRESUPUESTO",
-    "OBR_AVANCE",
-    "OBR_RECURSOS"
+    "OBR_MAESTRO", "OBR_PRESUPUESTO", "OBR_AVANCE", "OBR_RECURSOS"
   ],
-  // VENTAS
   VENTAS: [
-    "VEN_CABECERA",
-    "VEN_DETALLE",
-    "VEN_DOCUMENTOS",
-    "VEN_HISTORIAL"
+    "VEN_CABECERA", "VEN_DETALLE", "VEN_DOCUMENTOS", "VEN_HISTORIAL"
   ],
-  // COMPRAS
   COMPRAS: [
-    "COM_CABECERA",
-    "COM_DETALLE",
-    "COM_DOCUMENTOS",
-    "COM_HISTORIAL"
+    "COM_CABECERA", "COM_DETALLE", "COM_DOCUMENTOS", "COM_HISTORIAL"
   ],
-  // INVENTARIO
   INVENTARIO: [
-    "INV_MOVIMIENTOS",
-    "INV_SALDOS",
-    "INV_KARDEX",
-    "INV_AJUSTES",
-    "INV_TRASLADOS"
+    "INV_MOVIMIENTOS", "INV_SALDOS", "INV_KARDEX", "INV_AJUSTES", "INV_TRASLADOS"
   ],
-  // INGRESOS
   INGRESOS: [
-    "ING_MOVIMIENTOS",
-    "ING_RECAUDOS",
-    "ING_HISTORIAL"
+    "ING_MOVIMIENTOS", "ING_RECAUDOS", "ING_HISTORIAL"
   ],
-  // COSTOS
   COSTOS: [
-    "COS_MOVIMIENTOS",
-    "COS_CATEGORIAS",
-    "COS_HISTORIAL"
+    "COS_MOVIMIENTOS", "COS_CATEGORIAS", "COS_HISTORIAL"
   ],
-  // GASTOS
   GASTOS: [
-    "GAS_MOVIMIENTOS",
-    "GAS_CATEGORIAS",
-    "GAS_HISTORIAL"
+    "GAS_MOVIMIENTOS", "GAS_CATEGORIAS", "GAS_HISTORIAL"
   ],
-  // CARTERA
   CARTERA: [
-    "CAR_CUENTAS",
-    "CAR_RECAUDOS",
-    "CAR_VENCIMIENTOS",
-    "CAR_HISTORIAL"
+    "CAR_CUENTAS", "CAR_RECAUDOS", "CAR_VENCIMIENTOS", "CAR_HISTORIAL"
   ],
-  // CUENTAS POR PAGAR
   CUENTAS_POR_PAGAR: [
-    "CXP_CUENTAS",
-    "CXP_PAGOS",
-    "CXP_VENCIMIENTOS",
-    "CXP_HISTORIAL"
+    "CXP_CUENTAS", "CXP_PAGOS", "CXP_VENCIMIENTOS", "CXP_HISTORIAL"
   ],
-  // TESORERÍA
   TESORERIA: [
-    "TES_CUENTAS",
-    "TES_MOVIMIENTOS",
-    "TES_PAGOS",
-    "TES_RECAUDOS",
-    "TES_CONCILIACION"
+    "TES_CUENTAS", "TES_MOVIMIENTOS", "TES_PAGOS", "TES_RECAUDOS", "TES_CONCILIACION"
   ],
-  // SEGURIDAD
   SEGURIDAD: [
-    "USR_USUARIOS",
-    "USR_ROLES",
-    "USR_PERMISOS",
-    "USR_SESIONES",
-    "USR_AUDITORIA"
+    "USR_USUARIOS", "USR_ROLES", "USR_PERMISOS", "USR_SESIONES", "USR_AUDITORIA"
   ]
 };
 
 // ============================================================
-// 03. COLOREAR TODAS LAS PESTAÑAS FÍSICAS
-// Aplica a cada hoja existente el color correspondiente a su módulo.
+// 03. APLICAR COLORES DE PESTAÑAS AUTOMÁTICAMENTE
 // ============================================================
 function COLOREAR_TODAS_LAS_PESTANAS() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let coloreadas = 0;
-  const noEncontradas = [];
+  let noEncontradas = [];
 
-  Object.keys(HOJAS_ERP).forEach(function(modulo) {
+  Object.entries(HOJAS_ERP).forEach(function([modulo, hojas]) {
     const color = COLORES_ERP[modulo];
-    const hojas = HOJAS_ERP[modulo];
-
     hojas.forEach(function(nombreHoja) {
       const hoja = ss.getSheetByName(nombreHoja);
       if (hoja) {
@@ -177,33 +100,15 @@ function COLOREAR_TODAS_LAS_PESTANAS() {
     });
   });
 
-  // Colorear menú principal 🏠MENU
   const menu = ss.getSheetByName("🏠MENU");
   if (menu) {
     menu.setTabColor(COLORES_ERP.MENU);
     coloreadas++;
-  } else {
-    noEncontradas.push("🏠MENU");
   }
 
   SpreadsheetApp.flush();
-  REGISTRAR_RESULTADO_COLORES(coloreadas, noEncontradas);
-}
-
-// ============================================================
-// 04. REGISTRAR RESULTADO DE COLOREADO EN LOGS
-// ============================================================
-function REGISTRAR_RESULTADO_COLORES(coloreadas, noEncontradas) {
-  console.log("=================================");
-  console.log("🎨 COLORES DEL ERP OPERATIVO");
-  console.log("=================================");
-  console.log("Pestañas coloreadas con éxito: " + coloreadas);
-  console.log("Hojas físicas no encontradas en el libro: " + noEncontradas.length);
+  console.log("Pestañas coloreadas de manera exitosa: " + coloreadas);
   if (noEncontradas.length > 0) {
-    console.log("Detalle de hojas omitidas/no encontradas:");
-    noEncontradas.forEach(function(nombreHoja) {
-      console.log("- " + nombreHoja);
-    });
+    console.info("Hojas que no se han creado en el libro: " + noEncontradas.join(", "));
   }
-  console.log("=================================");
 }

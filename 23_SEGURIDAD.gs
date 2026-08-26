@@ -365,9 +365,13 @@ function SEG_CONSULTAR_USUARIO(idUsuario) {
 function SEG_LISTAR_USUARIOS() {
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
-  return registros.map(function(fila) {
-    return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
-  });
+  return registros
+    .filter(function(fila) {
+      return fila[0] && String(fila[0]).trim() !== "";
+    })
+    .map(function(fila) {
+      return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
+    });
 }
 
 /**
@@ -522,9 +526,13 @@ function SEG_CONSULTAR_ROL(idRol) {
 function SEG_LISTAR_ROLES() {
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_ROLES);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_ROLES);
-  return registros.map(function(fila) {
-    return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
-  });
+  return registros
+    .filter(function(fila) {
+      return fila[0] && String(fila[0]).trim() !== "";
+    })
+    .map(function(fila) {
+      return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
+    });
 }
 
 /**
@@ -1318,9 +1326,13 @@ function SEG_REGISTRAR_AUDITORIA(datos) {
 function SEG_OBTENER_SESIONES() {
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_SESIONES);
-  return registros.map(function(fila) {
-    return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
-  });
+  return registros
+    .filter(function(fila) {
+      return fila[0] && String(fila[0]).trim() !== "";
+    })
+    .map(function(fila) {
+      return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
+    });
 }
 
 
@@ -1357,4 +1369,227 @@ function SEG_REGISTRAR_AUTONOMO(datos) {
   }
   
   return resultado;
+}
+
+
+// ============================================================
+// FUNCIONES ADICIONALES DE INTEGRACIÓN CON EL FRONTEND
+// ============================================================
+
+/**
+ * Obtiene el listado completo de todos los roles (Puente para el frontend).
+ */
+function SEG_OBTENER_ROLES() {
+  try {
+    SEG_INICIALIZAR_ROLES_PREDEFINIDOS(); // Autopoblar si está vacía
+    return SEG_LISTAR_ROLES();
+  } catch (error) {
+    console.error("Error en SEG_OBTENER_ROLES: " + error.toString());
+    throw new Error("No se pudieron cargar los roles de la base de datos.");
+  }
+}
+
+/**
+ * Obtiene el listado completo de todos los permisos parametrizados en USR_PERMISOS (Puente para el frontend).
+ */
+function SEG_OBTENER_PERMISOS() {
+  try {
+    SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS(); // Autopoblar si está vacía
+    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
+    const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_PERMISOS);
+    return registros.map(function(fila) {
+      return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
+    });
+  } catch (error) {
+    console.error("Error en SEG_OBTENER_PERMISOS: " + error.toString());
+    throw new Error("No se pudieron cargar los permisos de la base de datos.");
+  }
+}
+
+
+// ============================================================
+// SELF-HEALING: INICIALIZACIÓN DE ROLES Y PERMISOS PREDEFINIDOS
+// ============================================================
+
+/**
+ * Auto-inicializa roles del ERP si la tabla USR_ROLES está vacía.
+ */
+function SEG_INICIALIZAR_ROLES_PREDEFINIDOS() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_ROLES);
+    if (!hoja) return;
+    
+    const ultimaFila = hoja.getLastRow();
+    if (ultimaFila >= 2) {
+      // Ya existen roles, no es necesario inicializar
+      return;
+    }
+    
+    console.log("Inicializando roles predefinidos en USR_ROLES...");
+    const ahora = new Date();
+    const rolesPredefinidos = [
+      ["ROL-000001", "ADMINISTRADOR", "Administración general y acceso total al ERP", 100, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Rol maestro protegido"],
+      ["ROL-000002", "CONTADOR", "Gestión y supervisión de procesos contables y financieros", 80, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Acceso a reportes contables"],
+      ["ROL-000003", "AUXILIAR_CONTABLE", "Apoyo en registros y procesos contables autorizados", 60, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Permiso de registro operativo"],
+      ["ROL-000004", "TESORERO", "Gestión de tesorería, pagos, recaudos y conciliaciones", 70, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Acceso a bancos y cajas"],
+      ["ROL-000005", "COMERCIAL", "Gestión de clientes y operaciones comerciales", 50, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Acceso limitado a ventas"],
+      ["ROL-000006", "OPERATIVO", "Registro de operaciones asignadas e inventarios", 40, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Rol operativo general"],
+      ["ROL-000007", "CONSULTA", "Acceso exclusivamente de lectura general", 10, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Rol de sólo lectura"]
+    ];
+    
+    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_ROLES);
+    rolesPredefinidos.forEach(function(filaRol) {
+      const objetoRol = {
+        ID_ROL: filaRol[0],
+        NOMBRE_ROL: filaRol[1],
+        DESCRIPCION: filaRol[2],
+        NIVEL_JERARQUIA: filaRol[3],
+        ESTADO_ROL: filaRol[4],
+        ROL_SISTEMA: filaRol[5],
+        FECHA_CREACION: filaRol[6],
+        FECHA_ACTUALIZACION: filaRol[7],
+        USUARIO_CREACION: filaRol[8],
+        USUARIO_ACTUALIZACION: filaRol[9],
+        OBSERVACIONES: filaRol[10]
+      };
+      const filaInsertar = SEG_CONVERTIR_OBJETO_FILA(encabezados, objetoRol);
+      hoja.appendRow(filaInsertar);
+    });
+    
+    console.log("Roles predefinidos creados correctamente.");
+  } catch (error) {
+    console.error("Error en SEG_INICIALIZAR_ROLES_PREDEFINIDOS: " + error.toString());
+  }
+}
+
+/**
+ * Auto-inicializa permisos básicos del ERP si la tabla USR_PERMISOS está vacía.
+ */
+function SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_PERMISOS);
+    if (!hoja) return;
+    
+    const ultimaFila = hoja.getLastRow();
+    if (ultimaFila >= 2) {
+      // Ya existen permisos
+      return;
+    }
+    
+    console.log("Inicializando permisos predefinidos en USR_PERMISOS...");
+    const ahora = new Date();
+    
+    // Asignaremos permisos por defecto al rol ADMINISTRADOR (Acceso total) y CONSULTA (SÓLO LECTURA)
+    const modulos = ["SEGURIDAD", "CLIENTES", "PROVEEDORES", "PRODUCTOS", "OBRAS", "VENTAS", "COMPRAS", "INVENTARIO", "TESORERIA"];
+    const accionesAdmin = ["VER", "CREAR", "EDITAR", "ELIMINAR", "ANULAR", "APROBAR", "ADMINISTRAR"];
+    
+    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
+    let consecutivo = 1;
+    
+    // 1. ADMINISTRADOR gets all permisos
+    modulos.forEach(function(mod) {
+      accionesAdmin.forEach(function(acc) {
+        const idPermiso = "PER-" + String(consecutivo).padStart(SEG_CONFIG.DIGITOS_ID, "0");
+        const objetoPermiso = {
+          ID_PERMISO: idPermiso,
+          ID_ROL: "ROL-000001", // ADMINISTRADOR
+          MODULO: mod,
+          SUBMODULO: "GENERAL",
+          ACCION: acc,
+          PERMITIDO: "SI",
+          ESTADO_PERMISO: "ACTIVO",
+          FECHA_CREACION: ahora,
+          FECHA_ACTUALIZACION: ahora,
+          USUARIO_CREACION: "SISTEMA",
+          USUARIO_ACTUALIZACION: "SISTEMA",
+          OBSERVACIONES: "Permiso administrativo maestro"
+        };
+        const filaInsertar = SEG_CONVERTIR_OBJETO_FILA(encabezados, objetoPermiso);
+        hoja.appendRow(filaInsertar);
+        consecutivo++;
+      });
+    });
+    
+    // 2. CONSULTA gets VER only
+    modulos.forEach(function(mod) {
+      const idPermiso = "PER-" + String(consecutivo).padStart(SEG_CONFIG.DIGITOS_ID, "0");
+      const objetoPermiso = {
+        ID_PERMISO: idPermiso,
+        ID_ROL: "ROL-000007", // CONSULTA
+        MODULO: mod,
+        SUBMODULO: "GENERAL",
+        ACCION: "VER",
+        PERMITIDO: "SI",
+        ESTADO_PERMISO: "ACTIVO",
+        FECHA_CREACION: ahora,
+        FECHA_ACTUALIZACION: ahora,
+        USUARIO_CREACION: "SISTEMA",
+        USUARIO_ACTUALIZACION: "SISTEMA",
+        OBSERVACIONES: "Permiso de sólo lectura"
+      };
+      const filaInsertar = SEG_CONVERTIR_OBJETO_FILA(encabezados, objetoPermiso);
+      hoja.appendRow(filaInsertar);
+      consecutivo++;
+    });
+    
+    console.log("Permisos predefinidos creados correctamente.");
+  } catch (error) {
+    console.error("Error en SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS: " + error.toString());
+  }
+}
+
+/**
+ * Aprueba un usuario pendiente asignándole su rol definitivo y activándolo en un solo paso atómico.
+ * Puente de alto nivel para el frontend (evita múltiples llamadas asíncronas).
+ */
+function SEG_APROBAR_USUARIO(idUsuario, idRol, usuarioActualizador) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // Validar que el rol exista
+    const rol = SEG_CONSULTAR_ROL(idRol);
+    if (!rol) {
+      throw new Error("El rol seleccionado '" + idRol + "' no es válido o no existe en USR_ROLES.");
+    }
+    
+    // Actualizar rol del usuario
+    const resultadoRol = SEG_ACTUALIZAR_USUARIO(idUsuario, { 
+      ID_ROL: idRol,
+      USUARIO_ACTUALIZACION: usuarioActualizador || "SISTEMA"
+    });
+    
+    if (!resultadoRol.EXITO) {
+      throw new Error("No se pudo actualizar el rol del usuario.");
+    }
+    
+    // Activar estado del usuario
+    const resultadoEstado = SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, "ACTIVO", usuarioActualizador || "SISTEMA");
+    
+    if (!resultadoEstado.EXITO) {
+      throw new Error("No se pudo activar el estado del usuario.");
+    }
+    
+    // Registrar auditoría física en USR_AUDITORIA
+    SEG_REGISTRAR_AUDITORIA({
+      ID_USUARIO: idUsuario,
+      USUARIO: resultadoRol.USUARIO.USUARIO,
+      MODULO: "SEGURIDAD",
+      SUBMODULO: "USUARIOS",
+      ACCION: "APROBAR",
+      TIPO_REGISTRO: "USUARIOS",
+      ID_REGISTRO: idUsuario,
+      DESCRIPCION: "Usuario '" + resultadoRol.USUARIO.USUARIO + "' aprobado con éxito. Rol asignado: " + rol.NOMBRE_ROL + ".",
+      RESULTADO: "EXITOSO"
+    });
+    
+    return {
+      EXITO: true,
+      MENSAJE: "Usuario '" + resultadoRol.USUARIO.USUARIO + "' aprobado con éxito. Rol asignado: " + rol.NOMBRE_ROL + "."
+    };
+  } catch (error) {
+    console.error("Error en SEG_APROBAR_USUARIO: " + error.toString());
+    throw new Error(error.message || error.toString());
+  }
 }
