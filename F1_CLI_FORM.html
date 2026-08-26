@@ -1,1864 +1,872 @@
+<!-- ============================================================
+* INTERFAZ: F1_CLI_FORM
+* MODULO: CLIENTES / PROVEEDORES (TERCEROS UNIFICADOS)
+* RESPONSABILIDAD: Captura y validación tributaria de Terceros
+* CONEXIÓN BACKEND: 05_CLIENTES.gs, 06_PROVEEDORES.gs y 23_SEGURIDAD.gs
+* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
+============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Gestión de Clientes</title>
-
+  <title>Gestión de Terceros | MEGUDAN ERP</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f3f4f6; color: #111827;
     }
-
-    /* =========================================================
-       CONTENEDOR PRINCIPAL
-       ========================================================= */
-
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* =========================================================
-       ENCABEZADO
-       ========================================================= */
-
+    .container { max-width: 1280px; margin: 20px auto; padding: 0 20px; }
+    
+    /* Encabezado */
     .header {
-      background: #111827;
-      color: white;
-      padding: 20px 24px;
-      border-radius: 12px 12px 0 0;
+      background: linear-gradient(135deg, #111827, #1f2937);
+      color: white; padding: 20px 24px;
+      border-radius: 10px 10px 0 0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .header p {
-      margin: 6px 0 0;
-      color: #d1d5db;
-      font-size: 13px;
-    }
-
-    /* =========================================================
-       BARRA DE ACCIONES
-       ========================================================= */
-
+    .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    .header p { margin: 5px 0 0; font-size: 13px; color: #9ca3af; }
+    
+    /* Barra de Acciones */
     .toolbar {
-      background: white;
-      padding: 14px 20px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      background: white; padding: 12px 20px;
+      display: flex; gap: 10px; flex-wrap: wrap;
       border-bottom: 1px solid #e5e7eb;
     }
-
-    button {
-      border: none;
-      border-radius: 7px;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
+    .btn {
+      border: none; border-radius: 6px; padding: 8px 16px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
     }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
 
-    button:hover {
-      opacity: 0.88;
-    }
-
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-    }
-
-    .btn-success {
-      background: #16a34a;
-      color: white;
-    }
-
-    .btn-warning {
-      background: #d97706;
-      color: white;
-    }
-
-    .btn-danger {
-      background: #dc2626;
-      color: white;
-    }
-
-    .btn-secondary {
-      background: #6b7280;
-      color: white;
-    }
-
-    /* =========================================================
-       BUSCADOR
-       ========================================================= */
-
-    .search-area {
-      background: white;
-      padding: 16px 20px;
+    /* Buscador */
+    .search-card {
+      background: white; padding: 15px 20px;
       border-bottom: 1px solid #e5e7eb;
     }
-
-    .search-box {
-      display: flex;
-      gap: 10px;
-      max-width: 700px;
+    .search-group { display: flex; gap: 10px; max-width: 600px; }
+    .search-input {
+      flex: 1; padding: 10px 12px;
+      border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: 14px; outline: none;
     }
-
-    /* =========================================================
-       SECCIONES
-       ========================================================= */
-
-    .section {
-      background: white;
-      margin-top: 14px;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-    }
-
-    .section-title {
-      background: #f9fafb;
-      padding: 13px 18px;
-      font-weight: bold;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 14px;
-    }
-
-    .section-content {
-      padding: 18px;
-    }
-
-    /* =========================================================
-       FORMULARIO
-       ========================================================= */
-
-    .form-grid {
+    .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    
+    /* Layout principal */
+    .grid-layout {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px; margin-top: 20px;
     }
-
-    .field {
-      display: flex;
-      flex-direction: column;
+    .form-col { display: flex; flex-direction: column; gap: 20px; }
+    .card {
+      background: white; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-
-    .field.full {
-      grid-column: 1 / -1;
+    .card-title {
+      font-size: 15px; font-weight: 700; color: #374151;
+      margin-top: 0; margin-bottom: 15px; padding-bottom: 8px;
+      border-bottom: 2px solid #f3f4f6;
     }
-
-    .field.two {
-      grid-column: span 2;
+    
+    /* Selectores de Tipo de Tercero */
+    .tercero-selector {
+      display: flex; gap: 24px; margin-bottom: 15px;
     }
-
-    label {
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 6px;
-      color: #374151;
+    .checkbox-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: #4b5563;
+      cursor: pointer;
     }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-      padding: 9px 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 13px;
-      background: white;
-      color: #111827;
-      outline: none;
+    .checkbox-label input[type="checkbox"] {
+      width: 18px; height: 18px; border-radius: 4px;
+      border: 1.5px solid #d1d5db; cursor: pointer;
     }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.10);
+    
+    /* Grids de formulario */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .full-width { grid-column: span 2; }
+    
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 700; color: #4b5563; }
+    .input-field, select, textarea {
+      padding: 9px 12px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 13px; outline: none;
+      background: #ffffff; width: 100%; transition: border-color 0.2s;
     }
-
-    input[readonly] {
-      background: #f3f4f6;
-      color: #6b7280;
+    .input-field:focus, select:focus, textarea:focus {
+      border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
     }
-
-    textarea {
-      min-height: 80px;
-      resize: vertical;
+    .input-field[readonly] { background-color: #f3f4f6; color: #6b7280; }
+    
+    /* Identificación & DV Group */
+    .id-group { display: flex; gap: 8px; }
+    .id-group .input-id { flex: 4; }
+    .id-group .input-dv { flex: 1; text-align: center; font-weight: 700; background-color: #f3f4f6; }
+    
+    /* Secciones Dinámicas */
+    .dynamic-section { display: none; }
+    .dynamic-section.active { display: block; }
+    
+    /* RUT Checklist responsabilidades */
+    .rut-checklist { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+    .rut-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: #374151; cursor: pointer;
     }
-
-    /* =========================================================
-       ESTADO
-       ========================================================= */
-
-    .status {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: bold;
-      background: #dcfce7;
-      color: #166534;
+    .rut-code {
+      background: #f3f4f6; border-radius: 4px; padding: 2px 6px;
+      font-weight: 700; font-size: 11px; color: #4b5563;
+      border: 1px solid #e5e7eb; min-width: 45px; text-align: center;
     }
-
-    /* =========================================================
-       PIE
-       ========================================================= */
-
-    .footer {
-      margin-top: 14px;
-      padding: 15px;
-      text-align: right;
-      font-size: 11px;
-      color: #6b7280;
+    
+    /* Alert Messages */
+    .msg-box {
+      display: none; padding: 12px; border-radius: 6px;
+      font-size: 13px; font-weight: 600; margin-bottom: 15px;
     }
-
-    /* =========================================================
-       MENSAJES
-       ========================================================= */
-
-    .message {
-      display: none;
-      padding: 10px 14px;
-      margin-top: 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: bold;
+    .msg-success { display: block; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .msg-error { display: block; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .msg-info { display: block; background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    
+    /* Auditoria Footer */
+    .audit-footer {
+      margin-top: 20px; padding: 15px; font-size: 11px;
+      color: #9ca3af; text-align: center; border-top: 1px dashed #e5e7eb;
     }
-
-    .message.success {
-      background: #dcfce7;
-      color: #166534;
+    
+    @media (max-width: 1024px) {
+      .grid-layout { grid-template-columns: 1fr; }
     }
-
-    .message.error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .message.info {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    /* =========================================================
-       RESPONSIVE
-       ========================================================= */
-
-    @media (max-width: 900px) {
-      .form-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 600px) {
-      .app {
-        padding: 10px;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .field.two,
-      .field.full {
-        grid-column: auto;
-      }
-
-      .search-box {
-        flex-direction: column;
-      }
-
-      .toolbar {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .full-width { grid-column: span 1; }
     }
   </style>
 </head>
-
 <body>
 
-<div class="app">
+<div class="container">
+  <!-- Encabezado -->
+  <header class="header">
+    <h1>👥 Ficha Única de Terceros</h1>
+    <p>ERP Operativo · MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS</p>
+  </header>
 
-  <!-- =======================================================
-       ENCABEZADO
-       ======================================================= -->
-
-  <div class="header">
-    <h1>👥 Gestión de Clientes</h1>
-    <p>ERP Operativo · Módulo de Clientes</p>
-  </div>
-
-
-  <!-- =======================================================
-       BARRA DE ACCIONES
-       ======================================================= -->
-
+  <!-- Toolbar de Acciones -->
   <div class="toolbar">
-
-    <button class="btn-primary" onclick="nuevoCliente()">
-      🆕 Nuevo
-    </button>
-
-    <button class="btn-success" onclick="guardarCliente()">
-      💾 Guardar
-    </button>
-
-    <button class="btn-warning" onclick="editarCliente()">
-      ✏️ Actualizar
-    </button>
-
-    <button class="btn-secondary" onclick="limpiarFormulario()">
-      🧹 Limpiar
-    </button>
-
-    <button class="btn-danger" onclick="inactivarCliente()">
-      🚫 Inactivar
-    </button>
-
+    <button class="btn btn-primary" onclick="nuevoTercero()">🆕 Nuevo</button>
+    <button class="btn btn-success" onclick="guardarTercero()">💾 Guardar</button>
+    <button class="btn btn-secondary" onclick="editarTercero()">✏️ Actualizar</button>
+    <button class="btn btn-secondary" onclick="limpiarFormulario()">🧹 Limpiar</button>
+    <button class="btn btn-danger" onclick="inactivarTercero()">🚫 Inactivar</button>
   </div>
 
+  <!-- Buscador Integrado -->
+  <div class="search-card">
+    <div class="search-group">
+      <input type="text" id="buscarTercero" class="search-input" placeholder="Buscar por NIT, CC, Razón Social o ID del ERP...">
+      <button class="btn btn-primary" onclick="buscarTercero()">🔍 Buscar</button>
+    </div>
+    <div id="mensaje" class="msg-box"></div>
+  </div>
 
-  <!-- =======================================================
-       BUSCADOR
-       ======================================================= -->
+  <!-- Layout Principal Formulario -->
+  <div class="grid-layout">
+    
+    <!-- Columna Principal -->
+    <div class="form-col">
+      
+      <!-- Card: Tipo de Tercero Selector -->
+      <div class="card">
+        <h3 class="card-title">Selección del Tipo de Tercero</h3>
+        <div class="tercero-selector">
+          <label class="checkbox-label">
+            <input type="checkbox" id="tipo_cliente" checked> Clientes
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="tipo_proveedor"> Proveedores
+          </label>
+        </div>
+      </div>
 
-  <div class="search-area">
+      <!-- Card: Datos Básicos -->
+      <div class="card">
+        <h3 class="card-title">📌 Datos Básicos</h3>
+        <div class="form-grid">
+          
+          <div class="field">
+            <label>ID Interno ERP</label>
+            <input type="text" id="ID_CLIENTE" class="input-field" readonly placeholder="Generado Automáticamente">
+          </div>
 
-    <label for="buscarCliente">
-      🔎 Buscar cliente por documento, ID o nombre
-    </label>
+          <div class="field">
+            <label>Tipo de Persona *</label>
+            <select id="TIPO_PERSONA" onchange="alternarTipoPersona(this.value)">
+              <option value="PERSONA_NATURAL">Persona Natural</option>
+              <option value="PERSONA_JURIDICA" selected>Persona Jurídica (Empresa)</option>
+            </select>
+          </div>
 
-    <div class="search-box">
+          <div class="field">
+            <label>Tipo de Identificación *</label>
+            <select id="TIPO_DOCUMENTO">
+              <option value="NIT" selected>NIT (Número de Identificación Tributaria)</option>
+              <option value="CC">Cédula de Ciudadanía</option>
+              <option value="CE">Cédula de Extranjería</option>
+              <option value="PASAPORTE">Pasaporte</option>
+            </select>
+          </div>
 
-      <input
-        type="text"
-        id="buscarCliente"
-        placeholder="Digite NIT, CC, ID o razón social..."
-      >
+          <div class="field">
+            <label>Identificación / NIT & Dv *</label>
+            <div class="id-group">
+              <input type="text" id="NUMERO_DOCUMENTO" class="input-field input-id" placeholder="Digite el número sin puntos" oninput="calcularDVFrontend(this.value)">
+              <input type="text" id="DIGITO_VERIFICACION" class="input-field input-dv" readonly placeholder="Dv">
+            </div>
+          </div>
 
-      <button
-        class="btn-primary"
-        onclick="buscarCliente()">
-        🔍 Buscar
-      </button>
+          <!-- Campos Dinámicos: Empresa -->
+          <div class="field full-width dynamic-section" id="sec_empresa">
+            <label>Razón Social *</label>
+            <input type="text" id="RAZON_SOCIAL" class="input-field" placeholder="Escriba la Razón Social Completa">
+          </div>
+
+          <!-- Campos Dinámicos: Persona Natural -->
+          <div class="full-width dynamic-section" id="sec_persona">
+            <div class="form-grid">
+              <div class="field">
+                <label>Primer Nombre *</label>
+                <input type="text" id="PRIMER_NOMBRE" class="input-field" placeholder="Primer Nombre">
+              </div>
+              <div class="field">
+                <label>Segundo Nombre</label>
+                <input type="text" id="SEGUNDO_NOMBRE" class="input-field" placeholder="Segundo Nombre">
+              </div>
+              <div class="field">
+                <label>Primer Apellido *</label>
+                <input type="text" id="PRIMER_APELLIDO" class="input-field" placeholder="Primer Apellido">
+              </div>
+              <div class="field">
+                <label>Segundo Apellido</label>
+                <input type="text" id="SEGUNDO_APELLIDO" class="input-field" placeholder="Segundo Apellido">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Nombre Comercial / Sucursal</label>
+            <input type="text" id="NOMBRE_COMERCIAL" class="input-field" placeholder="Nombre Comercial si aplica">
+          </div>
+
+          <div class="field">
+            <label>Clasificación de Tercero *</label>
+            <select id="TIPO_CLIENTE">
+              <option value="MAYORISTA" selected>Mayorista</option>
+              <option value="MINORISTA">Minorista</option>
+              <option value="EMPRESARIAL">Empresarial</option>
+              <option value="NACIONAL">Nacional</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Card: Datos de Ubicación y Contacto -->
+      <div class="card">
+        <h3 class="card-title">📞 Datos de Ubicación y Contacto</h3>
+        <div class="form-grid">
+          
+          <div class="field full-width">
+            <label>Dirección Física Principal *</label>
+            <input type="text" id="DIRECCION" class="input-field" placeholder="Ej: Calle 4 # 5-62, Barrio Centro">
+          </div>
+
+          <div class="field">
+            <label>Municipio / Ciudad *</label>
+            <input type="text" id="CIUDAD" class="input-field" placeholder="Ej: Pitalito">
+          </div>
+
+          <div class="field">
+            <label>Departamento *</label>
+            <input type="text" id="DEPARTAMENTO" class="input-field" placeholder="Ej: Huila">
+          </div>
+
+          <div class="field">
+            <label>País *</label>
+            <input type="text" id="PAIS" class="input-field" value="COLOMBIA">
+          </div>
+
+          <div class="field">
+            <label>Celular de Contacto *</label>
+            <input type="text" id="CELULAR" class="input-field" placeholder="Ej: 3118172601">
+          </div>
+
+          <div class="field">
+            <label>Teléfono Fijo</label>
+            <input type="text" id="TELEFONO" class="input-field" placeholder="Ej: 8360000">
+          </div>
+
+          <div class="field">
+            <label>Correo Electrónico (Factura Electrónica) *</label>
+            <input type="email" id="CORREO" class="input-field" placeholder="ejemplo@correo.com">
+          </div>
+
+          <div class="field">
+            <label>Contacto Principal (Nombres)</label>
+            <input type="text" id="CONTACTO_PRINCIPAL" class="input-field" placeholder="Nombre de contacto administrativo">
+          </div>
+
+          <div class="field">
+            <label>Cargo del Contacto</label>
+            <input type="text" id="CARGO_CONTACTO" class="input-field" placeholder="Ej: Gerente de Compras">
+          </div>
+
+        </div>
+      </div>
 
     </div>
 
-    <div id="mensaje" class="message"></div>
+    <!-- Columna Lateral Derecha -->
+    <div class="form-col">
+      
+      <!-- Card: Régimen y Responsabilidades RUT -->
+      <div class="card">
+        <h3 class="card-title">🧾 Datos para Facturación y Envío</h3>
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          
+          <div class="field">
+            <label>Tipo de Régimen IVA *</label>
+            <select id="RESPONSABILIDAD_IVA">
+              <option value="RESPONSABLE_IVA">Responsable de IVA</option>
+              <option value="NO_RESPONSABLE_IVA" selected>No Responsable de IVA</option>
+            </select>
+          </div>
 
-  </div>
+          <div class="field">
+            <label>Régimen Tributario *</label>
+            <select id="REGIMEN_FISCAL">
+              <option value="ORDINARIO" selected>Régimen Ordinario</option>
+              <option value="SIMPLE">Régimen Simple de Tributación (RST)</option>
+              <option value="ESPECIAL">Régimen Especial</option>
+            </select>
+          </div>
 
+          <div class="field" style="margin-top: 10px;">
+            <label>Responsabilidad Fiscal (RUT) *</label>
+            <div class="rut-checklist">
+              <label class="rut-item">
+                <input type="checkbox" value="O-13" name="responsabilidad_rut">
+                <span class="rut-code">O-13</span> Gran Contribuyente
+              </label>
+              <label class="rut-item">
+                <input type="checkbox" value="O-15" name="responsabilidad_rut">
+                <span class="rut-code">O-15</span> Autorretenedor
+              </label>
+              <label class="rut-item">
+                <input type="checkbox" value="O-23" name="responsabilidad_rut">
+                <span class="rut-code">O-23</span> Agente de retención IVA
+              </label>
+              <label class="rut-item">
+                <input type="checkbox" value="O-47" name="responsabilidad_rut">
+                <span class="rut-code">O-47</span> Régimen simple de tributación
+              </label>
+              <label class="rut-item">
+                <input type="checkbox" value="R-99-PN" name="responsabilidad_rut" checked>
+                <span class="rut-code">R-99-PN</span> No aplica - Otros
+              </label>
+            </div>
+            <!-- Campo oculto para almacenar la combinación de responsabilidades -->
+            <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="R-99-PN">
+          </div>
 
-  <!-- =======================================================
-       DATOS DE IDENTIFICACIÓN
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      👤 DATOS DE IDENTIFICACIÓN
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>ID Cliente</label>
-          <input
-            type="text"
-            id="ID_CLIENTE"
-            readonly
-            placeholder="Automático">
         </div>
+      </div>
 
-        <div class="field">
-          <label>Tipo de Persona *</label>
+      <!-- Card: Condiciones Comerciales y Contabilidad -->
+      <div class="card">
+        <h3 class="card-title">💰 Condiciones Comerciales</h3>
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          
+          <div class="field">
+            <label>Forma de Pago Acordada</label>
+            <select id="FORMA_PAGO">
+              <option value="CONTADO" selected>Contado</option>
+              <option value="CREDITO">Crédito</option>
+            </select>
+          </div>
 
-          <select id="TIPO_PERSONA">
-            <option value="">Seleccione...</option>
-            <option value="PERSONA_NATURAL">Persona Natural</option>
-            <option value="PERSONA_JURIDICA">Persona Jurídica</option>
-          </select>
+          <div class="field">
+            <label>Medio de Pago Habitual</label>
+            <select id="METODO_PAGO">
+              <option value="TRANSFERENCIA" selected>Transferencia Bancaria</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+              <option value="CHEQUE">Cheque</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Plazo de Pago (Días)</label>
+            <input type="number" id="PLAZO_PAGO_DIAS" class="input-field" min="0" value="0">
+          </div>
+
+          <div class="field">
+            <label>Límite de Crédito Autorizado</label>
+            <input type="number" id="LIMITE_CREDITO" class="input-field" min="0" value="0">
+          </div>
+
+          <div class="field">
+            <label>Vendedor Operativo Asignado</label>
+            <input type="text" id="VENDEDOR_ASIGNADO" class="input-field" placeholder="Código de vendedor">
+          </div>
+
+          <div class="field">
+            <label>Centro de Costo Vinculado</label>
+            <input type="text" id="CENTRO_COSTO" class="input-field" placeholder="Centro de costo operativo">
+          </div>
+
+          <div class="field">
+            <label>Obra / Proyecto Principal</label>
+            <input type="text" id="OBRA_PRINCIPAL" class="input-field" placeholder="ID Obra principal">
+          </div>
+
+          <div class="field">
+            <label>Cuenta Auxiliar Contable</label>
+            <input type="text" id="CUENTA_CONTABLE_CLIENTE" class="input-field" placeholder="130505...">
+          </div>
+
+          <div class="field">
+            <label>Estado de Operación *</label>
+            <select id="ESTADO_CLIENTE">
+              <option value="ACTIVO" selected>Activo</option>
+              <option value="INACTIVO">Inactivo</option>
+              <option value="BLOQUEADO">Bloqueado</option>
+            </select>
+          </div>
+
         </div>
-
-        <div class="field">
-          <label>Tipo de Documento *</label>
-
-          <select id="TIPO_DOCUMENTO">
-            <option value="">Seleccione...</option>
-            <option value="CC">Cédula de Ciudadanía</option>
-            <option value="NIT">NIT</option>
-            <option value="CE">Cédula de Extranjería</option>
-            <option value="PASAPORTE">Pasaporte</option>
-            <option value="PEP">PEP</option>
-            <option value="PPT">PPT</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Número de Documento *</label>
-          <input
-            type="text"
-            id="NUMERO_DOCUMENTO"
-            placeholder="Número de documento">
-        </div>
-
-        <div class="field">
-          <label>Dígito de Verificación</label>
-          <input
-            type="text"
-            id="DIGITO_VERIFICACION"
-            maxlength="1"
-            placeholder="DV">
-        </div>
-
-        <div class="field two">
-          <label>Razón Social</label>
-          <input
-            type="text"
-            id="RAZON_SOCIAL"
-            placeholder="Razón social">
-        </div>
-
-        <div class="field">
-          <label>Nombre Comercial</label>
-          <input
-            type="text"
-            id="NOMBRE_COMERCIAL"
-            placeholder="Nombre comercial">
-        </div>
-
-        <div class="field">
-          <label>Primer Nombre</label>
-          <input
-            type="text"
-            id="PRIMER_NOMBRE">
-        </div>
-
-        <div class="field">
-          <label>Segundo Nombre</label>
-          <input
-            type="text"
-            id="SEGUNDO_NOMBRE">
-        </div>
-
-        <div class="field">
-          <label>Primer Apellido</label>
-          <input
-            type="text"
-            id="PRIMER_APELLIDO">
-        </div>
-
-        <div class="field">
-          <label>Segundo Apellido</label>
-          <input
-            type="text"
-            id="SEGUNDO_APELLIDO">
-        </div>
-
-        <div class="field">
-          <label>Tipo de Cliente *</label>
-
-          <select id="TIPO_CLIENTE">
-            <option value="">Seleccione...</option>
-            <option value="NACIONAL">Nacional</option>
-            <option value="INTERNACIONAL">Internacional</option>
-            <option value="MAYORISTA">Mayorista</option>
-            <option value="MINORISTA">Minorista</option>
-            <option value="EMPRESARIAL">Empresarial</option>
-          </select>
-        </div>
-
       </div>
 
     </div>
 
   </div>
 
-
-  <!-- =======================================================
-       INFORMACIÓN TRIBUTARIA
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      🧾 INFORMACIÓN TRIBUTARIA
+  <!-- Observaciones -->
+  <div class="card" style="margin-top: 20px;">
+    <h3 class="card-title">📝 Observaciones Adicionales</h3>
+    <div class="field">
+      <textarea id="OBSERVACIONES" placeholder="Escriba aquí notas comerciales, tributarias o condiciones logísticas del Tercero..."></textarea>
     </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>Responsabilidad IVA</label>
-
-          <select id="RESPONSABILIDAD_IVA">
-            <option value="">Seleccione...</option>
-            <option value="RESPONSABLE_IVA">Responsable de IVA</option>
-            <option value="NO_RESPONSABLE_IVA">No responsable de IVA</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Responsabilidad Fiscal</label>
-
-          <input
-            type="text"
-            id="RESPONSABILIDAD_FISCAL"
-            placeholder="Responsabilidades fiscales">
-        </div>
-
-        <div class="field">
-          <label>Régimen Fiscal</label>
-
-          <select id="REGIMEN_FISCAL">
-            <option value="">Seleccione...</option>
-            <option value="ORDINARIO">Ordinario</option>
-            <option value="SIMPLE">SIMPLE</option>
-            <option value="ESPECIAL">Especial</option>
-          </select>
-        </div>
-
-      </div>
-
-    </div>
-
   </div>
 
-
-  <!-- =======================================================
-       DATOS DE CONTACTO
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      📞 DATOS DE CONTACTO
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field full">
-          <label>Dirección</label>
-          <input
-            type="text"
-            id="DIRECCION"
-            placeholder="Dirección principal">
-        </div>
-
-        <div class="field">
-          <label>Ciudad</label>
-          <input
-            type="text"
-            id="CIUDAD"
-            placeholder="Ciudad">
-        </div>
-
-        <div class="field">
-          <label>Departamento</label>
-          <input
-            type="text"
-            id="DEPARTAMENTO"
-            placeholder="Departamento">
-        </div>
-
-        <div class="field">
-          <label>País *</label>
-          <input
-            type="text"
-            id="PAIS"
-            value="COLOMBIA">
-        </div>
-
-        <div class="field">
-          <label>Teléfono</label>
-          <input
-            type="text"
-            id="TELEFONO">
-        </div>
-
-        <div class="field">
-          <label>Celular</label>
-          <input
-            type="text"
-            id="CELULAR">
-        </div>
-
-        <div class="field">
-          <label>Correo</label>
-          <input
-            type="email"
-            id="CORREO"
-            placeholder="correo@empresa.com">
-        </div>
-
-        <div class="field">
-          <label>Contacto Principal</label>
-          <input
-            type="text"
-            id="CONTACTO_PRINCIPAL">
-        </div>
-
-        <div class="field">
-          <label>Cargo del Contacto</label>
-          <input
-            type="text"
-            id="CARGO_CONTACTO">
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =======================================================
-       CONDICIONES COMERCIALES
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      💰 CONDICIONES COMERCIALES
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>Forma de Pago</label>
-
-          <select id="FORMA_PAGO">
-            <option value="">Seleccione...</option>
-            <option value="CONTADO">Contado</option>
-            <option value="CREDITO">Crédito</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Método de Pago</label>
-
-          <select id="METODO_PAGO">
-            <option value="">Seleccione...</option>
-            <option value="EFECTIVO">Efectivo</option>
-            <option value="TRANSFERENCIA">Transferencia</option>
-            <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
-            <option value="TARJETA_DEBITO">Tarjeta Débito</option>
-            <option value="CHEQUE">Cheque</option>
-            <option value="OTRO">Otro</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Plazo de Pago (días)</label>
-
-          <input
-            type="number"
-            id="PLAZO_PAGO_DIAS"
-            min="0"
-            value="0">
-        </div>
-
-        <div class="field">
-          <label>Límite de Crédito</label>
-
-          <input
-            type="number"
-            id="LIMITE_CREDITO"
-            min="0"
-            step="0.01"
-            value="0">
-        </div>
-
-        <div class="field">
-          <label>Vendedor Asignado</label>
-          <input
-            type="text"
-            id="VENDEDOR_ASIGNADO">
-        </div>
-
-        <div class="field">
-          <label>Centro de Costo</label>
-          <input
-            type="text"
-            id="CENTRO_COSTO">
-        </div>
-
-        <div class="field">
-          <label>Obra Principal</label>
-          <input
-            type="text"
-            id="OBRA_PRINCIPAL">
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =======================================================
-       CONFIGURACIÓN CONTABLE
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      📚 CONFIGURACIÓN CONTABLE
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field two">
-
-          <label>Cuenta Contable del Cliente</label>
-
-          <input
-            type="text"
-            id="CUENTA_CONTABLE_CLIENTE"
-            placeholder="Cuenta contable">
-            
-        </div>
-
-        <div class="field">
-
-          <label>Estado del Cliente *</label>
-
-          <select id="ESTADO_CLIENTE">
-            <option value="ACTIVO">Activo</option>
-            <option value="INACTIVO">Inactivo</option>
-            <option value="BLOQUEADO">Bloqueado</option>
-          </select>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =======================================================
-       OBSERVACIONES
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      📝 OBSERVACIONES
-    </div>
-
-    <div class="section-content">
-
+  <!-- Control y Auditoria -->
+  <div class="card" style="margin-top: 20px;">
+    <h3 class="card-title">🔐 Control del Registro</h3>
+    <div class="form-grid">
       <div class="field">
-
-        <label>Observaciones</label>
-
-        <textarea
-          id="OBSERVACIONES"
-          placeholder="Información adicional del cliente..."></textarea>
-
+        <label>Fecha Creación</label>
+        <input type="text" id="FECHA_CREACION" class="input-field" readonly placeholder="Automático">
       </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =======================================================
-       CONTROL
-       ======================================================= -->
-
-  <div class="section">
-
-    <div class="section-title">
-      🔐 CONTROL DEL REGISTRO
-    </div>
-
-    <div class="section-content">
-
-      <div class="form-grid">
-
-        <div class="field">
-          <label>Fecha de Creación</label>
-          <input
-            type="text"
-            id="FECHA_CREACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
-        <div class="field">
-          <label>Fecha de Actualización</label>
-          <input
-            type="text"
-            id="FECHA_ACTUALIZACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
-        <div class="field">
-          <label>Usuario Creación</label>
-          <input
-            type="text"
-            id="USUARIO_CREACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
-        <div class="field">
-          <label>Usuario Actualización</label>
-          <input
-            type="text"
-            id="USUARIO_ACTUALIZACION"
-            readonly
-            placeholder="Automático">
-        </div>
-
+      <div class="field">
+        <label>Fecha Modificación</label>
+        <input type="text" id="FECHA_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
       </div>
-
+      <div class="field">
+        <label>Creado Por</label>
+        <input type="text" id="USUARIO_CREACION" class="input-field" readonly placeholder="Automático">
+      </div>
+      <div class="field">
+        <label>Modificado Por</label>
+        <input type="text" id="USUARIO_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
+      </div>
     </div>
-
   </div>
 
-
-  <!-- =======================================================
-       PIE
-       ======================================================= -->
-
-  <div class="footer">
-    ERP Operativo · Módulo Clientes · CLI_FORM
-  </div>
+  <footer class="audit-footer">
+    MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS © 2026 · Todos los derechos reservados · F1_CLI_FORM
+  </footer>
 
 </div>
 
-
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
-
-    <script>
-
-  // ==========================================================
-  // 01. ESTADO DEL FORMULARIO
-  // ==========================================================
-
+<!-- JavaScript de la Interfaz -->
+<script>
+  let CLI_PROCESANDO = false;
   let CLI_MODO = "NUEVO";
 
-  let CLI_PROCESANDO = false;
-
-
-  // ==========================================================
-  // 02. INICIALIZAR FORMULARIO
-  // ==========================================================
-
   document.addEventListener("DOMContentLoaded", function() {
-
-    limpiarFormulario();
-
-    nuevoCliente();
-
+    alternarTipoPersona("PERSONA_JURIDICA");
+    nuevoTercero();
   });
 
+  // Alterna visibilidad de campos de Persona Natural o Razón Social de Persona Jurídica
+  function alternarTipoPersona(tipo) {
+    const secEmpresa = document.getElementById("sec_empresa");
+    const secPersona = document.getElementById("sec_persona");
+    
+    if (tipo === "PERSONA_NATURAL") {
+      secEmpresa.classList.remove("active");
+      secPersona.classList.add("active");
+    } else {
+      secPersona.classList.remove("active");
+      secEmpresa.classList.add("active");
+    }
+  }
 
-  // ==========================================================
-  // 03. NUEVO CLIENTE
-  // ==========================================================
+  // Algoritmo Frontend de Cálculo rápido de DV Oficial de la DIAN
+  function calcularDVFrontend(nit) {
+    const dvField = document.getElementById("DIGITO_VERIFICACION");
+    nit = String(nit).trim().replace(/\D/g, "");
+    
+    if (!nit) {
+      dvField.value = "";
+      return;
+    }
+    
+    const vprimas = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+    let suma = 0;
+    const len = nit.length;
+    
+    for (let i = 0; !(i >= len); i++) {
+      const char = nit.charAt(len - 1 - i);
+      const digit = parseInt(char, 10);
+      if (!isNaN(digit)) {
+        suma += digit * vprimas[i];
+      }
+    }
+    
+    const residuo = suma % 11;
+    let dv = 0;
+    if (residuo >= 2) {
+      dv = 11 - residuo;
+    } else if (residuo === 1) {
+      dv = 1;
+    }
+    
+    dvField.value = dv;
+  }
 
-  function nuevoCliente() {
-
+  // Inicializa el formulario para un nuevo tercero
+  function nuevoTercero() {
     if (CLI_PROCESANDO) return;
-
     limpiarFormulario();
-
     CLI_MODO = "NUEVO";
-
+    mostrarMensaje("Generando ID de Tercero...", "info");
+    
     google.script.run
-      .withSuccessHandler(function(idCliente) {
-
-        document
-          .getElementById("ID_CLIENTE")
-          .value = idCliente;
-
-        mostrarMensaje(
-          "Formulario listo para registrar un nuevo cliente.",
-          "info"
-        );
-
+      .withSuccessHandler(function(idGenerado) {
+        document.getElementById("ID_CLIENTE").value = idGenerado;
+        mostrarMensaje("Formulario listo para nuevo tercero.", "success");
       })
-      .withFailureHandler(function(error) {
-
-        manejarError(error);
-
+      .withFailureHandler(function(err) {
+        mostrarMensaje("Error al generar ID: " + err.message, "error");
       })
       .CLI_GENERAR_ID();
-
   }
 
+  // Captura el estado de los checkboxes de RUT y los compila en un string delimitado por comas
+  function compilarResponsabilidadesRUT() {
+    const checkboxes = document.querySelectorAll('input[name="responsabilidad_rut"]:checked');
+    const valores = [];
+    checkboxes.forEach(cb => {
+      valores.push(cb.value);
+    });
+    const stringCompilado = valores.join(",");
+    document.getElementById("RESPONSABILIDAD_FISCAL").value = stringCompilado;
+    return stringCompilado;
+  }
 
-  // ==========================================================
-  // 04. GUARDAR CLIENTE
-  // ==========================================================
-
-  function guardarCliente() {
-
+  // Guarda la información del Tercero (Clientes o Proveedores según el contexto)
+  function guardarTercero() {
     if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // VALIDAR FORMULARIO
-    // --------------------------------------------------------
-
-    if (!validarFormulario()) {
+    compilarResponsabilidadesRUT();
+    
+    const tipoPersona = document.getElementById("TIPO_PERSONA").value;
+    const tipoDocumento = document.getElementById("TIPO_DOCUMENTO").value;
+    const identificacion = document.getElementById("NUMERO_DOCUMENTO").value.trim();
+    const correo = document.getElementById("CORREO").value.trim();
+    
+    if (!tipoPersona || !tipoDocumento || !identificacion || !correo) {
+      mostrarMensaje("Por favor complete los campos obligatorios del Tercero (*) antes de guardar.", "error");
       return;
     }
-
-
-    // --------------------------------------------------------
-    // VALIDAR MODO
-    // --------------------------------------------------------
-
-    if (CLI_MODO === "EDICION") {
-
-      mostrarMensaje(
-        "Este cliente ya existe. Use el botón ACTUALIZAR.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // OBTENER DATOS
-    // --------------------------------------------------------
-
-    const datos =
-      obtenerDatosFormulario();
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
 
     CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Guardando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // ENVIAR A APPS SCRIPT
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-
-        CLI_PROCESANDO = false;
-
-        CLI_MODO = "EDICION";
-
-
-        // ----------------------------------------------------
-        // ASEGURAR ID DEVUELTO
-        // ----------------------------------------------------
-
-        if (resultado.idCliente) {
-
-          document
-            .getElementById("ID_CLIENTE")
-            .value = resultado.idCliente;
-
-        }
-
-
-        mostrarMensaje(
-          resultado.mensaje ||
-          "Cliente registrado correctamente.",
-          "success"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_GUARDAR_CLIENTE(datos);
-
+    mostrarMensaje("Procesando guardado en la base de datos de MEGUDAN...", "info");
+    
+    const datos = obtenerDatosFormulario();
+    
+    // Ruteo dinámico si se marcó cliente o proveedor
+    const esCliente = document.getElementById("tipo_cliente").checked;
+    const esProveedor = document.getElementById("tipo_proveedor").checked;
+    
+    if (esCliente) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          CLI_PROCESANDO = false;
+          CLI_MODO = "EDICION";
+          mostrarMensaje("Tercero registrado correctamente en CLI_MAESTRO con ID " + res.idCliente, "success");
+          document.getElementById("ID_CLIENTE").value = res.idCliente;
+        })
+        .withFailureHandler(function(err) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Fallo al guardar cliente: " + err.message, "error");
+        })
+        .CLI_GUARDAR_CLIENTE(datos);
+    } else if (esProveedor) {
+      // Se comunicará dinámicamente con PROV_GUARDAR_PROVEEDOR modularizado
+      google.script.run
+        .withSuccessHandler(function(res) {
+          CLI_PROCESANDO = false;
+          CLI_MODO = "EDICION";
+          mostrarMensaje("Tercero registrado correctamente en PROV_MAESTRO con ID " + res.idProveedor, "success");
+          document.getElementById("ID_CLIENTE").value = res.idProveedor;
+        })
+        .withFailureHandler(function(err) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Fallo al guardar proveedor: " + err.message, "error");
+        })
+        .PROV_GUARDAR_PROVEEDOR(datos);
+    } else {
+      CLI_PROCESANDO = false;
+      mostrarMensaje("Debe seleccionar al menos un Tipo de Tercero (Clientes o Proveedores).", "error");
+    }
   }
 
-
-  // ==========================================================
-  // 05. BUSCAR CLIENTE
-  // ==========================================================
-
-  function buscarCliente() {
-
+  // Actualizar la información de un tercero existente
+  function editarTercero() {
     if (CLI_PROCESANDO) return;
+    compilarResponsabilidadesRUT();
+    const idTercero = document.getElementById("ID_CLIENTE").value.trim();
+    
+    if (!idTercero) {
+      mostrarMensaje("Primero debe buscar y cargar un tercero para poder actualizar.", "error");
+      return;
+    }
 
+    CLI_PROCESANDO = true;
+    mostrarMensaje("Actualizando información del tercero en caliente...", "info");
+    const datos = obtenerDatosFormulario();
+    
+    const esCliente = idTercero.startsWith("CLI");
+    if (esCliente) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Tercero actualizado exitosamente en CLI_MAESTRO.", "success");
+        })
+        .withFailureHandler(function(err) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Fallo al actualizar cliente: " + err.message, "error");
+        })
+        .CLI_ACTUALIZAR_CLIENTE(datos);
+    } else {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Tercero actualizado exitosamente en PROV_MAESTRO.", "success");
+        })
+        .withFailureHandler(function(err) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Fallo al actualizar proveedor: " + err.message, "error");
+        })
+        .PROV_ACTUALIZAR_PROVEEDOR(datos);
+    }
+  }
 
-    // --------------------------------------------------------
-    // OBTENER CRITERIO
-    // --------------------------------------------------------
-
-    const criterio =
-      document
-        .getElementById("buscarCliente")
-        .value
-        .trim();
-
-
-    // --------------------------------------------------------
-    // VALIDAR
-    // --------------------------------------------------------
-
+  // Buscar un Tercero en Clientes o Proveedores de forma inteligente
+  function buscarTercero() {
+    if (CLI_PROCESANDO) return;
+    const criterio = document.getElementById("buscarTercero").value.trim();
+    
     if (!criterio) {
-
-      mostrarMensaje(
-        "Digite un documento, ID o nombre para buscar.",
-        "error"
-      );
-
+      mostrarMensaje("Por favor ingrese un NIT, CC, Razón Social o ID para buscar.", "error");
       return;
-
     }
 
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
     CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Buscando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // BUSCAR EN CLI_MAESTRO
-    // --------------------------------------------------------
-
+    mostrarMensaje("Consultando bases de datos operacionales...", "info");
+    
+    // Primero buscar en Clientes
     google.script.run
       .withSuccessHandler(function(cliente) {
-
-        CLI_PROCESANDO = false;
-
-
-        // ----------------------------------------------------
-        // CLIENTE NO ENCONTRADO
-        // ----------------------------------------------------
-
-        if (!cliente) {
-
-          mostrarMensaje(
-            "No se encontró ningún cliente con ese criterio.",
-            "error"
-          );
-
-          return;
-
+        if (cliente) {
+          CLI_PROCESANDO = false;
+          cargarTerceroFormulario(cliente, "CLI");
+        } else {
+          // Si no está en clientes, intentar buscar en Proveedores de manera unificada
+          google.script.run
+            .withSuccessHandler(function(proveedor) {
+              CLI_PROCESANDO = false;
+              if (proveedor) {
+                cargarTerceroFormulario(proveedor, "PROV");
+              } else {
+                mostrarMensaje("No se encontró ningún tercero con los datos provistos.", "error");
+              }
+            })
+            .withFailureHandler(function(err) {
+              CLI_PROCESANDO = false;
+              mostrarMensaje("Error al buscar proveedor: " + err.message, "error");
+            })
+            .PROV_BUSCAR_PROVEEDOR(criterio);
         }
-
-
-        // ----------------------------------------------------
-        // CARGAR CLIENTE
-        // ----------------------------------------------------
-
-        cargarCliente(cliente);
-
-        CLI_MODO = "EDICION";
-
       })
-      .withFailureHandler(function(error) {
-
+      .withFailureHandler(function(err) {
         CLI_PROCESANDO = false;
-
-        manejarError(error);
-
+        mostrarMensaje("Error al buscar cliente: " + err.message, "error");
       })
       .CLI_BUSCAR_CLIENTE(criterio);
-
   }
 
+  // Carga el objeto de Tercero recibido en todos los inputs de la interfaz
+  function cargarTerceroFormulario(tercero, tipo) {
+    limpiarFormulario();
+    CLI_MODO = "EDICION";
+    
+    // Sincronizar check de tipo de tercero
+    if (tipo === "CLI") {
+      document.getElementById("tipo_cliente").checked = true;
+      document.getElementById("tipo_proveedor").checked = false;
+    } else {
+      document.getElementById("tipo_cliente").checked = false;
+      document.getElementById("tipo_proveedor").checked = true;
+    }
+    
+    Object.keys(tercero).forEach(key => {
+      const input = document.getElementById(key);
+      if (input && key !== "RESPONSABILIDAD_FISCAL") {
+        input.value = tercero[key] || "";
+      }
+    });
 
-  // ==========================================================
-  // 06. ACTUALIZAR CLIENTE
-  // ==========================================================
+    // Alternar campos dinámicos según persona
+    alternarTipoPersona(tercero.TIPO_PERSONA);
 
-  function editarCliente() {
+    // Sincronizar los checkboxes del RUT
+    if (tercero.RESPONSABILIDAD_FISCAL) {
+      const responsabilidades = tercero.RESPONSABILIDAD_FISCAL.split(",");
+      const checkboxes = document.querySelectorAll('input[name="responsabilidad_rut"]');
+      checkboxes.forEach(cb => {
+        cb.checked = responsabilidades.includes(cb.value);
+      });
+      document.getElementById("RESPONSABILIDAD_FISCAL").value = tercero.RESPONSABILIDAD_FISCAL;
+    }
 
+    mostrarMensaje("Tercero (" + tercero.ID_CLIENTE + ") cargado correctamente.", "success");
+  }
+
+  // Desactiva el Tercero modificando su estado a INACTIVO
+  function inactivarTercero() {
     if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // OBTENER ID
-    // --------------------------------------------------------
-
-    const idCliente =
-      document
-        .getElementById("ID_CLIENTE")
-        .value
-        .trim();
-
-
-    // --------------------------------------------------------
-    // VALIDAR CLIENTE
-    // --------------------------------------------------------
-
-    if (!idCliente) {
-
-      mostrarMensaje(
-        "Primero debe buscar o cargar un cliente.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // VALIDAR FORMULARIO
-    // --------------------------------------------------------
-
-    if (!validarFormulario()) {
+    const idTercero = document.getElementById("ID_CLIENTE").value.trim();
+    if (!idTercero) {
+      mostrarMensaje("Por favor cargue un Tercero antes de inactivar.", "error");
       return;
     }
 
-
-    // --------------------------------------------------------
-    // OBTENER DATOS
-    // --------------------------------------------------------
-
-    const datos =
-      obtenerDatosFormulario();
-
-
-    // --------------------------------------------------------
-    // CONFIRMAR
-    // --------------------------------------------------------
-
-    const confirmar =
-      confirm(
-        "¿Desea actualizar la información del cliente " +
-        idCliente +
-        "?"
-      );
-
-
-    if (!confirmar) {
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
+    if (!confirm("¿Está seguro que desea inactivar este Tercero en el ERP?")) return;
+    
     CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Actualizando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // ENVIAR A APPS SCRIPT
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-
-        CLI_PROCESANDO = false;
-
-        CLI_MODO = "EDICION";
-
-        mostrarMensaje(
-          resultado.mensaje ||
-          "Cliente actualizado correctamente.",
-          "success"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_ACTUALIZAR_CLIENTE(datos);
-
+    mostrarMensaje("Inactivando registro...", "info");
+    
+    const esCliente = idTercero.startsWith("CLI");
+    if (esCliente) {
+      google.script.run
+        .withSuccessHandler(function() {
+          CLI_PROCESANDO = false;
+          document.getElementById("ESTADO_CLIENTE").value = "INACTIVO";
+          mostrarMensaje("Tercero inactivado exitosamente en CLI_MAESTRO.", "success");
+        })
+        .withFailureHandler(function(err) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Error al inactivar: " + err.message, "error");
+        })
+        .CLI_INACTIVAR_CLIENTE(idTercero);
+    } else {
+      google.script.run
+        .withSuccessHandler(function() {
+          CLI_PROCESANDO = false;
+          document.getElementById("ESTADO_CLIENTE").value = "INACTIVO";
+          mostrarMensaje("Tercero inactivado exitosamente en PROV_MAESTRO.", "success");
+        })
+        .withFailureHandler(function(err) {
+          CLI_PROCESANDO = false;
+          mostrarMensaje("Error al inactivar: " + err.message, "error");
+        })
+        .PROV_INACTIVAR_PROVEEDOR(idTercero);
+    }
   }
 
-
-  // ==========================================================
-  // 07. INACTIVAR CLIENTE
-  // ==========================================================
-
-  function inactivarCliente() {
-
-    if (CLI_PROCESANDO) return;
-
-
-    // --------------------------------------------------------
-    // OBTENER ID
-    // --------------------------------------------------------
-
-    const idCliente =
-      document
-        .getElementById("ID_CLIENTE")
-        .value
-        .trim();
-
-
-    // --------------------------------------------------------
-    // VALIDAR
-    // --------------------------------------------------------
-
-    if (!idCliente) {
-
-      mostrarMensaje(
-        "Primero debe buscar o cargar un cliente.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // CONFIRMAR
-    // --------------------------------------------------------
-
-    const confirmar =
-      confirm(
-        "¿Está seguro de que desea inactivar el cliente " +
-        idCliente +
-        "?"
-      );
-
-
-    if (!confirmar) {
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // PROCESAR
-    // --------------------------------------------------------
-
-    CLI_PROCESANDO = true;
-
-    mostrarMensaje(
-      "Inactivando cliente...",
-      "info"
-    );
-
-
-    // --------------------------------------------------------
-    // ENVIAR A APPS SCRIPT
-    // --------------------------------------------------------
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-
-        CLI_PROCESANDO = false;
-
-        document
-          .getElementById("ESTADO_CLIENTE")
-          .value = "INACTIVO";
-
-
-        mostrarMensaje(
-          resultado.mensaje ||
-          "Cliente inactivado correctamente.",
-          "success"
-        );
-
-      })
-      .withFailureHandler(function(error) {
-
-        CLI_PROCESANDO = false;
-
-        manejarError(error);
-
-      })
-      .CLI_INACTIVAR_CLIENTE(idCliente);
-
+  // Obtiene un objeto clave-valor con todos los datos mapeados por ID
+  function obtenerDatosFormulario() {
+    const datos = {};
+    const inputs = document.querySelectorAll("input[id], select[id], textarea[id]");
+    inputs.forEach(input => {
+      if (input.id !== "buscarTercero") {
+        datos[input.id] = input.value;
+      }
+    });
+    // Forzar el ID que sirva de comodín para Clientes o Proveedores
+    datos.ID_PROVEEDOR = datos.ID_CLIENTE;
+    return datos;
   }
 
-
-  // ==========================================================
-  // 08. LIMPIAR FORMULARIO
-  // ==========================================================
-
+  // Limpia y resetea todos los campos del formulario
   function limpiarFormulario() {
-
-    const campos =
-      document.querySelectorAll(
-        "input:not([readonly]), select, textarea"
-      );
-
-
-    campos.forEach(function(campo) {
-
-      // ------------------------------------------------------
-      // VALORES POR DEFECTO
-      // ------------------------------------------------------
-
-      if (campo.id === "PAIS") {
-
-        campo.value = "COLOMBIA";
-
+    const inputs = document.querySelectorAll("input:not([readonly]), select, textarea");
+    inputs.forEach(input => {
+      if (input.name !== "responsabilidad_rut") {
+        input.value = "";
       }
-
-      else if (campo.id === "ESTADO_CLIENTE") {
-
-        campo.value = "ACTIVO";
-
-      }
-
-      else if (
-        campo.id === "PLAZO_PAGO_DIAS" ||
-        campo.id === "LIMITE_CREDITO"
-      ) {
-
-        campo.value = "0";
-
-      }
-
-      else {
-
-        campo.value = "";
-
-      }
-
+    });
+    
+    // Inputs del RUT checklist
+    const checkboxes = document.querySelectorAll('input[name="responsabilidad_rut"]');
+    checkboxes.forEach(cb => {
+      cb.checked = cb.value === "R-99-PN";
     });
 
-
-    // --------------------------------------------------------
-    // CAMPOS AUTOMÁTICOS
-    // --------------------------------------------------------
-
-    const automaticos = [
-
-      "ID_CLIENTE",
-      "FECHA_CREACION",
-      "FECHA_ACTUALIZACION",
-      "USUARIO_CREACION",
-      "USUARIO_ACTUALIZACION"
-
-    ];
-
-
-    automaticos.forEach(function(id) {
-
-      const elemento =
-        document.getElementById(id);
-
-      if (elemento) {
-
-        elemento.value = "";
-
-      }
-
-    });
-
-
-    // --------------------------------------------------------
-    // BUSCADOR
-    // --------------------------------------------------------
-
-    document
-      .getElementById("buscarCliente")
-      .value = "";
-
-
-    // --------------------------------------------------------
-    // ESTADO
-    // --------------------------------------------------------
-
-    CLI_MODO = "NUEVO";
+    document.getElementById("ID_CLIENTE").value = "";
+    document.getElementById("FECHA_CREACION").value = "";
+    document.getElementById("FECHA_ACTUALIZACION").value = "";
+    document.getElementById("USUARIO_CREACION").value = "";
+    document.getElementById("USUARIO_ACTUALIZACION").value = "";
+    document.getElementById("PAIS").value = "COLOMBIA";
+    document.getElementById("ESTADO_CLIENTE").value = "ACTIVO";
+    document.getElementById("FORMA_PAGO").value = "CONTADO";
+    document.getElementById("METODO_PAGO").value = "TRANSFERENCIA";
+    document.getElementById("PLAZO_PAGO_DIAS").value = "0";
+    document.getElementById("LIMITE_CREDITO").value = "0";
+    document.getElementById("RESPONSABILIDAD_FISCAL").value = "R-99-PN";
 
     ocultarMensaje();
-
   }
 
-
-  // ==========================================================
-  // 09. VALIDAR FORMULARIO
-  // ==========================================================
-
-  function validarFormulario() {
-
-    const tipoPersona =
-      obtenerValor("TIPO_PERSONA");
-
-    const tipoDocumento =
-      obtenerValor("TIPO_DOCUMENTO");
-
-    const documento =
-      obtenerValor("NUMERO_DOCUMENTO");
-
-    const tipoCliente =
-      obtenerValor("TIPO_CLIENTE");
-
-    const pais =
-      obtenerValor("PAIS");
-
-
-    // --------------------------------------------------------
-    // TIPO DE PERSONA
-    // --------------------------------------------------------
-
-    if (!tipoPersona) {
-
-      mostrarMensaje(
-        "Seleccione el tipo de persona.",
-        "error"
-      );
-
-      enfocarCampo("TIPO_PERSONA");
-
-      return false;
-
-    }
-
-
-    // --------------------------------------------------------
-    // TIPO DE DOCUMENTO
-    // --------------------------------------------------------
-
-    if (!tipoDocumento) {
-
-      mostrarMensaje(
-        "Seleccione el tipo de documento.",
-        "error"
-      );
-
-      enfocarCampo("TIPO_DOCUMENTO");
-
-      return false;
-
-    }
-
-
-    // --------------------------------------------------------
-    // DOCUMENTO
-    // --------------------------------------------------------
-
-    if (!documento) {
-
-      mostrarMensaje(
-        "Digite el número de documento.",
-        "error"
-      );
-
-      enfocarCampo("NUMERO_DOCUMENTO");
-
-      return false;
-
-    }
-
-
-    // --------------------------------------------------------
-    // TIPO DE CLIENTE
-    // --------------------------------------------------------
-
-    if (!tipoCliente) {
-
-      mostrarMensaje(
-        "Seleccione el tipo de cliente.",
-        "error"
-      );
-
-      enfocarCampo("TIPO_CLIENTE");
-
-      return false;
-
-    }
-
-
-    // --------------------------------------------------------
-    // PAÍS
-    // --------------------------------------------------------
-
-    if (!pais) {
-
-      mostrarMensaje(
-        "Digite el país.",
-        "error"
-      );
-
-      enfocarCampo("PAIS");
-
-      return false;
-
-    }
-
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // 10. OBTENER DATOS DEL FORMULARIO
-  // ==========================================================
-
-  function obtenerDatosFormulario() {
-
-    const datos = {};
-
-
-    // --------------------------------------------------------
-    // OBTENER TODOS LOS CAMPOS CON ID
-    // --------------------------------------------------------
-
-    const campos =
-      document.querySelectorAll(
-        "input[id], select[id], textarea[id]"
-      );
-
-
-    campos.forEach(function(campo) {
-
-      // No enviamos el buscador como información del cliente.
-      if (campo.id === "buscarCliente") {
-        return;
-      }
-
-
-      // ------------------------------------------------------
-      // VALOR
-      // ------------------------------------------------------
-
-      let valor =
-        campo.value;
-
-
-      // ------------------------------------------------------
-      // LIMPIAR ESPACIOS EN TEXTOS
-      // ------------------------------------------------------
-
-      if (
-        campo.type !== "number"
-      ) {
-
-        valor =
-          String(valor || "").trim();
-
-      }
-
-
-      datos[campo.id] =
-        valor;
-
-    });
-
-
-    return datos;
-
-  }
-
-
-  // ==========================================================
-  // 11. CARGAR CLIENTE EN EL FORMULARIO
-  // ==========================================================
-
-  function cargarCliente(datos) {
-
-    if (!datos) {
-
-      mostrarMensaje(
-        "No se encontró el cliente.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // RECORRER DATOS RECIBIDOS
-    // --------------------------------------------------------
-
-    Object.keys(datos).forEach(
-      function(campo) {
-
-        const elemento =
-          document.getElementById(campo);
-
-
-        if (!elemento) {
-          return;
-        }
-
-
-        let valor =
-          datos[campo];
-
-
-        // ----------------------------------------------------
-        // FORMATEAR FECHAS
-        // ----------------------------------------------------
-
-        if (
-          campo === "FECHA_CREACION" ||
-          campo === "FECHA_ACTUALIZACION"
-        ) {
-
-          valor =
-            formatearFecha(valor);
-
-        }
-
-
-        elemento.value =
-          valor ?? "";
-
-      }
-    );
-
-
-    CLI_MODO = "EDICION";
-
-
-    mostrarMensaje(
-      "Cliente cargado correctamente: " +
-      (datos.ID_CLIENTE || ""),
-      "success"
-    );
-
-  }
-
-
-  // ==========================================================
-  // 12. UTILIDADES DE CAMPOS
-  // ==========================================================
-
-  function obtenerValor(id) {
-
-    const elemento =
-      document.getElementById(id);
-
-    return elemento
-      ? String(elemento.value || "").trim()
-      : "";
-
-  }
-
-
-  function enfocarCampo(id) {
-
-    const elemento =
-      document.getElementById(id);
-
-    if (elemento) {
-
-      elemento.focus();
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // 13. FORMATEAR FECHAS
-  // ==========================================================
-
-  function formatearFecha(valor) {
-
-    if (!valor) {
-      return "";
-    }
-
-
-    const fecha =
-      new Date(valor);
-
-
-    if (isNaN(fecha.getTime())) {
-
-      return valor;
-
-    }
-
-
-    const dia =
-      String(fecha.getDate())
-        .padStart(2, "0");
-
-    const mes =
-      String(fecha.getMonth() + 1)
-        .padStart(2, "0");
-
-    const anio =
-      fecha.getFullYear();
-
-    const hora =
-      String(fecha.getHours())
-        .padStart(2, "0");
-
-    const minuto =
-      String(fecha.getMinutes())
-        .padStart(2, "0");
-
-
-    return (
-      dia + "/" +
-      mes + "/" +
-      anio + " " +
-      hora + ":" +
-      minuto
-    );
-
-  }
-
-
-  // ==========================================================
-  // 14. MANEJO DE ERRORES
-  // ==========================================================
-
-  function manejarError(error) {
-
-    CLI_PROCESANDO = false;
-
-
-    let mensaje =
-      "Ocurrió un error inesperado.";
-
-
-    if (error) {
-
-      if (typeof error === "string") {
-
-        mensaje = error;
-
-      }
-
-      else if (error.message) {
-
-        mensaje = error.message;
-
-      }
-
-    }
-
-
-    mostrarMensaje(
-      mensaje,
-      "error"
-    );
-
-
-    console.error(error);
-
-  }
-
-
-  // ==========================================================
-  // 15. MENSAJES
-  // ==========================================================
-
+  // Utilidad de Mensajes
   function mostrarMensaje(texto, tipo) {
-
-    const mensaje =
-      document.getElementById("mensaje");
-
-
-    mensaje.textContent =
-      texto;
-
-
-    mensaje.className =
-      "message " + tipo;
-
-
-    mensaje.style.display =
-      "block";
-
-
-    // --------------------------------------------------------
-    // SUBIR AL MENSAJE PARA VER EL RESULTADO
-    // --------------------------------------------------------
-
-    mensaje.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest"
-    });
-
+    const box = document.getElementById("mensaje");
+    box.textContent = texto;
+    box.className = "msg-box msg-" + tipo;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
-
 
   function ocultarMensaje() {
-
-    const mensaje =
-      document.getElementById("mensaje");
-
-
-    mensaje.style.display =
-      "none";
-
-
-    mensaje.textContent =
-      "";
-
-
-    mensaje.className =
-      "message";
-
+    document.getElementById("mensaje").style.display = "none";
   }
-
-
-  // ==========================================================
-  // 16. FIN DEL FORMULARIO
-  // ==========================================================
-
 </script>
 
 </body>

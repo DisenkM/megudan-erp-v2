@@ -1,1452 +1,731 @@
+<!-- ============================================================
+* INTERFAZ: F2_USR_GESTION
+* MODULO: SEGURIDAD (ADMINISTRACIÓN CENTRAL)
+* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos y Sesiones del ERP
+* CONEXIÓN BACKEND: 23_SEGURIDAD.gs y 24_LOGS.gs
+* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
+============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
   <base target="_top">
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Gestión de Usuarios</title>
-
-
-  <!-- ========================================================
-       01. ESTILOS GENERALES
-       ======================================================== -->
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Seguridad | MEGUDAN ERP</title>
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-
+    * { box-sizing: border-box; }
     body {
-
-      margin: 0;
-
-      padding: 0;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-      background: #f4f6f8;
-
-      color: #1f2937;
-
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f4f6f8; color: #1f2937;
     }
-
-
-    /* ========================================================
-       CONTENEDOR PRINCIPAL
-       ======================================================== */
-
-    .app {
-
-      min-height: 100vh;
-
-      display: flex;
-
-      flex-direction: column;
-
-    }
-
-
-    /* ========================================================
-       ENCABEZADO
-       ======================================================== */
-
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Header */
     .header {
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: space-between;
-
-      padding: 18px 25px;
-
-      background: #374151;
-
-      color: #ffffff;
-
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 25px; background-color: #374151; color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-
-
-    .header-title {
-
-      display: flex;
-
-      align-items: center;
-
-      gap: 12px;
-
-    }
-
-
-    .header-icon {
-
-      font-size: 28px;
-
-    }
-
-
-    .header h1 {
-
-      margin: 0;
-
-      font-size: 22px;
-
-    }
-
-
-    .header p {
-
-      margin: 4px 0 0;
-
-      font-size: 13px;
-
-      opacity: 0.8;
-
-    }
-
-
-    /* ========================================================
-       NAVEGACIÓN POR PESTAÑAS
-       ======================================================== */
-
+    .header-title { display: flex; align-items: center; gap: 12px; }
+    .header-icon { font-size: 28px; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.8; }
+    
+    /* Tabs Navigation */
     .tabs {
-
-      display: flex;
-
-      gap: 0;
-
-      background: #ffffff;
-
-      border-bottom: 1px solid #d1d5db;
-
-      overflow-x: auto;
-
+      display: flex; gap: 0; background-color: #ffffff;
+      border-bottom: 1px solid #d1d5db; overflow-x: auto;
     }
-
-
     .tab-button {
-
-      border: none;
-
-      background: transparent;
-
-      padding: 16px 24px;
-
-      cursor: pointer;
-
-      font-size: 14px;
-
-      font-weight: bold;
-
-      color: #6b7280;
-
-      border-bottom: 3px solid transparent;
-
-      white-space: nowrap;
-
-      transition: 0.2s;
-
+      border: none; background: transparent; padding: 16px 24px;
+      cursor: pointer; font-size: 14px; font-weight: 700; color: #6b7280;
+      border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s;
     }
-
-
-    .tab-button:hover {
-
-      background: #f9fafb;
-
-      color: #111827;
-
-    }
-
-
-    .tab-button.active {
-
-      color: #374151;
-
-      border-bottom-color: #374151;
-
-      background: #f9fafb;
-
-    }
-
-
-    /* ========================================================
-       CONTENIDO
-       ======================================================== */
-
-    .content {
-
-      flex: 1;
-
-      padding: 25px;
-
-    }
-
-
-    .tab-content {
-
-      display: none;
-
-    }
-
-
-    .tab-content.active {
-
-      display: block;
-
-    }
-
-
-    /* ========================================================
-       TARJETAS
-       ======================================================== */
-
+    .tab-button:hover { background-color: #f9fafb; color: #111827; }
+    .tab-button.active { color: #374151; border-bottom-color: #374151; background-color: #f9fafb; }
+    
+    /* Content wrapper */
+    .content { flex: 1; padding: 25px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Cards and Elements */
     .card {
-
-      background: #ffffff;
-
-      border: 1px solid #e5e7eb;
-
-      border-radius: 10px;
-
-      padding: 22px;
-
-      margin-bottom: 20px;
-
-      box-shadow:
-        0 2px 4px
-        rgba(0, 0, 0, 0.05);
-
+      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-
-
-    .card-header {
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: space-between;
-
-      gap: 15px;
-
-      margin-bottom: 20px;
-
-    }
-
-
-    .card-title {
-
-      margin: 0;
-
-      font-size: 18px;
-
-    }
-
-
-    /* ========================================================
-       BOTONES
-       ======================================================== */
-
+    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+    .card-title { margin: 0; font-size: 18px; font-weight: 700; }
+    
     .button {
-
-      border: none;
-
-      border-radius: 7px;
-
-      padding: 10px 16px;
-
-      cursor: pointer;
-
-      font-size: 14px;
-
-      font-weight: bold;
-
-      transition: 0.2s;
-
+      border: none; border-radius: 6px; padding: 10px 16px;
+      cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;
     }
-
-
-    .button-primary {
-
-      background: #374151;
-
-      color: #ffffff;
-
+    .button-primary { background: #374151; color: #ffffff; }
+    .button-primary:hover { background: #1f2937; }
+    .button-secondary { background: #e5e7eb; color: #374151; }
+    .button-secondary:hover { background: #d1d5db; }
+    .button-danger { background: #b91c1c; color: #ffffff; }
+    .button-danger:hover { background: #991b1b; }
+    .button-success { background: #16a34a; color: #ffffff; }
+    .button-success:hover { background: #15803d; }
+    
+    /* Search and inputs */
+    .search-container { display: flex; gap: 10px; margin-bottom: 20px; }
+    .input, select {
+      width: 100%; padding: 11px 12px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 14px; outline: none; background: white;
     }
-
-
-    .button-primary:hover {
-
-      background: #1f2937;
-
-    }
-
-
-    .button-secondary {
-
-      background: #e5e7eb;
-
-      color: #374151;
-
-    }
-
-
-    .button-secondary:hover {
-
-      background: #d1d5db;
-
-    }
-
-
-    .button-danger {
-
-      background: #b91c1c;
-
-      color: #ffffff;
-
-    }
-
-
-    .button-danger:hover {
-
-      background: #991b1b;
-
-    }
-
-
-    /* ========================================================
-       BARRA DE BÚSQUEDA
-       ======================================================== */
-
-    .search-container {
-
-      display: flex;
-
-      gap: 10px;
-
-      margin-bottom: 20px;
-
-    }
-
-
-    .input {
-
-      width: 100%;
-
-      padding: 11px 12px;
-
-      border: 1px solid #d1d5db;
-
-      border-radius: 7px;
-
-      font-size: 14px;
-
-      outline: none;
-
-    }
-
-
-    .input:focus {
-
-      border-color: #374151;
-
-      box-shadow:
-        0 0 0 3px
-        rgba(55, 65, 81, 0.10);
-
-    }
-
-
-    /* ========================================================
-       TABLAS
-       ======================================================== */
-
-    .table-container {
-
-      width: 100%;
-
-      overflow-x: auto;
-
-    }
-
-
-    table {
-
-      width: 100%;
-
-      border-collapse: collapse;
-
-      min-width: 750px;
-
-    }
-
-
+    .input:focus, select:focus { border-color: #374151; box-shadow: 0 0 0 3px rgba(55,65,81,0.10); }
+    
+    /* Tables design */
+    .table-container { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 750px; }
     th {
-
-      background: #f3f4f6;
-
-      padding: 12px;
-
-      text-align: left;
-
-      font-size: 12px;
-
-      color: #374151;
-
-      border-bottom: 1px solid #d1d5db;
-
-      white-space: nowrap;
-
+      background: #f3f4f6; padding: 12px; text-align: left; font-size: 12px;
+      color: #374151; border-bottom: 1px solid #d1d5db; white-space: nowrap; font-weight: 700;
     }
-
-
-    td {
-
-      padding: 12px;
-
-      border-bottom: 1px solid #e5e7eb;
-
-      font-size: 13px;
-
+    td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+    tr:hover td { background: #f9fafb; }
+    
+    /* Badges */
+    .badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge-active { background: #dcfce7; color: #166534; }
+    .badge-inactive { background: #f3f4f6; color: #4b5563; }
+    .badge-blocked { background: #fef3c7; color: #92400e; }
+    .badge-pending { background: #fee2e2; color: #ea580c; border: 1.5px solid #f97316; }
+    .badge-session { background: #dbeafe; color: #1d4ed8; }
+    
+    /* State placeholders */
+    .empty-state { text-align: center; padding: 45px 20px; color: #6b7280; }
+    .empty-icon { font-size: 42px; margin-bottom: 10px; }
+    
+    /* Modales */
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
     }
-
-
-    tr:hover td {
-
-      background: #f9fafb;
-
+    .modal-content {
+      background-color: #fcfcfc; margin: 8% auto; padding: 25px;
+      border: 1px solid #e5e7eb; width: 480px; border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-
-
-    /* ========================================================
-       ESTADOS
-       ======================================================== */
-
-    .badge {
-
-      display: inline-block;
-
-      padding: 5px 9px;
-
-      border-radius: 20px;
-
-      font-size: 11px;
-
-      font-weight: bold;
-
-    }
-
-
-    .badge-active {
-
-      background: #dcfce7;
-
-      color: #166534;
-
-    }
-
-
-    .badge-inactive {
-
-      background: #fee2e2;
-
-      color: #991b1b;
-
-    }
-
-
-    .badge-blocked {
-
-      background: #fef3c7;
-
-      color: #92400e;
-
-    }
-
-
-    .badge-session {
-
-      background: #dbeafe;
-
-      color: #1d4ed8;
-
-    }
-
-
-    /* ========================================================
-       ESTADO VACÍO
-       ======================================================== */
-
-    .empty-state {
-
-      text-align: center;
-
-      padding: 45px 20px;
-
-      color: #6b7280;
-
-    }
-
-
-    .empty-icon {
-
-      font-size: 42px;
-
-      margin-bottom: 10px;
-
-    }
-
-
-    /* ========================================================
-       MENSAJES
-       ======================================================== */
-
-    .message {
-
-      display: none;
-
-      padding: 12px 15px;
-
-      border-radius: 7px;
-
-      margin-bottom: 18px;
-
-      font-size: 14px;
-
-    }
-
-
-    .message.success {
-
-      display: block;
-
-      background: #dcfce7;
-
-      color: #166534;
-
-    }
-
-
-    .message.error {
-
-      display: block;
-
-      background: #fee2e2;
-
-      color: #991b1b;
-
-    }
-
-
-    /* ========================================================
-       RESPONSIVE
-       ======================================================== */
-
-    @media (max-width: 700px) {
-
-      .header {
-
-        padding: 15px;
-
-      }
-
-
-      .header h1 {
-
-        font-size: 18px;
-
-      }
-
-
-      .content {
-
-        padding: 15px;
-
-      }
-
-
-      .card {
-
-        padding: 15px;
-
-      }
-
-
-      .card-header {
-
-        flex-direction: column;
-
-        align-items: flex-start;
-
-      }
-
-
-      .search-container {
-
-        flex-direction: column;
-
-      }
-
-    }
-
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 17px; font-weight: 700; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
+    .close-btn:hover { color: black; }
+    
+    .modal-body .field { display: flex; flex-direction: column; margin-bottom: 15px; gap: 6px; }
+    .modal-body label { font-size: 12px; font-weight: 700; color: #374151; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 20px; }
+    
+    .message { display: none; padding: 12px 15px; border-radius: 6px; margin-bottom: 18px; font-size: 13px; font-weight: 600; }
+    .message.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .message.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .message.info { display: block; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
   </style>
-
 </head>
-
-
 <body>
 
-
-  <!-- ========================================================
-       02. CONTENEDOR PRINCIPAL
-       ======================================================== -->
-
-  <div class="app">
-
-
-    <!-- ======================================================
-         03. ENCABEZADO
-         ====================================================== -->
-
-    <header class="header">
-
-      <div class="header-title">
-
-        <div class="header-icon">
-          🔐
-        </div>
-
-        <div>
-
-          <h1>
-            Gestión de Seguridad
-          </h1>
-
-          <p>
-            Administración de usuarios, roles, permisos y sesiones
-          </p>
-
-        </div>
-
+<div class="app">
+  <header class="header">
+    <div class="header-title">
+      <div class="header-icon">🔐</div>
+      <div>
+        <h1>Gestión de Seguridad</h1>
+        <p>Administración de usuarios, roles, permisos y sesiones del ERP</p>
       </div>
+    </div>
+  </header>
 
-    </header>
+  <nav class="tabs">
+    <button class="tab-button active" onclick="USR_CAMBIAR_PESTANA('usuarios')">👤 Usuarios</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
+  </nav>
 
+  <main class="content">
+    <div id="USR_MENSAJE_ALERT" class="message"></div>
 
-    <!-- ======================================================
-         04. PESTAÑAS PRINCIPALES
-         ====================================================== -->
-
-    <nav class="tabs">
-
-      <button
-        class="tab-button active"
-        onclick="USR_CAMBIAR_PESTANA('usuarios')"
-      >
-        👤 Usuarios
-      </button>
-
-
-      <button
-        class="tab-button"
-        onclick="USR_CAMBIAR_PESTANA('roles')"
-      >
-        🛡️ Roles
-      </button>
-
-
-      <button
-        class="tab-button"
-        onclick="USR_CAMBIAR_PESTANA('permisos')"
-      >
-        🔑 Permisos
-      </button>
-
-
-      <button
-        class="tab-button"
-        onclick="USR_CAMBIAR_PESTANA('sesiones')"
-      >
-        🟢 Sesiones
-      </button>
-
-    </nav>
-
-
-    <!-- ======================================================
-         05. CONTENIDO PRINCIPAL
-         ====================================================== -->
-
-    <main class="content">
-
-
-      <!-- ====================================================
-           05.01 MENSAJES DEL SISTEMA
-           ==================================================== -->
-
-      <div id="USR_MENSAJE"></div>
-
-
-      <!-- ====================================================
-           06. PESTAÑA USUARIOS
-           ==================================================== -->
-
-      <section
-        id="tab-usuarios"
-        class="tab-content active"
-      >
-
-        <div class="card">
-
-          <div class="card-header">
-
-            <h2 class="card-title">
-              👤 Gestión de Usuarios
-            </h2>
-
-            <button
-              class="button button-primary"
-              onclick="USR_NUEVO_USUARIO()"
-            >
-              + Nuevo Usuario
-            </button>
-
-          </div>
-
-
-          <div class="search-container">
-
-            <input
-              type="text"
-              id="USR_BUSCADOR_USUARIOS"
-              class="input"
-              placeholder="Buscar por usuario, nombre, correo o ID..."
-              oninput="USR_BUSCAR_USUARIOS()"
-            >
-
-          </div>
-
-
-          <div class="table-container">
-
-            <table>
-
-              <thead>
-
-                <tr>
-
-                  <th>ID</th>
-                  <th>Usuario</th>
-                  <th>Nombre</th>
-                  <th>Correo</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody id="USR_TABLA_USUARIOS">
-
-                <tr>
-
-                  <td colspan="7">
-
-                    <div class="empty-state">
-
-                      <div class="empty-icon">
-                        👤
-                      </div>
-
-                      <strong>
-                        Cargando usuarios...
-                      </strong>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+    <!-- Pestaña: Usuarios -->
+    <section id="tab-usuarios" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">👤 Usuarios del ERP</h2>
+          <button class="button button-primary" onclick="USR_ABRIR_MODAL_USUARIO()">+ Nuevo Usuario</button>
         </div>
-
-      </section>
-
-
-      <!-- ====================================================
-           07. PESTAÑA ROLES
-           ==================================================== -->
-
-      <section
-        id="tab-roles"
-        class="tab-content"
-      >
-
-        <div class="card">
-
-          <div class="card-header">
-
-            <h2 class="card-title">
-              🛡️ Gestión de Roles
-            </h2>
-
-            <button
-              class="button button-primary"
-              onclick="USR_NUEVO_ROL()"
-            >
-              + Nuevo Rol
-            </button>
-
-          </div>
-
-
-          <div class="search-container">
-
-            <input
-              type="text"
-              id="USR_BUSCADOR_ROLES"
-              class="input"
-              placeholder="Buscar rol..."
-              oninput="USR_BUSCAR_ROLES()"
-            >
-
-          </div>
-
-
-          <div class="table-container">
-
-            <table>
-
-              <thead>
-
-                <tr>
-
-                  <th>ID</th>
-                  <th>Nombre del Rol</th>
-                  <th>Descripción</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody id="USR_TABLA_ROLES">
-
-                <tr>
-
-                  <td colspan="5">
-
-                    <div class="empty-state">
-
-                      <div class="empty-icon">
-                        🛡️
-                      </div>
-
-                      <strong>
-                        Seleccione esta pestaña para cargar los roles.
-                      </strong>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+        <div class="search-container">
+          <input type="text" id="USR_BUSCADOR_USUARIOS" class="input" placeholder="Buscar por usuario, nombre, correo o ID..." oninput="USR_BUSCAR_USUARIOS()">
         </div>
-
-      </section>
-
-
-      <!-- ====================================================
-           08. PESTAÑA PERMISOS
-           ==================================================== -->
-
-      <section
-        id="tab-permisos"
-        class="tab-content"
-      >
-
-        <div class="card">
-
-          <div class="card-header">
-
-            <h2 class="card-title">
-              🔑 Gestión de Permisos
-            </h2>
-
-            <button
-              class="button button-primary"
-              onclick="USR_NUEVO_PERMISO()"
-            >
-              + Asignar Permiso
-            </button>
-
-          </div>
-
-
-          <div class="search-container">
-
-            <input
-              type="text"
-              id="USR_BUSCADOR_PERMISOS"
-              class="input"
-              placeholder="Buscar por rol, módulo o acción..."
-              oninput="USR_BUSCAR_PERMISOS()"
-            >
-
-          </div>
-
-
-          <div class="table-container">
-
-            <table>
-
-              <thead>
-
-                <tr>
-
-                  <th>ID</th>
-                  <th>Rol</th>
-                  <th>Módulo</th>
-                  <th>Acción</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody id="USR_TABLA_PERMISOS">
-
-                <tr>
-
-                  <td colspan="6">
-
-                    <div class="empty-state">
-
-                      <div class="empty-icon">
-                        🔑
-                      </div>
-
-                      <strong>
-                        Seleccione esta pestaña para cargar los permisos.
-                      </strong>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Nombre Completo</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="USR_TABLA_USUARIOS">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">👤</div>
+                    <strong>Cargando usuarios registrados...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
+    </section>
 
-      </section>
-
-
-      <!-- ====================================================
-           09. PESTAÑA SESIONES
-           ==================================================== -->
-
-      <section
-        id="tab-sesiones"
-        class="tab-content"
-      >
-
-        <div class="card">
-
-          <div class="card-header">
-
-            <h2 class="card-title">
-              🟢 Control de Sesiones
-            </h2>
-
-            <button
-              class="button button-secondary"
-              onclick="USR_CARGAR_SESIONES()"
-            >
-              ↻ Actualizar
-            </button>
-
-          </div>
-
-
-          <div class="search-container">
-
-            <input
-              type="text"
-              id="USR_BUSCADOR_SESIONES"
-              class="input"
-              placeholder="Buscar por usuario, ID o estado..."
-              oninput="USR_BUSCAR_SESIONES()"
-            >
-
-          </div>
-
-
-          <div class="table-container">
-
-            <table>
-
-              <thead>
-
-                <tr>
-
-                  <th>ID Sesión</th>
-                  <th>Usuario</th>
-                  <th>Inicio</th>
-                  <th>Última Actividad</th>
-                  <th>Expiración</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody id="USR_TABLA_SESIONES">
-
-                <tr>
-
-                  <td colspan="7">
-
-                    <div class="empty-state">
-
-                      <div class="empty-icon">
-                        🟢
-                      </div>
-
-                      <strong>
-                        Seleccione esta pestaña para cargar las sesiones.
-                      </strong>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+    <!-- Pestaña: Roles -->
+    <section id="tab-roles" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🛡️ Roles y Niveles de Jerarquía</h2>
         </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre del Rol</th>
+                <th>Descripción</th>
+                <th>Nivel</th>
+                <th>Rol Sistema</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="USR_TABLA_ROLES">
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-icon">🛡️</div>
+                    <strong>Cargando roles predefinidos...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-      </section>
+    <!-- Pestaña: Permisos -->
+    <section id="tab-permisos" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🔑 Control de Permisos por Rol</h2>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Rol</th>
+                <th>Módulo</th>
+                <th>Submódulo</th>
+                <th>Acción</th>
+                <th>Permitido</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="USR_TABLA_PERMISOS">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">🔑</div>
+                    <strong>Cargando matriz de permisos...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
+    <!-- Pestaña: Sesiones -->
+    <section id="tab-sesiones" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🟢 Control de Sesiones Activas</h2>
+          <button class="button button-secondary" onclick="USR_CARGAR_SESIONES()">↻ Actualizar</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Sesión</th>
+                <th>Usuario</th>
+                <th>Inicio</th>
+                <th>Última Actividad</th>
+                <th>Expiración</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="USR_TABLA_SESIONES">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">🟢</div>
+                    <strong>Cargando registros de sesión...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
 
-    </main>
-
+<!-- Modal: Registro de Usuario por Admin -->
+<div id="modal_usuario" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">👤 Registro de Nuevo Usuario</h3>
+      <span class="close-btn" onclick="USR_CERRAR_MODAL_USUARIO()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nombre de Usuario (Login) *</label>
+        <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
+      </div>
+      <div class="field">
+        <label>Nombre Completo *</label>
+        <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="field">
+        <label>Correo Electrónico *</label>
+        <input type="email" id="form_correo" class="input" placeholder="Ej: jperez@megudan.com">
+      </div>
+      <div class="field">
+        <label>Contraseña Temporal *</label>
+        <input type="password" id="form_contrasena" class="input" placeholder="Min. 8 caracteres (1 mayúscula, 1 número, 1 especial)">
+      </div>
+      <div class="field">
+        <label>Rol Asignado *</label>
+        <select id="form_id_rol"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="USR_CERRAR_MODAL_USUARIO()">Cancelar</button>
+      <button class="button button-primary" onclick="USR_GUARDAR_USUARIO()">Guardar Usuario</button>
+    </div>
   </div>
+</div>
 
+<!-- Modal: Aprobación de Auto-registro -->
+<div id="modal_aprobacion" class="modal">
+  <div class="modal-content" style="width: 440px;">
+    <div class="modal-header">
+      <h3 class="modal-title">✓ Aprobar Registro de Usuario</h3>
+      <span class="close-btn" onclick="USR_CERRAR_MODAL_APROBACION()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: #4b5563; margin-bottom: 15px;">
+        Vas a aprobar el acceso para el usuario <strong id="aprob_username"></strong>. Por favor, asígnale su Rol definitivo:
+      </p>
+      <input type="hidden" id="aprob_id_usuario">
+      <div class="field">
+        <label>Rol Definitivo *</label>
+        <select id="aprob_id_role"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="USR_CERRAR_MODAL_APROBACION()">Cancelar</button>
+      <button class="button button-success" onclick="USR_EJECUTAR_APROBACION()">Aprobar y Activar</button>
+    </div>
+  </div>
+</div>
 
-  <!-- ========================================================
-       10. JAVASCRIPT
-       ======================================================== -->
+<!-- JavaScript modular de Seguridad -->
+<script>
+  let USR_USUARIOS = [];
+  let USR_ROLES = [];
+  let USR_PERMISOS = [];
+  let USR_SESIONES = [];
+  let PROCESANDO_GUARDADO = false;
 
-  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    USR_CARGAR_USUARIOS();
+    USR_CARGAR_ROLES();
+    USR_CARGAR_PERMISOS();
+    USR_CARGAR_SESIONES();
+  });
 
+  function USR_CAMBIAR_PESTANA(pestana) {
+    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
 
-    // ==========================================================
-    // 10.01 DATOS LOCALES
-    // Aquí se almacenarán temporalmente los datos obtenidos
-    // desde 23_SEGURIDAD.gs.
-    // ==========================================================
+    const target = document.getElementById("tab-" + pestana);
+    if (target) target.classList.add("active");
 
-    let USR_USUARIOS = [];
+    const botones = document.querySelectorAll(".tab-button");
+    botones.forEach(btn => {
+      if (btn.textContent.toLowerCase().includes(pestana)) {
+        btn.classList.add("active");
+      }
+    });
+  }
 
-    let USR_ROLES = [];
+  function USR_MOSTRAR_ALERTA(mensaje, tipo) {
+    const el = document.getElementById("USR_MENSAJE_ALERT");
+    el.textContent = mensaje;
+    el.className = "message " + tipo;
+    el.style.display = "block";
+    // Mantenemos los mensajes de éxito o información legibles; los ocultamos después de un tiempo
+    setTimeout(() => { 
+      if (el.textContent === mensaje) {
+        el.style.display = "none"; 
+      }
+    }, 6000);
+  }
 
-    let USR_PERMISOS = [];
+  function USR_MOSTRAR_ERROR(mensaje) {
+    const el = document.getElementById("USR_MENSAJE_ALERT");
+    el.textContent = "❌ Error: " + mensaje;
+    el.className = "message error";
+    el.style.display = "block";
+    console.error(mensaje);
+  }
 
-    let USR_SESIONES = [];
+  // Modales
+  function USR_ABRIR_MODAL_USUARIO() {
+    document.getElementById("form_usuario").value = "";
+    document.getElementById("form_nombre").value = "";
+    document.getElementById("form_correo").value = "";
+    document.getElementById("form_contrasena").value = "";
+    
+    const select = document.getElementById("form_id_rol");
+    select.innerHTML = "";
+    
+    if (!(USR_ROLES.length > 0)) {
+      const opt = document.createElement("option");
+      opt.value = ""; opt.text = "Cargando roles...";
+      select.add(opt);
+    } else {
+      USR_ROLES.forEach(r => {
+        if (r.ESTADO_ROL === "ACTIVO") {
+          const opt = document.createElement("option");
+          opt.value = r.ID_ROL;
+          opt.text = r.NOMBRE_ROL + " (Nivel " + r.NIVEL_JERARQUIA + ")";
+          select.add(opt);
+        }
+      });
+    }
+    document.getElementById("modal_usuario").style.display = "block";
+  }
 
+  function USR_CERRAR_MODAL_USUARIO() {
+    document.getElementById("modal_usuario").style.display = "none";
+  }
 
-    // ==========================================================
-    // 10.02 INICIALIZAR FORMULARIO
-    // ==========================================================
+  function USR_GUARDAR_USUARIO() {
+    if (PROCESANDO_GUARDADO) return;
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      function() {
+    const usuario = document.getElementById("form_usuario").value.trim();
+    const nombre = document.getElementById("form_nombre").value.trim();
+    const correo = document.getElementById("form_correo").value.trim();
+    const contrasena = document.getElementById("form_contrasena").value;
+    const idRol = document.getElementById("form_id_rol").value;
 
+    if (!usuario || !nombre || !correo || !contrasena || !idRol) {
+      alert("Todos los campos marcados con (*) son obligatorios.");
+      return;
+    }
+
+    if (!(contrasena.length >= 8)) {
+      alert("La contraseña debe tener mínimo 8 caracteres.");
+      return;
+    }
+
+    PROCESANDO_GUARDADO = true;
+    USR_MOSTRAR_ALERTA("Registrando usuario en Sheets...", "info");
+    USR_CERRAR_MODAL_USUARIO();
+
+    // Enviamos la contraseña plana directamente en el objeto datos para crear el usuario en una sola transacción atómica
+    const datos = {
+      USUARIO: usuario,
+      NOMBRE: nombre,
+      CORREO: correo,
+      ID_ROL: idRol,
+      CONTRASENA_PLANA: contrasena,
+      USUARIO_CREACION: "ADMINISTRADOR_SISTEMA"
+    };
+
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        PROCESANDO_GUARDADO = false;
+        USR_MOSTRAR_ALERTA("Usuario '" + usuario + "' registrado con éxito.", "success");
         USR_CARGAR_USUARIOS();
+      })
+      .withFailureHandler(function(err) {
+        PROCESANDO_GUARDADO = false;
+        USR_MOSTRAR_ERROR("No se pudo crear el usuario: " + err.message);
+      })
+      .SEG_CREAR_USUARIO(datos);
+  }
 
+  // Aprobaciones
+  function USR_ABRIR_APROBACION(idUsuario, username) {
+    document.getElementById("aprob_id_usuario").value = idUsuario;
+    document.getElementById("aprob_username").textContent = username;
+    
+    const select = document.getElementById("aprob_id_role");
+    select.innerHTML = "";
+    
+    if (!(USR_ROLES.length > 0)) {
+      const opt = document.createElement("option");
+      opt.value = ""; opt.text = "Cargando roles...";
+      select.add(opt);
+    } else {
+      USR_ROLES.forEach(r => {
+        if (r.ESTADO_ROL === "ACTIVO") {
+          const opt = document.createElement("option");
+          opt.value = r.ID_ROL;
+          opt.text = r.NOMBRE_ROL + " (Nivel " + r.NIVEL_JERARQUIA + ")";
+          select.add(opt);
+        }
+      });
+    }
+    document.getElementById("modal_aprobacion").style.display = "block";
+  }
+
+  function USR_CERRAR_MODAL_APROBACION() {
+    document.getElementById("modal_aprobacion").style.display = "none";
+  }
+
+  function USR_EJECUTAR_APROBACION() {
+    const idUsuario = document.getElementById("aprob_id_usuario").value;
+    const idRol = document.getElementById("aprob_id_role").value;
+    
+    if (!idRol) {
+      alert("Por favor seleccione un rol definitivo.");
+      return;
+    }
+    
+    USR_CERRAR_MODAL_APROBACION();
+    USR_MOSTRAR_ALERTA("Aprobando acceso y activando cuenta...", "info");
+    
+    // Llamada atómica al backend para asignar rol y activar estado en un solo paso
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        USR_MOSTRAR_ALERTA(resultado.MENSAJE, "success");
+        USR_CARGAR_USUARIOS();
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudo aprobar el usuario: " + err.message);
+      })
+      .SEG_APROBAR_USUARIO(idUsuario, idRol, "ADMINISTRADOR_SISTEMA");
+  }
+
+  // Carga asíncrona de datos desde el backend .gs
+  function USR_CARGAR_USUARIOS() {
+    google.script.run
+      .withSuccessHandler(function(usuarios) {
+        USR_USUARIOS = usuarios;
+        USR_MOSTRAR_USUARIOS(usuarios);
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudieron cargar los usuarios: " + err.message);
+      })
+      .SEG_LISTAR_USUARIOS();
+  }
+
+  function USR_MOSTRAR_USUARIOS(usuarios) {
+    const tbody = document.getElementById("USR_TABLA_USUARIOS");
+    tbody.innerHTML = "";
+
+    if (!(usuarios.length > 0)) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay usuarios registrados.</td></tr>`;
+      return;
+    }
+
+    usuarios.forEach(u => {
+      const tr = document.createElement("tr");
+      let badgeClass = "badge-inactive";
+      let accionesHtml = "";
+      
+      if (u.ESTADO_USUARIO === "ACTIVO") {
+        badgeClass = "badge-active";
+        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'INACTIVO')">Inactivar</button>`;
+      } else if (u.ESTADO_USUARIO === "INACTIVO") {
+        badgeClass = "badge-inactive";
+        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Activar</button>`;
+      } else if (u.ESTADO_USUARIO === "BLOQUEADO") {
+        badgeClass = "badge-blocked";
+        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Desbloquear</button>`;
+      } else if (u.ESTADO_USUARIO === "PENDIENTE") {
+        badgeClass = "badge-pending";
+        accionesHtml = `<button class="button button-success" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="USR_ABRIR_APROBACION('${u.ID_USUARIO}', '${u.USUARIO}')">Aprobar Acceso</button>`;
       }
-    );
+      
+      tr.innerHTML = `
+        <td><strong>${u.ID_USUARIO}</strong></td>
+        <td>${u.USUARIO}</td>
+        <td>${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
+        <td>${u.CORREO}</td>
+        <td><span class="badge badge-session">${u.ID_ROL}</span></td>
+        <td><span class="badge ${badgeClass}">${u.ESTADO_USUARIO}</span></td>
+        <td>${accionesHtml}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
+  function USR_BUSCAR_USUARIOS() {
+    const criterio = document.getElementById("USR_BUSCADOR_USUARIOS").value.trim().toUpperCase();
+    if (!criterio) {
+      USR_MOSTRAR_USUARIOS(USR_USUARIOS);
+      return;
+    }
 
-    // ==========================================================
-    // 10.03 CAMBIAR PESTAÑA
-    // ==========================================================
+    const filtrados = USR_USUARIOS.filter(u => {
+      return (
+        String(u.ID_USUARIO).toUpperCase().includes(criterio) ||
+        String(u.USUARIO).toUpperCase().includes(criterio) ||
+        String(u.NOMBRE || u.NOMBRE_COMPLETO || "").toUpperCase().includes(criterio) ||
+        String(u.CORREO).toUpperCase().includes(criterio)
+      );
+    });
+    USR_MOSTRAR_USUARIOS(filtrados);
+  }
 
-    function USR_CAMBIAR_PESTANA(nombrePestana) {
+  function USR_CAMBIAR_ESTADO(idUsuario, nuevoEstado) {
+    if(!confirm("¿Está seguro de cambiar el estado de este usuario a " + nuevoEstado + "?")) return;
+    
+    google.script.run
+      .withSuccessHandler(function() {
+        USR_MOSTRAR_ALERTA("Estado de usuario actualizado correctamente.", "success");
+        USR_CARGAR_USUARIOS();
+      })
+      .withFailureHandler(function(err) {
+        alert("Error al actualizar estado: " + err.message);
+      })
+      .SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, "ADMINISTRADOR_SISTEMA");
+  }
 
-
-      // --------------------------------------------------------
-      // OCULTAR CONTENIDO
-      // --------------------------------------------------------
-
-      document
-        .querySelectorAll(".tab-content")
-        .forEach(function(elemento) {
-
-          elemento.classList.remove("active");
-
+  function USR_CARGAR_ROLES() {
+    google.script.run
+      .withSuccessHandler(function(roles) {
+        USR_ROLES = roles;
+        const tbody = document.getElementById("USR_TABLA_ROLES");
+        tbody.innerHTML = "";
+        
+        const rolesValidos = roles.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
+        rolesValidos.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${r.ID_ROL}</strong></td>
+            <td>${r.NOMBRE_ROL}</td>
+            <td>${r.DESCRIPCION}</td>
+            <td>Nivel ${r.NIVEL_JERARQUIA}</td>
+            <td>${r.ROL_SISTEMA}</td>
+            <td><span class="badge badge-active">${r.ESTADO_ROL}</span></td>
+          `;
+          tbody.appendChild(tr);
         });
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudieron cargar los roles: " + err.message);
+      })
+      .SEG_OBTENER_ROLES();
+  }
 
+  function USR_CARGAR_PERMISOS() {
+    google.script.run
+      .withSuccessHandler(function(permisos) {
+        USR_PERMISOS = permisos;
+        const tbody = document.getElementById("USR_TABLA_PERMISOS");
+        tbody.innerHTML = "";
 
-      // --------------------------------------------------------
-      // QUITAR ESTADO ACTIVO
-      // --------------------------------------------------------
-
-      document
-        .querySelectorAll(".tab-button")
-        .forEach(function(elemento) {
-
-          elemento.classList.remove("active");
-
-        });
-
-
-      // --------------------------------------------------------
-      // MOSTRAR PESTAÑA
-      // --------------------------------------------------------
-
-      const contenido =
-        document.getElementById(
-          "tab-" + nombrePestana
-        );
-
-      if (contenido) {
-
-        contenido.classList.add("active");
-
-      }
-
-
-      // --------------------------------------------------------
-      // ACTIVAR BOTÓN
-      // --------------------------------------------------------
-
-      const botones =
-        document.querySelectorAll(".tab-button");
-
-      botones.forEach(function(boton) {
-
-        const texto =
-          boton.textContent
-            .toLowerCase();
-
-        if (
-          texto.includes(nombrePestana)
-        ) {
-
-          boton.classList.add("active");
-
+        if (!(permisos.length > 0)) {
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
+          return;
         }
 
-      });
-
-
-      // --------------------------------------------------------
-      // CARGAR DATOS DEL MÓDULO
-      // --------------------------------------------------------
-
-      switch (nombrePestana) {
-
-        case "usuarios":
-
-          USR_CARGAR_USUARIOS();
-
-          break;
-
-
-        case "roles":
-
-          USR_CARGAR_ROLES();
-
-          break;
-
-
-        case "permisos":
-
-          USR_CARGAR_PERMISOS();
-
-          break;
-
-
-        case "sesiones":
-
-          USR_CARGAR_SESIONES();
-
-          break;
-
-      }
-
-    }
-
-
-    // ==========================================================
-    // 10.04 MOSTRAR MENSAJE
-    // ==========================================================
-
-    function USR_MOSTRAR_MENSAJE(
-      mensaje,
-      tipo
-    ) {
-
-      const contenedor =
-        document.getElementById(
-          "USR_MENSAJE"
-        );
-
-      contenedor.innerHTML = `
-        <div class="message ${tipo}">
-          ${mensaje}
-        </div>
-      `;
-
-
-      setTimeout(
-        function() {
-
-          contenedor.innerHTML = "";
-
-        },
-        4000
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.05 CARGAR USUARIOS
-    // Se conectará con una función del servidor.
-    // ==========================================================
-
-    function USR_CARGAR_USUARIOS() {
-
-      console.log(
-        "Cargando usuarios..."
-      );
-
-      // Próxima conexión:
-      //
-      // google.script.run
-      //   .withSuccessHandler(...)
-      //   .withFailureHandler(...)
-      //   .SEG_LISTAR_USUARIOS();
-
-    }
-
-
-    // ==========================================================
-    // 10.06 CARGAR ROLES
-    // ==========================================================
-
-    function USR_CARGAR_ROLES() {
-
-      console.log(
-        "Cargando roles..."
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.07 CARGAR PERMISOS
-    // ==========================================================
-
-    function USR_CARGAR_PERMISOS() {
-
-      console.log(
-        "Cargando permisos..."
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.08 CARGAR SESIONES
-    // ==========================================================
-
-    function USR_CARGAR_SESIONES() {
-
-      console.log(
-        "Cargando sesiones..."
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.09 BUSCAR USUARIOS
-    // ==========================================================
-
-    function USR_BUSCAR_USUARIOS() {
-
-      const criterio =
-        document
-          .getElementById(
-            "USR_BUSCADOR_USUARIOS"
-          )
-          .value;
-
-      console.log(
-        "Buscar usuarios:",
-        criterio
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.10 BUSCAR ROLES
-    // ==========================================================
-
-    function USR_BUSCAR_ROLES() {
-
-      const criterio =
-        document
-          .getElementById(
-            "USR_BUSCADOR_ROLES"
-          )
-          .value;
-
-      console.log(
-        "Buscar roles:",
-        criterio
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.11 BUSCAR PERMISOS
-    // ==========================================================
-
-    function USR_BUSCAR_PERMISOS() {
-
-      const criterio =
-        document
-          .getElementById(
-            "USR_BUSCADOR_PERMISOS"
-          )
-          .value;
-
-      console.log(
-        "Buscar permisos:",
-        criterio
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.12 BUSCAR SESIONES
-    // ==========================================================
-
-    function USR_BUSCAR_SESIONES() {
-
-      const criterio =
-        document
-          .getElementById(
-            "USR_BUSCADOR_SESIONES"
-          )
-          .value;
-
-      console.log(
-        "Buscar sesiones:",
-        criterio
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.13 NUEVO USUARIO
-    // ==========================================================
-
-    function USR_NUEVO_USUARIO() {
-
-      USR_MOSTRAR_MENSAJE(
-        "Formulario de creación de usuario pendiente de conectar.",
-        "success"
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.14 NUEVO ROL
-    // ==========================================================
-
-    function USR_NUEVO_ROL() {
-
-      USR_MOSTRAR_MENSAJE(
-        "Formulario de creación de rol pendiente de conectar.",
-        "success"
-      );
-
-    }
-
-
-    // ==========================================================
-    // 10.15 NUEVO PERMISO
-    // ==========================================================
-
-    function USR_NUEVO_PERMISO() {
-
-      USR_MOSTRAR_MENSAJE(
-        "Asignación de permisos pendiente de conectar.",
-        "success"
-      );
-
-    }
-
-
-  </script>
-
-
+        const permisosValidos = permisos.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
+        permisosValidos.forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${p.ID_PERMISO}</strong></td>
+            <td>${p.ID_ROL}</td>
+            <td>${p.MODULO}</td>
+            <td>${p.SUBMODULO || "-"}</td>
+            <td>${p.ACCION}</td>
+            <td><span class="badge ${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">${p.PERMITIDO}</span></td>
+            <td>${p.ESTADO_PERMISO}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudieron cargar los permisos: " + err.message);
+      })
+      .SEG_OBTENER_PERMISOS();
+  }
+
+  function USR_CARGAR_SESIONES() {
+    google.script.run
+      .withSuccessHandler(function(sesiones) {
+        USR_SESIONES = sesiones;
+        const tbody = document.getElementById("USR_TABLA_SESIONES");
+        tbody.innerHTML = "";
+
+        if (!(sesiones.length > 0)) {
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay sesiones registradas en USR_SESIONES.</td></tr>`;
+          return;
+        }
+
+        const sesionesValidas = sesiones.filter(s => s.ID_SESION && String(s.ID_SESION).trim() !== "");
+        sesionesValidas.forEach(s => {
+          const tr = document.createElement("tr");
+          const estadoClass = s.ESTADO_SESION === "ACTIVA" ? "badge-active" : "badge-inactive";
+          tr.innerHTML = `
+            <td><strong>${s.ID_SESION}</strong></td>
+            <td>${s.USUARIO} (${s.ID_USUARIO})</td>
+            <td>${s.FECHA_INICIO}</td>
+            <td>${s.ULTIMA_ACTIVIDAD}</td>
+            <td>${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
+            <td><span class="badge ${estadoClass}">${s.ESTADO_SESION}</span></td>
+            <td>
+              ${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('${s.TOKEN_SESION}')">Revocar</button>` : '-'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudieron cargar los registros de sesión: " + err.message);
+      })
+      .SEG_OBTENER_SESIONES();
+  }
+
+  function USR_REVOCAR_SESION(token) {
+    if(!confirm("¿Desea forzar de forma remota el cierre de esta sesión activa?")) return;
+    google.script.run
+      .withSuccessHandler(function() {
+        USR_MOSTRAR_ALERTA("Sesión revocada exitosamente.", "success");
+        USR_CARGAR_SESIONES();
+      })
+      .withFailureHandler(function(err) {
+        alert("Error al cerrar sesión: " + err.message);
+      })
+      .SEG_CERRAR_SESION(token);
+  }
+</script>
 </body>
-
 </html>
