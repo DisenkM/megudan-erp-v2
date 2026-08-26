@@ -1,0 +1,22 @@
+name: Sincronizar a Google Docs
+
+on:
+  push:
+    branches:
+      - main  # Cambia a "master" si tu rama principal se llama así
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Subir y Convertir a Google Docs
+        uses: adityasshari/upload-to-drive@v2
+        with:
+          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+          filename: 'README.md' # <- Pon aquí el archivo de tu repo que quieres mandar a Docs (ej. README.md)
+          folderId: 'TU_ID_DE_CARPETA_DE_GOOGLE_DRIVE' # <- REEMPLAZA ESTO
+          overwrite: true
+          convertToGoogleDocs: true
