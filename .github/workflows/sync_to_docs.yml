@@ -43,6 +43,6 @@ jobs:
           # Usamos el parámetro correcto alimentado por el paso de conversión anterior
           credentials: ${{ steps.b64_auth.outputs.encoded_creds }}
           filename: "REPOSITORIOS-GITHUB 2026.txt"
-          folderId: "16h3KIgT3XeiAbt6U4r3OV5Yao0RTw"
+          folderId: "16h3KIgT3XeiAbt6U4r3OV5Yao0RTw-zC"
           name: "REPOSITORIOS-GITHUB 2026"
           overwrite: "true"
