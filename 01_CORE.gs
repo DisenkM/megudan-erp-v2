@@ -16,8 +16,19 @@ function CORE_onOpen() {
   }
   try {
     ui.createMenu("FORMULARIOS")
-      .addItem("👥 Abrir Clientes", "ABRIR_CLIENTES")
-      .addItem("👤 Abrir Gestión de Usuarios", "ABRIR_USUARIOS")
+      .addItem("👥 Abrir Clientes Web", "ABRIR_CLIENTES")
+      .addItem("👤 Abrir Gestión de Usuarios Web", "ABRIR_USUARIOS")
+      .addSeparator()
+      .addSubMenu(ui.createMenu("Clientes en Hoja")
+        .addItem("💾 Guardar Nuevo", "CLI_SHEET_GUARDAR")
+        .addItem("🔍 Cargar por ID/NIT", "CLI_SHEET_CARGAR")
+        .addItem("✏️ Actualizar Existente", "CLI_SHEET_ACTUALIZAR")
+        .addItem("🚫 Inactivar Tercero", "CLI_SHEET_INACTIVAR"))
+      .addSubMenu(ui.createMenu("Proveedores en Hoja")
+        .addItem("💾 Guardar Nuevo", "PROV_SHEET_GUARDAR")
+        .addItem("🔍 Cargar por ID/NIT", "PROV_SHEET_CARGAR")
+        .addItem("✏️ Actualizar Existente", "PROV_SHEET_ACTUALIZAR")
+        .addItem("🚫 Inactivar Tercero", "PROV_SHEET_INACTIVAR"))
       .addToUi();
   } catch (error) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {

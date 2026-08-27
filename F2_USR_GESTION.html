@@ -134,7 +134,7 @@
       <div class="header-icon">🔐</div>
       <div>
         <h1>Gestión de Seguridad</h1>
-        <p>Administración de usuarios, roles, permisos y sesiones del ERP</p>
+        <p>Administración de usuarios, roles, permisos, sesiones y logo corporativo del ERP</p>
       </div>
     </div>
   </header>
@@ -144,6 +144,7 @@
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('logo')">🖼️ Logo Empresa</button>
   </nav>
 
   <main class="content">
@@ -288,6 +289,32 @@
         </div>
       </div>
     </section>
+
+    <!-- Pestaña: Logo Empresa (Exclusivo administradores en Sheets) -->
+    <section id="tab-logo" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🖼️ Logotipo Corporativo de MEGUDAN</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px;">
+          <p style="font-size: 13px; color: #4b5563;">
+            Cargue la imagen oficial de su logotipo para que se dibuje de forma dinámica en las plantillas del ERP (como facturas, compras y PDFs en Google Drive).
+          </p>
+          
+          <div class="field" style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; font-weight: bold; color: #374151;">Seleccionar archivo de imagen (PNG, JPG o JPEG)</label>
+            <input type="file" id="form_logo_file" accept="image/*" class="input" onchange="usrPrevisualizarLogo(this)">
+          </div>
+          
+          <div id="logo_preview_container" style="display: none; text-align: center; padding: 15px; border: 1.5px dashed #d1d5db; border-radius: 8px; background: #f9fafb;">
+            <p style="font-size: 11px; color: #6b7280; margin-bottom: 8px;">Previsualización del archivo seleccionado:</p>
+            <img id="logo_preview" src="" style="max-height: 120px; max-width: 100%; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          </div>
+          
+          <button class="button button-primary" id="btn_guardar_logo" onclick="usrGuardarLogo()" disabled>Subir e Indexar Logotipo</button>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -358,6 +385,8 @@
   let USR_PERMISOS = [];
   let USR_SESIONES = [];
   let PROCESANDO_GUARDADO = false;
+  let LOGO_BASE64 = null;
+  let LOGO_NOMBRE = null;
 
   document.addEventListener("DOMContentLoaded", function() {
     USR_CARGAR_USUARIOS();
@@ -386,10 +415,9 @@
     el.textContent = mensaje;
     el.className = "message " + tipo;
     el.style.display = "block";
-    // Mantenemos los mensajes de éxito o información legibles; los ocultamos después de un tiempo
-    setTimeout(() => { 
+    setTimeout(() => {
       if (el.textContent === mensaje) {
-        el.style.display = "none"; 
+        el.style.display = "none";
       }
     }, 6000);
   }
@@ -400,6 +428,59 @@
     el.className = "message error";
     el.style.display = "block";
     console.error(mensaje);
+  }
+
+  // Previsualizador local de logotipo
+  function usrPrevisualizarLogo(input) {
+    const file = input.files[0];
+    const btn = document.getElementById("btn_guardar_logo");
+    if (!file) {
+      LOGO_BASE64 = null;
+      LOGO_NOMBRE = null;
+      document.getElementById("logo_preview_container").style.display = "none";
+      btn.disabled = true;
+      return;
+    }
+    
+    LOGO_NOMBRE = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      LOGO_BASE64 = e.target.result;
+      document.getElementById("logo_preview").src = LOGO_BASE64;
+      document.getElementById("logo_preview_container").style.display = "block";
+      btn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Guardar logotipo en Drive (Afecta CFG_EMPRESA)
+  function usrGuardarLogo() {
+    if (!LOGO_BASE64) return;
+    const btn = document.getElementById("btn_guardar_logo");
+    btn.disabled = true;
+    btn.textContent = "Guardando e indexando...";
+    USR_MOSTRAR_ALERTA("Subiendo imagen de logotipo a Google Drive...", "info");
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.textContent = "Subir e Indexar Logotipo";
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          document.getElementById("form_logo_file").value = "";
+          document.getElementById("logo_preview_container").style.display = "none";
+          LOGO_BASE64 = null;
+          LOGO_NOMBRE = null;
+        } else {
+          USR_MOSTRAR_ERROR("No se pudo guardar el logo.");
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = "Subir e Indexar Logotipo";
+        USR_MOSTRAR_ERROR(err.message);
+      })
+      .SEG_GUARDAR_LOGO(LOGO_BASE64, LOGO_NOMBRE);
   }
 
   // Modales
@@ -456,7 +537,6 @@
     USR_MOSTRAR_ALERTA("Registrando usuario en Sheets...", "info");
     USR_CERRAR_MODAL_USUARIO();
 
-    // Enviamos la contraseña plana directamente en el objeto datos para crear el usuario en una sola transacción atómica
     const datos = {
       USUARIO: usuario,
       NOMBRE: nombre,
@@ -520,7 +600,6 @@
     USR_CERRAR_MODAL_APROBACION();
     USR_MOSTRAR_ALERTA("Aprobando acceso y activando cuenta...", "info");
     
-    // Llamada atómica al backend para asignar rol y activar estado en un solo paso
     google.script.run
       .withSuccessHandler(function(resultado) {
         USR_MOSTRAR_ALERTA(resultado.MENSAJE, "success");
@@ -574,13 +653,13 @@
       }
       
       tr.innerHTML = `
-        <td><strong>${u.ID_USUARIO}</strong></td>
-        <td>${u.USUARIO}</td>
-        <td>${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
-        <td>${u.CORREO}</td>
-        <td><span class="badge badge-session">${u.ID_ROL}</span></td>
-        <td><span class="badge ${badgeClass}">${u.ESTADO_USUARIO}</span></td>
-        <td>${accionesHtml}</td>
+        <td><strong>\${u.ID_USUARIO}</strong></td>
+        <td>\${u.USUARIO}</td>
+        <td>\${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
+        <td>\${u.CORREO}</td>
+        <td><span class="badge badge-session">\${u.ID_ROL}</span></td>
+        <td><span class="badge \${badgeClass}">\${u.ESTADO_USUARIO}</span></td>
+        <td>\${accionesHtml}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -629,12 +708,12 @@
         rolesValidos.forEach(r => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td><strong>${r.ID_ROL}</strong></td>
-            <td>${r.NOMBRE_ROL}</td>
-            <td>${r.DESCRIPCION}</td>
-            <td>Nivel ${r.NIVEL_JERARQUIA}</td>
-            <td>${r.ROL_SISTEMA}</td>
-            <td><span class="badge badge-active">${r.ESTADO_ROL}</span></td>
+            <td><strong>\${r.ID_ROL}</strong></td>
+            <td>\${r.NOMBRE_ROL}</td>
+            <td>\${r.DESCRIPCION}</td>
+            <td>Nivel \${r.NIVEL_JERARQUIA}</td>
+            <td>\${r.ROL_SISTEMA}</td>
+            <td><span class="badge badge-active">\${r.ESTADO_ROL}</span></td>
           `;
           tbody.appendChild(tr);
         });
@@ -661,13 +740,13 @@
         permisosValidos.forEach(p => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td><strong>${p.ID_PERMISO}</strong></td>
-            <td>${p.ID_ROL}</td>
-            <td>${p.MODULO}</td>
-            <td>${p.SUBMODULO || "-"}</td>
-            <td>${p.ACCION}</td>
-            <td><span class="badge ${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">${p.PERMITIDO}</span></td>
-            <td>${p.ESTADO_PERMISO}</td>
+            <td><strong>\${p.ID_PERMISO}</strong></td>
+            <td>\${p.ID_ROL}</td>
+            <td>\${p.MODULO}</td>
+            <td>\${p.SUBMODULO || "-"}</td>
+            <td>\${p.ACCION}</td>
+            <td><span class="badge \${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">\${p.PERMITIDO}</span></td>
+            <td>\${p.ESTADO_PERMISO}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -695,14 +774,14 @@
           const tr = document.createElement("tr");
           const estadoClass = s.ESTADO_SESION === "ACTIVA" ? "badge-active" : "badge-inactive";
           tr.innerHTML = `
-            <td><strong>${s.ID_SESION}</strong></td>
-            <td>${s.USUARIO} (${s.ID_USUARIO})</td>
-            <td>${s.FECHA_INICIO}</td>
-            <td>${s.ULTIMA_ACTIVIDAD}</td>
-            <td>${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
-            <td><span class="badge ${estadoClass}">${s.ESTADO_SESION}</span></td>
+            <td><strong>\${s.ID_SESION}</strong></td>
+            <td>\${s.USUARIO} (\${s.ID_USUARIO})</td>
+            <td>\${s.FECHA_INICIO}</td>
+            <td>\${s.ULTIMA_ACTIVIDAD}</td>
+            <td>\${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
+            <td><span class="badge \${estadoClass}">\${s.ESTADO_SESION}</span></td>
             <td>
-              ${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('${s.TOKEN_SESION}')">Revocar</button>` : '-'}
+              \${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('\${s.TOKEN_SESION}')">Revocar</button>` : '-'}
             </td>
           `;
           tbody.appendChild(tr);

@@ -1,7 +1,7 @@
 <!-- ============================================================
 * INTERFAZ: F3_WEB_LOGIN
 * MODULO: AUTENTICACIÓN / ACCESO WEB DEL ERP
-* RESPONSABILIDAD: Inicio de sesión y Auto-registro con aprobación obligatoria
+* RESPONSABILIDAD: Inicio de sesión, Auto-registro y Recuperación de Contraseña por Correo
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
 * ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
 ============================================================ -->
@@ -33,50 +33,33 @@
     .brand { text-align: center; margin-bottom: 25px; }
     .brand h1 { margin: 0; font-size: 26px; color: #111827; font-weight: 800; letter-spacing: -0.5px; }
     .brand p { margin: 5px 0 0; font-size: 13px; color: #6b7280; font-weight: 500; }
-    
     .field { display: flex; flex-direction: column; margin-bottom: 18px; gap: 6px; }
     .field label { font-size: 12px; font-weight: 700; color: #374151; }
     .input {
-      width: 100%; padding: 11px 12px;
-      border: 1px solid #d1d5db; border-radius: 6px;
-      font-size: 14px; outline: none; transition: border-color 0.2s;
+      width: 100%; padding: 11px 12px; border: 1.5px solid #d1d5db;
+      border-radius: 6px; font-size: 14px; outline: none; transition: all 0.2s;
     }
-    .input:focus {
-      border-color: #111827;
-      box-shadow: 0 0 0 3px rgba(17,24,39,0.1);
-    }
-    
+    .input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
     .btn {
-      width: 100%; padding: 12px;
-      background: #111827; color: white;
-      border: none; border-radius: 6px;
-      font-size: 14px; font-weight: 700;
+      width: 100%; background-color: #1f2937; color: white; border: none;
+      padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 700;
       cursor: pointer; margin-top: 10px; transition: all 0.2s;
     }
-    .btn:hover { background: #1f2937; }
+    .btn:hover { background-color: #111827; }
+    .btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
     
-    .toggle-link {
-      text-align: center; margin-top: 20px; font-size: 13px; color: #4b5563;
-    }
-    .toggle-link a {
-      color: #2563eb; text-decoration: none; font-weight: 600;
-      cursor: pointer; transition: color 0.2s;
-    }
-    .toggle-link a:hover { color: #1d4ed8; text-decoration: underline; }
+    .toggle-link { text-align: center; margin-top: 20px; font-size: 13px; color: #4b5563; font-weight: 500; }
+    .toggle-link a { color: #2563eb; text-decoration: none; font-weight: 700; cursor: pointer; }
+    .toggle-link a:hover { text-decoration: underline; }
     
-    /* Alert Messages */
-    .msg-box {
-      display: none; padding: 10px 12px; border-radius: 6px;
-      font-size: 13px; font-weight: 600; margin-bottom: 20px;
-      border: 1px solid transparent;
-    }
+    /* Message boxes */
+    .msg-box { display: none; padding: 12px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 20px; border: 1px solid transparent; }
     .msg-success { display: block; background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
     .msg-error { display: block; background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
     .msg-info { display: block; background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
     
     .form-panel { display: none; }
     .form-panel.active { display: block; }
-    
     .footer { text-align: center; font-size: 11px; color: #9ca3af; margin-top: 20px; font-weight: 500; }
   </style>
 </head>
@@ -84,7 +67,6 @@
 
 <div class="wrapper">
   <div class="card">
-    
     <!-- Logo/Brand -->
     <div class="brand">
       <h1>MEGUDAN</h1>
@@ -101,17 +83,15 @@
           <label for="credencial">Usuario o Correo Electrónico</label>
           <input type="text" id="credencial" class="input" required placeholder="admin o admin@megudan.com">
         </div>
-
         <div class="field">
           <label for="contrasena">Contraseña</label>
           <input type="password" id="contrasena" class="input" required placeholder="••••••••">
         </div>
-
         <button type="submit" class="btn" id="btn_login_submit">Ingresar al ERP</button>
       </form>
-      
-      <div class="toggle-link">
-        ¿No tienes cuenta? <a onclick="conmutarPanel('registro')">Regístrate aquí</a>
+      <div class="toggle-link" style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+        <div>¿No tienes cuenta? <a onclick="conmutarPanel('registro')">Regístrate aquí</a></div>
+        <div><a onclick="conmutarPanel('recuperar')" style="color: #6b7280; font-size: 12px; font-weight: 500;">¿Olvidó su contraseña?</a></div>
       </div>
     </div>
 
@@ -122,37 +102,47 @@
           <label for="reg_usuario">Nombre de Usuario (Login) *</label>
           <input type="text" id="reg_usuario" class="input" required placeholder="Ej: m_gomez">
         </div>
-
         <div class="field">
           <label for="reg_nombre">Nombre Completo *</label>
           <input type="text" id="reg_nombre" class="input" required placeholder="Ej: Mateo Gómez">
         </div>
-
         <div class="field">
           <label for="reg_correo">Correo Electrónico Corporativo *</label>
           <input type="email" id="reg_correo" class="input" required placeholder="Ej: mgomez@megudan.com">
         </div>
-
         <div class="field">
           <label for="reg_contrasena">Contraseña *</label>
           <input type="password" id="reg_contrasena" class="input" required placeholder="Min. 8 caracteres (1 Mayúscula, 1 número)">
         </div>
-
         <div class="field">
           <label for="reg_contrasena_confirmar">Confirmar Contraseña *</label>
           <input type="password" id="reg_contrasena_confirmar" class="input" required placeholder="Reescriba la contraseña">
         </div>
-
         <button type="submit" class="btn" id="btn_registro_submit" style="background-color: #16a34a;">Enviar Solicitud de Registro</button>
       </form>
-      
       <div class="toggle-link">
         ¿Ya tienes cuenta? <a onclick="conmutarPanel('login')">Inicia sesión</a>
       </div>
     </div>
 
-  </div>
+    <!-- PANEL 3: RECUPERACIÓN DE CONTRASEÑA -->
+    <div id="panel-recuperar" class="form-panel">
+      <form onsubmit="procesarRecuperacion(event)">
+        <div class="field">
+          <label for="rec_correo">Correo Electrónico Registrado</label>
+          <input type="email" id="rec_correo" class="input" required placeholder="ejemplo@megudan.com">
+        </div>
+        <p style="font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: -5px; margin-bottom: 15px;">
+          Se enviará una contraseña temporal de un solo uso de forma asíncrona a este correo si se encuentra registrado en el sistema.
+        </p>
+        <button type="submit" class="btn" id="btn_recuperar_submit" style="background-color: #2563eb;">Enviar Contraseña Temporal</button>
+      </form>
+      <div class="toggle-link">
+        Volver al <a onclick="conmutarPanel('login')">Inicio de Sesión</a>
+      </div>
+    </div>
 
+  </div>
   <div class="footer">
     MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS &copy; 2026
   </div>
@@ -160,7 +150,6 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    // Procesar mensajes dinámicos en la URL al cargar (por ejemplo, expiración)
     const params = new URLSearchParams(window.location.search);
     const msg = params.get("mensaje");
     if (msg) {
@@ -168,25 +157,29 @@
     }
   });
 
-  // Conmuta visualmente entre los paneles de Login y Registro
   function conmutarPanel(panel) {
     ocultarMensaje();
     const pLogin = document.getElementById("panel-login");
     const pRegistro = document.getElementById("panel-registro");
+    const pRecuperar = document.getElementById("panel-recuperar");
     const subtitle = document.getElementById("brand-subtitle");
 
+    pLogin.classList.remove("active");
+    pRegistro.classList.remove("active");
+    pRecuperar.classList.remove("active");
+
     if (panel === "registro") {
-      pLogin.classList.remove("active");
       pRegistro.classList.add("active");
       subtitle.textContent = "Solicitud de Auto-registro";
+    } else if (panel === "recuperar") {
+      pRecuperar.classList.add("active");
+      subtitle.textContent = "Recuperar Contraseña";
     } else {
-      pRegistro.classList.remove("active");
       pLogin.classList.add("active");
       subtitle.textContent = "ERP Operativo · Acceso Seguro";
     }
   }
 
-  // Procesa el inicio de sesión contra el backend de USR_SESIONES
   function procesarLogin(e) {
     e.preventDefault();
     const credencial = document.getElementById("credencial").value.trim();
@@ -202,7 +195,6 @@
     btn.textContent = "Verificando credenciales...";
     mostrarMensaje("Estableciendo conexión con el ERP...", "info");
 
-    // 1. Llamar al autenticador criptográfico SHA-256
     google.script.run
       .withSuccessHandler(function(autenticacion) {
         if (!autenticacion.EXITO) {
@@ -212,13 +204,11 @@
           return;
         }
 
-        // 2. Autenticación exitosa, crear sesión en USR_SESIONES
         mostrarMensaje("Generando token seguro de acceso...", "info");
         google.script.run
           .withSuccessHandler(function(sesion) {
             if (sesion.EXITO) {
               mostrarMensaje("Sesión autorizada. Redirigiendo...", "success");
-              // Navegar al Dashboard enviando el token UUID por parámetro
               const destino = window.location.origin + window.location.pathname + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
               window.top.location.href = destino;
             } else {
@@ -242,7 +232,6 @@
       .SEG_AUTENTICAR_USUARIO(credencial, contrasena);
   }
 
-  // Procesa el auto-registro asíncrono con estado PENDIENTE
   function procesarRegistro(e) {
     e.preventDefault();
     const usuario = document.getElementById("reg_usuario").value.trim();
@@ -262,7 +251,6 @@
       return;
     }
 
-    // Regla de longitud del backend
     if (!(contrasena.length >= 8)) {
       mostrarMensaje("La contraseña debe tener mínimo 8 caracteres.", "error");
       return;
@@ -298,7 +286,40 @@
       .SEG_REGISTRAR_AUTONOMO(datos);
   }
 
-  // Utilidad de Mensajes
+  function procesarRecuperacion(e) {
+    e.preventDefault();
+    const correo = document.getElementById("rec_correo").value.trim();
+    const btn = document.getElementById("btn_recuperar_submit");
+
+    if (!correo) {
+      mostrarMensaje("Por favor ingrese su correo electrónico de registro.", "error");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Procesando...";
+    mostrarMensaje("Verificando dirección de correo corporativo...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.textContent = "Enviar Contraseña Temporal";
+        if (res.EXITO) {
+          mostrarMensaje(res.MENSAJE, "success");
+          document.getElementById("rec_correo").value = "";
+          setTimeout(() => { conmutarPanel("login"); }, 5000);
+        } else {
+          mostrarMensaje(res.MENSAJE, "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = "Enviar Contraseña Temporal";
+        mostrarMensaje("Error al procesar: " + err.message, "error");
+      })
+      .SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo);
+  }
+
   function mostrarMensaje(texto, tipo) {
     const el = document.getElementById("login_mensaje");
     el.textContent = texto;
@@ -311,4 +332,3 @@
 </script>
 </body>
 </html>
-
