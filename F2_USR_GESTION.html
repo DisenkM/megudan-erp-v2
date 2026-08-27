@@ -302,7 +302,7 @@
           </p>
           
           <div class="field" style="display: flex; flex-direction: column; gap: 6px;">
-            <label style="font-size: 12px; font-weight: bold; color: #374151;">Seleccionar archivo de imagen (PNG, JPG o JPEG)</label>
+            <label for="form_logo_file" style="font-size: 12px; font-weight: bold; color: #374151;">Seleccionar archivo de imagen (PNG, JPG o JPEG)</label>
             <input type="file" id="form_logo_file" accept="image/*" class="input" onchange="usrPrevisualizarLogo(this)">
           </div>
           
@@ -327,23 +327,23 @@
     </div>
     <div class="modal-body">
       <div class="field">
-        <label>Nombre de Usuario (Login) *</label>
+        <label for="form_usuario">Nombre de Usuario (Login) *</label>
         <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
       </div>
       <div class="field">
-        <label>Nombre Completo *</label>
+        <label for="form_nombre">Nombre Completo *</label>
         <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
       </div>
       <div class="field">
-        <label>Correo Electrónico *</label>
+        <label for="form_correo">Correo Electrónico *</label>
         <input type="email" id="form_correo" class="input" placeholder="Ej: jperez@megudan.com">
       </div>
       <div class="field">
-        <label>Contraseña Temporal *</label>
+        <label for="form_contrasena">Contraseña Temporal *</label>
         <input type="password" id="form_contrasena" class="input" placeholder="Min. 8 caracteres (1 mayúscula, 1 número, 1 especial)">
       </div>
       <div class="field">
-        <label>Rol Asignado *</label>
+        <label for="form_id_rol">Rol Asignado *</label>
         <select id="form_id_rol"></select>
       </div>
     </div>
@@ -367,7 +367,7 @@
       </p>
       <input type="hidden" id="aprob_id_usuario">
       <div class="field">
-        <label>Rol Definitivo *</label>
+        <label for="aprob_id_role">Rol Definitivo *</label>
         <select id="aprob_id_role"></select>
       </div>
     </div>

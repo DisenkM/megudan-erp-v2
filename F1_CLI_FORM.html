@@ -3,7 +3,7 @@
 * MODULO: CLIENTES / PROVEEDORES (TERCEROS UNIFICADOS)
 * RESPONSABILIDAD: Captura y validación tributaria de Terceros
 * CONEXIÓN BACKEND: 05_CLIENTES.gs, 06_PROVEEDORES.gs y 23_SEGURIDAD.gs
-* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
+* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS y labels corregidos)
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -51,7 +51,7 @@
     .btn-secondary:hover { background: #d1d5db; }
     .btn-danger { background: #dc2626; color: white; }
     .btn-danger:hover { background: #b91c1c; }
-
+    
     /* Buscador */
     .search-card {
       background: white; padding: 15px 20px;
@@ -100,7 +100,6 @@
     /* Grids de formulario */
     .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
     .full-width { grid-column: span 2; }
-    
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field label { font-size: 12px; font-weight: 700; color: #4b5563; }
     .input-field, select, textarea {
@@ -179,6 +178,7 @@
   <!-- Buscador Integrado -->
   <div class="search-card">
     <div class="search-group">
+      <label for="buscarTercero" style="display:none;">Buscar tercero</label>
       <input type="text" id="buscarTercero" class="search-input" placeholder="Buscar por NIT, CC, Razón Social o ID del ERP...">
       <button class="btn btn-primary" onclick="buscarTercero()">🔍 Buscar</button>
     </div>
@@ -195,35 +195,35 @@
       <div class="card">
         <h3 class="card-title">Selección del Tipo de Tercero</h3>
         <div class="tercero-selector">
-          <label class="checkbox-label">
+          <label class="checkbox-label" for="tipo_cliente">
             <input type="checkbox" id="tipo_cliente" checked> Clientes
           </label>
-          <label class="checkbox-label">
+          <label class="checkbox-label" for="tipo_proveedor">
             <input type="checkbox" id="tipo_proveedor"> Proveedores
           </label>
         </div>
       </div>
-
+      
       <!-- Card: Datos Básicos -->
       <div class="card">
         <h3 class="card-title">📌 Datos Básicos</h3>
         <div class="form-grid">
           
           <div class="field">
-            <label>ID Interno ERP</label>
+            <label for="ID_CLIENTE">ID Interno ERP</label>
             <input type="text" id="ID_CLIENTE" class="input-field" readonly placeholder="Generado Automáticamente">
           </div>
-
+          
           <div class="field">
-            <label>Tipo de Persona *</label>
+            <label for="TIPO_PERSONA">Tipo de Persona *</label>
             <select id="TIPO_PERSONA" onchange="alternarTipoPersona(this.value)">
               <option value="PERSONA_NATURAL">Persona Natural</option>
               <option value="PERSONA_JURIDICA" selected>Persona Jurídica (Empresa)</option>
             </select>
           </div>
-
+          
           <div class="field">
-            <label>Tipo de Identificación *</label>
+            <label for="TIPO_DOCUMENTO">Tipo de Identificación *</label>
             <select id="TIPO_DOCUMENTO">
               <option value="NIT" selected>NIT (Número de Identificación Tributaria)</option>
               <option value="CC">Cédula de Ciudadanía</option>
@@ -231,50 +231,50 @@
               <option value="PASAPORTE">Pasaporte</option>
             </select>
           </div>
-
+          
           <div class="field">
-            <label>Identificación / NIT & Dv *</label>
+            <label for="NUMERO_DOCUMENTO">Identificación / NIT & Dv *</label>
             <div class="id-group">
               <input type="text" id="NUMERO_DOCUMENTO" class="input-field input-id" placeholder="Digite el número sin puntos" oninput="calcularDVFrontend(this.value)">
               <input type="text" id="DIGITO_VERIFICACION" class="input-field input-dv" readonly placeholder="Dv">
             </div>
           </div>
-
+          
           <!-- Campos Dinámicos: Empresa -->
           <div class="field full-width dynamic-section" id="sec_empresa">
-            <label>Razón Social *</label>
+            <label for="RAZON_SOCIAL">Razón Social *</label>
             <input type="text" id="RAZON_SOCIAL" class="input-field" placeholder="Escriba la Razón Social Completa">
           </div>
-
+          
           <!-- Campos Dinámicos: Persona Natural -->
           <div class="full-width dynamic-section" id="sec_persona">
             <div class="form-grid">
               <div class="field">
-                <label>Primer Nombre *</label>
+                <label for="PRIMER_NOMBRE">Primer Nombre *</label>
                 <input type="text" id="PRIMER_NOMBRE" class="input-field" placeholder="Primer Nombre">
               </div>
               <div class="field">
-                <label>Segundo Nombre</label>
+                <label for="SEGUNDO_NOMBRE">Segundo Nombre</label>
                 <input type="text" id="SEGUNDO_NOMBRE" class="input-field" placeholder="Segundo Nombre">
               </div>
               <div class="field">
-                <label>Primer Apellido *</label>
+                <label for="PRIMER_APELLIDO">Primer Apellido *</label>
                 <input type="text" id="PRIMER_APELLIDO" class="input-field" placeholder="Primer Apellido">
               </div>
               <div class="field">
-                <label>Segundo Apellido</label>
+                <label for="SEGUNDO_APELLIDO">Segundo Apellido</label>
                 <input type="text" id="SEGUNDO_APELLIDO" class="input-field" placeholder="Segundo Apellido">
               </div>
             </div>
           </div>
-
+          
           <div class="field">
-            <label>Nombre Comercial / Sucursal</label>
+            <label for="NOMBRE_COMERCIAL">Nombre Comercial / Sucursal</label>
             <input type="text" id="NOMBRE_COMERCIAL" class="input-field" placeholder="Nombre Comercial si aplica">
           </div>
-
+          
           <div class="field">
-            <label>Clasificación de Tercero *</label>
+            <label for="TIPO_CLIENTE">Clasificación de Tercero *</label>
             <select id="TIPO_CLIENTE">
               <option value="MAYORISTA" selected>Mayorista</option>
               <option value="MINORISTA">Minorista</option>
@@ -282,65 +282,65 @@
               <option value="NACIONAL">Nacional</option>
             </select>
           </div>
-
+          
         </div>
       </div>
-
+      
       <!-- Card: Datos de Ubicación y Contacto -->
       <div class="card">
         <h3 class="card-title">📞 Datos de Ubicación y Contacto</h3>
         <div class="form-grid">
           
           <div class="field full-width">
-            <label>Dirección Física Principal *</label>
+            <label for="DIRECCION">Dirección Física Principal *</label>
             <input type="text" id="DIRECCION" class="input-field" placeholder="Ej: Calle 4 # 5-62, Barrio Centro">
           </div>
-
+          
           <div class="field">
-            <label>Municipio / Ciudad *</label>
+            <label for="CIUDAD">Municipio / Ciudad *</label>
             <input type="text" id="CIUDAD" class="input-field" placeholder="Ej: Pitalito">
           </div>
-
+          
           <div class="field">
-            <label>Departamento *</label>
+            <label for="DEPARTAMENTO">Departamento *</label>
             <input type="text" id="DEPARTAMENTO" class="input-field" placeholder="Ej: Huila">
           </div>
-
+          
           <div class="field">
-            <label>País *</label>
+            <label for="PAIS">País *</label>
             <input type="text" id="PAIS" class="input-field" value="COLOMBIA">
           </div>
-
+          
           <div class="field">
-            <label>Celular de Contacto *</label>
+            <label for="CELULAR">Celular de Contacto *</label>
             <input type="text" id="CELULAR" class="input-field" placeholder="Ej: 3118172601">
           </div>
-
+          
           <div class="field">
-            <label>Teléfono Fijo</label>
+            <label for="TELEFONO">Teléfono Fijo</label>
             <input type="text" id="TELEFONO" class="input-field" placeholder="Ej: 8360000">
           </div>
-
+          
           <div class="field">
-            <label>Correo Electrónico (Factura Electrónica) *</label>
+            <label for="CORREO">Correo Electrónico (Factura Electrónica) *</label>
             <input type="email" id="CORREO" class="input-field" placeholder="ejemplo@correo.com">
           </div>
-
+          
           <div class="field">
-            <label>Contacto Principal (Nombres)</label>
+            <label for="CONTACTO_PRINCIPAL">Contacto Principal (Nombres)</label>
             <input type="text" id="CONTACTO_PRINCIPAL" class="input-field" placeholder="Nombre de contacto administrativo">
           </div>
-
+          
           <div class="field">
-            <label>Cargo del Contacto</label>
+            <label for="CARGO_CONTACTO">Cargo del Contacto</label>
             <input type="text" id="CARGO_CONTACTO" class="input-field" placeholder="Ej: Gerente de Compras">
           </div>
-
+          
         </div>
       </div>
-
+      
     </div>
-
+    
     <!-- Columna Lateral Derecha -->
     <div class="form-col">
       
@@ -350,68 +350,69 @@
         <div class="form-grid" style="grid-template-columns: 1fr;">
           
           <div class="field">
-            <label>Tipo de Régimen IVA *</label>
+            <label for="RESPONSABILIDAD_IVA">Tipo de Régimen IVA *</label>
             <select id="RESPONSABILIDAD_IVA">
               <option value="RESPONSABLE_IVA">Responsable de IVA</option>
               <option value="NO_RESPONSABLE_IVA" selected>No Responsable de IVA</option>
             </select>
           </div>
-
+          
           <div class="field">
-            <label>Régimen Tributario *</label>
+            <label for="REGIMEN_FISCAL">Régimen Tributario *</label>
             <select id="REGIMEN_FISCAL">
               <option value="ORDINARIO" selected>Régimen Ordinario</option>
               <option value="SIMPLE">Régimen Simple de Tributación (RST)</option>
               <option value="ESPECIAL">Régimen Especial</option>
             </select>
           </div>
-
+          
           <div class="field" style="margin-top: 10px;">
-            <label>Responsabilidad Fiscal (RUT) *</label>
+            <label for="RESPONSABILIDAD_FISCAL">Responsabilidad Fiscal (RUT) *</label>
             <div class="rut-checklist">
               <label class="rut-item">
-                <input type="checkbox" value="O-13" name="responsabilidad_rut">
+                <input type="checkbox" value="O-13" name="responsabilidad_rut" id="resp_o13">
                 <span class="rut-code">O-13</span> Gran Contribuyente
               </label>
               <label class="rut-item">
-                <input type="checkbox" value="O-15" name="responsabilidad_rut">
+                <input type="checkbox" value="O-15" name="responsabilidad_rut" id="resp_o15">
                 <span class="rut-code">O-15</span> Autorretenedor
               </label>
               <label class="rut-item">
-                <input type="checkbox" value="O-23" name="responsabilidad_rut">
+                <input type="checkbox" value="O-23" name="responsabilidad_rut" id="resp_o23">
                 <span class="rut-code">O-23</span> Agente de retención IVA
               </label>
               <label class="rut-item">
-                <input type="checkbox" value="O-47" name="responsabilidad_rut">
+                <input type="checkbox" value="O-47" name="responsabilidad_rut" id="resp_o47">
                 <span class="rut-code">O-47</span> Régimen simple de tributación
               </label>
               <label class="rut-item">
-                <input type="checkbox" value="R-99-PN" name="responsabilidad_rut" checked>
+                <input type="checkbox" value="R-99-PN" name="responsabilidad_rut" checked id="resp_r99">
                 <span class="rut-code">R-99-PN</span> No aplica - Otros
               </label>
             </div>
+            
             <!-- Campo oculto para almacenar la combinación de responsabilidades -->
             <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="R-99-PN">
           </div>
-
+          
         </div>
       </div>
-
+      
       <!-- Card: Condiciones Comerciales y Contabilidad -->
       <div class="card">
         <h3 class="card-title">💰 Condiciones Comerciales</h3>
         <div class="form-grid" style="grid-template-columns: 1fr;">
           
           <div class="field">
-            <label>Forma de Pago Acordada</label>
+            <label for="FORMA_PAGO">Forma de Pago Acordada</label>
             <select id="FORMA_PAGO">
               <option value="CONTADO" selected>Contado</option>
               <option value="CREDITO">Crédito</option>
             </select>
           </div>
-
+          
           <div class="field">
-            <label>Medio de Pago Habitual</label>
+            <label for="METODO_PAGO">Medio de Pago Habitual</label>
             <select id="METODO_PAGO">
               <option value="TRANSFERENCIA" selected>Transferencia Bancaria</option>
               <option value="EFECTIVO">Efectivo</option>
@@ -419,57 +420,57 @@
               <option value="CHEQUE">Cheque</option>
             </select>
           </div>
-
+          
           <div class="field">
-            <label>Plazo de Pago (Días)</label>
+            <label for="PLAZO_PAGO_DIAS">Plazo de Pago (Días)</label>
             <input type="number" id="PLAZO_PAGO_DIAS" class="input-field" min="0" value="0">
           </div>
-
+          
           <div class="field">
-            <label>Límite de Crédito Autorizado</label>
+            <label for="LIMITE_CREDITO">Límite de Crédito Autorizado</label>
             <input type="number" id="LIMITE_CREDITO" class="input-field" min="0" value="0">
           </div>
-
+          
           <div class="field">
-            <label>Vendedor Operativo Asignado</label>
+            <label for="VENDEDOR_ASIGNADO">Vendedor Operativo Asignado</label>
             <input type="text" id="VENDEDOR_ASIGNADO" class="input-field" placeholder="Código de vendedor">
           </div>
-
+          
           <div class="field">
-            <label>Centro de Costo Vinculado</label>
+            <label for="CENTRO_COSTO">Centro de Costo Vinculado</label>
             <input type="text" id="CENTRO_COSTO" class="input-field" placeholder="Centro de costo operativo">
           </div>
-
+          
           <div class="field">
-            <label>Obra / Proyecto Principal</label>
+            <label for="OBRA_PRINCIPAL">Obra / Proyecto Principal</label>
             <input type="text" id="OBRA_PRINCIPAL" class="input-field" placeholder="ID Obra principal">
           </div>
-
+          
           <div class="field">
-            <label>Cuenta Auxiliar Contable</label>
+            <label for="CUENTA_CONTABLE_CLIENTE">Cuenta Auxiliar Contable</label>
             <input type="text" id="CUENTA_CONTABLE_CLIENTE" class="input-field" placeholder="130505...">
           </div>
-
+          
           <div class="field">
-            <label>Estado de Operación *</label>
+            <label for="ESTADO_CLIENTE">Estado de Operación *</label>
             <select id="ESTADO_CLIENTE">
               <option value="ACTIVO" selected>Activo</option>
               <option value="INACTIVO">Inactivo</option>
               <option value="BLOQUEADO">Bloqueado</option>
             </select>
           </div>
-
+          
         </div>
       </div>
-
+      
     </div>
-
   </div>
 
   <!-- Observaciones -->
   <div class="card" style="margin-top: 20px;">
     <h3 class="card-title">📝 Observaciones Adicionales</h3>
     <div class="field">
+      <label for="OBSERVACIONES" style="display:none;">Observaciones adicionales</label>
       <textarea id="OBSERVACIONES" placeholder="Escriba aquí notas comerciales, tributarias o condiciones logísticas del Tercero..."></textarea>
     </div>
   </div>
@@ -478,29 +479,33 @@
   <div class="card" style="margin-top: 20px;">
     <h3 class="card-title">🔐 Control del Registro</h3>
     <div class="form-grid">
+      
       <div class="field">
-        <label>Fecha Creación</label>
+        <label for="FECHA_CREACION">Fecha Creación</label>
         <input type="text" id="FECHA_CREACION" class="input-field" readonly placeholder="Automático">
       </div>
+      
       <div class="field">
-        <label>Fecha Modificación</label>
+        <label for="FECHA_ACTUALIZACION">Fecha Modificación</label>
         <input type="text" id="FECHA_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
       </div>
+      
       <div class="field">
-        <label>Creado Por</label>
+        <label for="USUARIO_CREACION">Creado Por</label>
         <input type="text" id="USUARIO_CREACION" class="input-field" readonly placeholder="Automático">
       </div>
+      
       <div class="field">
-        <label>Modificado Por</label>
+        <label for="USUARIO_ACTUALIZACION">Modificado Por</label>
         <input type="text" id="USUARIO_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
       </div>
+      
     </div>
   </div>
 
   <footer class="audit-footer">
     MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS © 2026 · Todos los derechos reservados · F1_CLI_FORM
   </footer>
-
 </div>
 
 <!-- JavaScript de la Interfaz -->
@@ -517,7 +522,6 @@
   function alternarTipoPersona(tipo) {
     const secEmpresa = document.getElementById("sec_empresa");
     const secPersona = document.getElementById("sec_persona");
-    
     if (tipo === "PERSONA_NATURAL") {
       secEmpresa.classList.remove("active");
       secPersona.classList.add("active");
@@ -531,16 +535,13 @@
   function calcularDVFrontend(nit) {
     const dvField = document.getElementById("DIGITO_VERIFICACION");
     nit = String(nit).trim().replace(/\D/g, "");
-    
     if (!nit) {
       dvField.value = "";
       return;
     }
-    
     const vprimas = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
     let suma = 0;
     const len = nit.length;
-    
     for (let i = 0; !(i >= len); i++) {
       const char = nit.charAt(len - 1 - i);
       const digit = parseInt(char, 10);
@@ -548,7 +549,6 @@
         suma += digit * vprimas[i];
       }
     }
-    
     const residuo = suma % 11;
     let dv = 0;
     if (residuo >= 2) {
@@ -556,7 +556,6 @@
     } else if (residuo === 1) {
       dv = 1;
     }
-    
     dvField.value = dv;
   }
 
@@ -594,7 +593,6 @@
   function guardarTercero() {
     if (CLI_PROCESANDO) return;
     compilarResponsabilidadesRUT();
-    
     const tipoPersona = document.getElementById("TIPO_PERSONA").value;
     const tipoDocumento = document.getElementById("TIPO_DOCUMENTO").value;
     const identificacion = document.getElementById("NUMERO_DOCUMENTO").value.trim();
@@ -604,10 +602,9 @@
       mostrarMensaje("Por favor complete los campos obligatorios del Tercero (*) antes de guardar.", "error");
       return;
     }
-
+    
     CLI_PROCESANDO = true;
     mostrarMensaje("Procesando guardado en la base de datos de MEGUDAN...", "info");
-    
     const datos = obtenerDatosFormulario();
     
     // Ruteo dinámico si se marcó cliente o proveedor
@@ -628,7 +625,6 @@
         })
         .CLI_GUARDAR_CLIENTE(datos);
     } else if (esProveedor) {
-      // Se comunicará dinámicamente con PROV_GUARDAR_PROVEEDOR modularizado
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
@@ -652,17 +648,16 @@
     if (CLI_PROCESANDO) return;
     compilarResponsabilidadesRUT();
     const idTercero = document.getElementById("ID_CLIENTE").value.trim();
-    
     if (!idTercero) {
       mostrarMensaje("Primero debe buscar y cargar un tercero para poder actualizar.", "error");
       return;
     }
-
+    
     CLI_PROCESANDO = true;
     mostrarMensaje("Actualizando información del tercero en caliente...", "info");
     const datos = obtenerDatosFormulario();
-    
     const esCliente = idTercero.startsWith("CLI");
+    
     if (esCliente) {
       google.script.run
         .withSuccessHandler(function(res) {
@@ -692,12 +687,11 @@
   function buscarTercero() {
     if (CLI_PROCESANDO) return;
     const criterio = document.getElementById("buscarTercero").value.trim();
-    
     if (!criterio) {
       mostrarMensaje("Por favor ingrese un NIT, CC, Razón Social o ID para buscar.", "error");
       return;
     }
-
+    
     CLI_PROCESANDO = true;
     mostrarMensaje("Consultando bases de datos operacionales...", "info");
     
@@ -752,10 +746,10 @@
         input.value = tercero[key] || "";
       }
     });
-
+    
     // Alternar campos dinámicos según persona
     alternarTipoPersona(tercero.TIPO_PERSONA);
-
+    
     // Sincronizar los checkboxes del RUT
     if (tercero.RESPONSABILIDAD_FISCAL) {
       const responsabilidades = tercero.RESPONSABILIDAD_FISCAL.split(",");
@@ -765,7 +759,6 @@
       });
       document.getElementById("RESPONSABILIDAD_FISCAL").value = tercero.RESPONSABILIDAD_FISCAL;
     }
-
     mostrarMensaje("Tercero (" + tercero.ID_CLIENTE + ") cargado correctamente.", "success");
   }
 
@@ -777,13 +770,12 @@
       mostrarMensaje("Por favor cargue un Tercero antes de inactivar.", "error");
       return;
     }
-
     if (!confirm("¿Está seguro que desea inactivar este Tercero en el ERP?")) return;
     
     CLI_PROCESANDO = true;
     mostrarMensaje("Inactivando registro...", "info");
-    
     const esCliente = idTercero.startsWith("CLI");
+    
     if (esCliente) {
       google.script.run
         .withSuccessHandler(function() {
@@ -839,7 +831,7 @@
     checkboxes.forEach(cb => {
       cb.checked = cb.value === "R-99-PN";
     });
-
+    
     document.getElementById("ID_CLIENTE").value = "";
     document.getElementById("FECHA_CREACION").value = "";
     document.getElementById("FECHA_ACTUALIZACION").value = "";
@@ -852,7 +844,6 @@
     document.getElementById("PLAZO_PAGO_DIAS").value = "0";
     document.getElementById("LIMITE_CREDITO").value = "0";
     document.getElementById("RESPONSABILIDAD_FISCAL").value = "R-99-PN";
-
     ocultarMensaje();
   }
 
@@ -868,6 +859,5 @@
     document.getElementById("mensaje").style.display = "none";
   }
 </script>
-
 </body>
 </html>
