@@ -653,13 +653,13 @@
       }
       
       tr.innerHTML = `
-        <td><strong>\${u.ID_USUARIO}</strong></td>
-        <td>\${u.USUARIO}</td>
-        <td>\${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
-        <td>\${u.CORREO}</td>
-        <td><span class="badge badge-session">\${u.ID_ROL}</span></td>
-        <td><span class="badge \${badgeClass}">\${u.ESTADO_USUARIO}</span></td>
-        <td>\${accionesHtml}</td>
+        <td><strong>${u.ID_USUARIO}</strong></td>
+        <td>${u.USUARIO}</td>
+        <td>${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
+        <td>${u.CORREO}</td>
+        <td><span class="badge badge-session">${u.ID_ROL}</span></td>
+        <td><span class="badge ${badgeClass}">${u.ESTADO_USUARIO}</span></td>
+        <td>${accionesHtml}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -708,12 +708,12 @@
         rolesValidos.forEach(r => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td><strong>\${r.ID_ROL}</strong></td>
-            <td>\${r.NOMBRE_ROL}</td>
-            <td>\${r.DESCRIPCION}</td>
-            <td>Nivel \${r.NIVEL_JERARQUIA}</td>
-            <td>\${r.ROL_SISTEMA}</td>
-            <td><span class="badge badge-active">\${r.ESTADO_ROL}</span></td>
+            <td><strong>${r.ID_ROL}</strong></td>
+            <td>${r.NOMBRE_ROL}</td>
+            <td>${r.DESCRIPCION}</td>
+            <td>Nivel ${r.NIVEL_JERARQUIA}</td>
+            <td>${r.ROL_SISTEMA}</td>
+            <td><span class="badge badge-active">${r.ESTADO_ROL}</span></td>
           `;
           tbody.appendChild(tr);
         });
@@ -740,13 +740,13 @@
         permisosValidos.forEach(p => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td><strong>\${p.ID_PERMISO}</strong></td>
-            <td>\${p.ID_ROL}</td>
-            <td>\${p.MODULO}</td>
-            <td>\${p.SUBMODULO || "-"}</td>
-            <td>\${p.ACCION}</td>
-            <td><span class="badge \${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">\${p.PERMITIDO}</span></td>
-            <td>\${p.ESTADO_PERMISO}</td>
+            <td><strong>${p.ID_PERMISO}</strong></td>
+            <td>${p.ID_ROL}</td>
+            <td>${p.MODULO}</td>
+            <td>${p.SUBMODULO || "-"}</td>
+            <td>${p.ACCION}</td>
+            <td><span class="badge ${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">${p.PERMITIDO}</span></td>
+            <td>${p.ESTADO_PERMISO}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -774,14 +774,14 @@
           const tr = document.createElement("tr");
           const estadoClass = s.ESTADO_SESION === "ACTIVA" ? "badge-active" : "badge-inactive";
           tr.innerHTML = `
-            <td><strong>\${s.ID_SESION}</strong></td>
-            <td>\${s.USUARIO} (\${s.ID_USUARIO})</td>
-            <td>\${s.FECHA_INICIO}</td>
-            <td>\${s.ULTIMA_ACTIVIDAD}</td>
-            <td>\${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
-            <td><span class="badge \${estadoClass}">\${s.ESTADO_SESION}</span></td>
+            <td><strong>${s.ID_SESION}</strong></td>
+            <td>${s.USUARIO} (${s.ID_USUARIO})</td>
+            <td>${s.FECHA_INICIO}</td>
+            <td>${s.ULTIMA_ACTIVIDAD}</td>
+            <td>${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
+            <td><span class="badge ${estadoClass}">${s.ESTADO_SESION}</span></td>
             <td>
-              \${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('\${s.TOKEN_SESION}')">Revocar</button>` : '-'}
+              ${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('${s.TOKEN_SESION}')">Revocar</button>` : '-'}
             </td>
           `;
           tbody.appendChild(tr);

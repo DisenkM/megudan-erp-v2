@@ -300,3 +300,11 @@ function PROV_SHEET_INACTIVAR() {
     ui.toast("Proveedor inactivado correctamente.", "ERP Operativo");
   }
 }
+
+
+/**
+ * Wrapper de compatibilidad para el frontend del formulario de Proveedores.
+ */
+function PROV_GENERAR_ID() {
+  return PROV_OBTENER_SIGUIENTE_ID();
+}

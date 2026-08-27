@@ -364,3 +364,11 @@ function CLI_SHEET_INACTIVAR() {
     ui.toast("Cliente inactivado correctamente.", "ERP Operativo");
   }
 }
+
+
+/**
+ * Wrapper de compatibilidad para el frontend del formulario de Clientes.
+ */
+function CLI_GENERAR_ID() {
+  return CLI_OBTENER_SIGUIENTE_ID();
+}

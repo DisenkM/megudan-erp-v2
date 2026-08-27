@@ -3,7 +3,7 @@
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
 * RESPONSABILIDAD: Menú dinámico, visualización de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS y sin labels huérfanos)
+* ESTADO: 100% Blindado frente a 'unsafe-eval' (CSP de Google)
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -20,13 +20,7 @@
       background-color: #f3f4f6; color: #111827;
       min-height: 100vh; display: flex; flex-direction: column;
     }
-    
-    /* Layout principal */
-    .dashboard-layout {
-      display: flex; flex: 1; min-height: 100vh;
-    }
-    
-    /* Sidebar izquierda */
+    .dashboard-layout { display: flex; flex: 1; min-height: 100vh; }
     .sidebar {
       width: 260px; background-color: #111827; color: white;
       display: flex; flex-direction: column; justify-content: space-between;
@@ -38,7 +32,6 @@
     }
     .sidebar-logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
     .sidebar-nav { flex: 1; padding: 20px 10px; display: flex; flex-direction: column; gap: 6px; }
-    
     .nav-item {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 16px; border-radius: 6px; font-size: 14px;
@@ -46,7 +39,6 @@
       cursor: pointer; transition: all 0.2s;
     }
     .nav-item:hover, .nav-item.active { background-color: #1f2937; color: white; }
-    
     .sidebar-footer {
       padding: 20px; border-top: 1px dashed rgba(255,255,255,0.1);
       background-color: #0b0f19; display: flex; flex-direction: column; gap: 10px;
@@ -60,11 +52,7 @@
     .user-info { display: flex; flex-direction: column; }
     .user-name { font-size: 13px; font-weight: 700; color: white; }
     .user-role { font-size: 11px; color: #9ca3af; }
-    
-    /* Panel de contenido derecho */
     .main-panel { flex: 1; display: flex; flex-direction: column; background-color: #f9fafb; }
-    
-    /* Topbar */
     .topbar {
       height: 64px; background-color: white; border-bottom: 1px solid #e5e7eb;
       display: flex; align-items: center; justify-content: space-between; padding: 0 25px;
@@ -73,16 +61,12 @@
     .session-status { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; }
     .status-warning { background-color: #f59e0b; animation: pulse 1s infinite; }
-    
-    /* Botón de cerrar sesión */
     .btn-logout {
       background-color: transparent; border: 1.5px solid #d1d5db; border-radius: 6px;
       padding: 6px 12px; font-size: 12px; font-weight: 700; color: #4b5563;
       cursor: pointer; transition: all 0.2s;
     }
     .btn-logout:hover { background-color: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
-    
-    /* Contenedor dinámico de iFrames/Módulos */
     .viewport { flex: 1; padding: 25px; display: flex; flex-direction: column; }
     .welcome-card {
       background: white; border: 1px solid #e5e7eb; border-radius: 10px;
@@ -92,13 +76,10 @@
     .welcome-icon { font-size: 48px; }
     .welcome-card h2 { margin: 0; font-size: 22px; font-weight: 800; color: #111827; }
     .welcome-card p { margin: 0; font-size: 14px; color: #4b5563; line-height: 1.5; }
-    
-    /* IFrame del módulo */
     .module-frame {
       width: 100%; height: 100%; border: none; border-radius: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: white; flex: 1; display: none;
     }
-    
     @keyframes pulse {
       0% { transform: scale(0.9); opacity: 0.8; }
       50% { transform: scale(1.1); opacity: 1; }
@@ -107,10 +88,7 @@
   </style>
 </head>
 <body>
-
 <div class="dashboard-layout">
-  
-  <!-- Sidebar Izquierda -->
   <aside class="sidebar">
     <div>
       <div class="sidebar-header">
@@ -120,13 +98,11 @@
         <a class="nav-item active" onclick="abrirModulo('inicio')">🏠 Inicio</a>
         <a class="nav-item" onclick="abrirModulo('clientes')">👥 Clientes / Terceros</a>
         <a class="nav-item" onclick="abrirModulo('seguridad')">🔐 Gestión Seguridad</a>
-        <!-- Los stubs inactivos para los próximos módulos se listan con opacidad leve -->
         <a class="nav-item" style="opacity: 0.5; cursor: not-allowed;">🗃️ Inventario (Próximamente)</a>
         <a class="nav-item" style="opacity: 0.5; cursor: not-allowed;">🏗️ Obras (Próximamente)</a>
       </nav>
     </div>
 
-    <!-- Perfil de Usuario en Sidebar Footer -->
     <div class="sidebar-footer">
       <div class="user-profile">
         <div class="user-avatar" id="avatar-letras">U</div>
@@ -139,10 +115,7 @@
     </div>
   </aside>
 
-  <!-- Panel de Contenido Derecho -->
   <div class="main-panel">
-    
-    <!-- Topbar -->
     <header class="topbar">
       <div class="topbar-title" id="module-title">🏠 Panel Principal</div>
       <div class="session-status">
@@ -151,50 +124,36 @@
       </div>
     </header>
 
-    <!-- Ventana Operativa -->
     <div class="viewport">
-      
-      <!-- Card de Bienvenida -->
       <div id="welcome-card" class="welcome-card">
         <div class="welcome-icon">🌲</div>
         <h2>¡Te damos la bienvenida al ERP V2!</h2>
         <p>
-          Este panel web interactivo centraliza la operación de MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS. 
+          Este panel web interactivo centraliza la operación de MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS.
           Selecciona un módulo en la barra de la izquierda para comenzar a trabajar.
         </p>
       </div>
-
-      <!-- iFrame para cargar subformularios dinámicamente -->
       <iframe id="viewport-frame" class="module-frame"></iframe>
-
     </div>
-
   </div>
-
 </div>
 
 <script>
-  // Variables inyectadas asíncronamente por Apps Script (doGet de 25_WEB.gs)
   const TOKEN_SESION = "<?= TOKEN_SESION ?>";
   const ID_USUARIO = "<?= ID_USUARIO ?>";
   const USUARIO = "<?= USUARIO ?>";
-
-  // Constantes de vigilancia de sesión
-  let minutosInactividad = 30; // Control de tiempo por inactividad
+  let minutosInactividad = 30;
 
   document.addEventListener("DOMContentLoaded", function() {
     configurarPerfilUsuario();
     vigilarSesionERP();
   });
 
-  // Configura los letreros y nombres del perfil en la sidebar inferior
   function configurarPerfilUsuario() {
     if (USUARIO && USUARIO !== "<?=" + " " + "USUARIO ?>") {
       document.getElementById("user-display").textContent = USUARIO;
       document.getElementById("avatar-letras").textContent = USUARIO.substring(0, 2).toUpperCase();
     }
-    
-    // Obtener información extendida del rol
     google.script.run
       .withSuccessHandler(function(contexto) {
         if (contexto && contexto.VALIDO) {
@@ -204,49 +163,39 @@
       .SEG_OBTENER_CONTEXTO_SEGURIDAD(TOKEN_SESION);
   }
 
-  // Vigila recursivamente que la sesión del ERP permanezca válida
   function vigilarSesionERP() {
-    // Vigilancia asíncrona cada 60 segundos
     setInterval(function() {
       google.script.run
         .withSuccessHandler(function(res) {
           const dot = document.getElementById("session-dot");
           const timeText = document.getElementById("session-time");
-
           if (!res.VALIDA) {
-            // Sesión caducada, forzar redirección
             dot.className = "status-dot status-warning";
             timeText.textContent = "Sesión Caducada";
             alert("Su sesión ha expirado por inactividad. Redirigiendo de inmediato...");
             window.top.location.href = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión caducada por inactividad.";
             return;
           }
-
-          // Sesión activa válida
           dot.className = "status-dot";
           timeText.textContent = "Sesión Protegida";
         })
         .withFailureHandler(function() {
-          // Fallo de red, advertir de inactividad de red
           document.getElementById("session-dot").className = "status-dot status-warning";
           document.getElementById("session-time").textContent = "Sin Conexión con Sheets";
         })
         .SEG_VALIDAR_SESION(TOKEN_SESION);
-    }, 60000); // Cada minuto
+    }, 60000);
   }
 
-  // Enruta las vistas del iframe dinámicamente sin recargar el Dashboard principal
   function abrirModulo(modulo) {
     const welcome = document.getElementById("welcome-card");
     const frame = document.getElementById("viewport-frame");
     const title = document.getElementById("module-title");
 
-    // Limpiar navegación activa
     document.querySelectorAll(".nav-item").forEach(item => {
       item.classList.remove("active");
     });
 
-    // Encontrar botón clicado y marcarlo como activo
     const navItems = document.querySelectorAll(".nav-item");
     navItems.forEach(item => {
       if (item.textContent.toLowerCase().includes(modulo)) {
@@ -266,7 +215,6 @@
 
     if (modulo === "clientes") {
       title.textContent = "👥 Clientes / Terceros";
-      // Cargar el formulario con el token inyectado asíncronamente
       frame.src = window.location.origin + window.location.pathname + "?ruta=clientes_form&token=" + TOKEN_SESION;
     } else if (modulo === "seguridad") {
       title.textContent = "🔐 Gestión de Seguridad";
@@ -274,10 +222,8 @@
     }
   }
 
-  // Cierre voluntario de sesión en USR_SESIONES
   function cerrarSesion() {
     if (!confirm("¿Desea cerrar sesión en el ERP?")) return;
-    
     google.script.run
       .withSuccessHandler(function() {
         window.top.location.href = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente.";

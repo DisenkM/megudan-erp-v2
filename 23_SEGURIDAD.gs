@@ -242,11 +242,13 @@ function SEG_BUSCAR_FILA_REGISTRO(nombreHoja, campoBusqueda, valorBusqueda) {
 
 /**
  * Valida de forma estricta que campos indicados como obligatorios tengan valor.
+ * [CORREGIDO] Se usaba la variable "value" (no definida) en lugar de "valor",
+ * lo que provocaba un ReferenceError cada vez que se invocaba esta función.
  */
 function SEG_VALIDAR_OBLIGATORIOS(datos, camposObligatorios) {
   camposObligatorios.forEach(function(campo) {
     const valor = datos[campo];
-    if (value === undefined || value === null || String(valor).trim() === "") {
+    if (valor === undefined || valor === null || String(valor).trim() === "") {
       throw new Error("El campo " + campo + " es obligatorio.");
     }
   });
@@ -270,6 +272,10 @@ function SEG_CREAR_USUARIO(datos) {
   if (!datos || typeof datos !== "object") {
     throw new Error("Debe proporcionar la información del usuario.");
   }
+
+  // [CORREGIDO] SEG_VALIDAR_OBLIGATORIOS existía pero nunca se llamaba desde aquí,
+  // por lo que se podían crear usuarios sin USUARIO ni CORREO.
+  SEG_VALIDAR_OBLIGATORIOS(datos, ["USUARIO", "CORREO"]);
 
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_USUARIOS);
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
@@ -827,6 +833,8 @@ function SEG_VALIDAR_CONTRASENA(usuario, contrasena) {
  * Autentica credenciales de ingreso (usuario/correo + contraseña) y retorna su contexto.
  */
 function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
+  SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS(); // Self-healing de administrador por defecto
+
   const usuario = SEG_BUSCAR_USUARIO_LOGIN(credencial);
   if (!usuario) {
     return { EXITO: false, CODIGO: "USUARIO_NO_ENCONTRADO", MENSAJE: "Credenciales incorrectas de acceso." };
@@ -1346,11 +1354,7 @@ function SEG_REGISTRAR_AUTONOMO(datos) {
   
   // Validaciones obligatorias para registro autónomo
   const camposObligatorios = ["USUARIO", "NOMBRE", "CORREO", "CONTRASENA_PLANA"];
-  camposObligatorios.forEach(function(campo) {
-    if (datos[campo] === undefined || datos[campo] === null || String(datos[campo]).trim() === "") {
-      throw new Error("El campo " + campo + " es obligatorio para registrarse.");
-    }
-  });
+  SEG_VALIDAR_OBLIGATORIOS(datos, camposObligatorios);
 
   // Forzar estado PENDIENTE de aprobación y rol básico CONSULTA (ROL-000007) por defecto
   datos.ESTADO_USUARIO = SEG_CONFIG.ESTADO_USUARIO_PENDIENTE || "PENDIENTE";
@@ -1539,7 +1543,8 @@ function SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS() {
  */
 function SEG_APROBAR_USUARIO(idUsuario, idRol, usuarioActualizador) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    // [CORREGIDO] Se eliminó "const ss = SpreadsheetApp.getActiveSpreadsheet();"
+    // que estaba declarada pero nunca se usaba dentro de esta función.
     const rol = SEG_CONSULTAR_ROL(idRol);
     if (!rol) {
       throw new Error("El rol seleccionado '" + idRol + "' no es válido o no existe en USR_ROLES.");
@@ -1591,11 +1596,16 @@ function SEG_APROBAR_USUARIO(idUsuario, idRol, usuarioActualizador) {
 /**
  * Guarda el logotipo de la empresa en Drive y actualiza la URL en la hoja de configuración CFG_EMPRESA.
  * RESTRICCIÓN: Solo ejecutable si se llama desde la interfaz de Sheets por un administrador.
+ * [CORREGIDO] Antes se hacía "const ui = SpreadsheetApp.getUi(); if (!ui) throw ...", pero
+ * SpreadsheetApp.getUi() NUNCA retorna null/undefined fuera de contexto: lanza una excepción
+ * directamente, así que el chequeo "if (!ui)" jamás se ejecutaba y el mensaje de restricción
+ * personalizado nunca se mostraba al usuario. Ahora se envuelve la llamada en try/catch.
  */
 function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
   try {
-    const ui = SpreadsheetApp.getUi();
-    if (!ui) {
+    try {
+      SpreadsheetApp.getUi();
+    } catch (uiError) {
       throw new Error("Esta operación solo está permitida para administradores dentro de Google Sheets.");
     }
     
@@ -1683,11 +1693,11 @@ function SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo) {
           <p style="margin: 5px 0 0; font-size: 12px; opacity: 0.8;">Sistema de Gestión Operativa</p>
         </div>
         <div style="padding: 25px; color: #1f2937; line-height: 1.6;">
-          <p style="margin: 0 0 15px;">Hola <strong>\${usuario.NOMBRE || usuario.NOMBRE_COMPLETO || usuario.USUARIO}</strong>,</p>
+          <p style="margin: 0 0 15px;">Hola <strong>${usuario.NOMBRE || usuario.NOMBRE_COMPLETO || usuario.USUARIO}</strong>,</p>
           <p style="margin: 0 0 15px;">Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el ERP de MEGUDAN.</p>
           <div style="background-color: #f3f4f6; border-left: 4px solid #374151; padding: 15px; margin: 20px 0; text-align: center; border-radius: 4px;">
             <p style="margin: 0 0 5px; font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Tu contraseña temporal de acceso:</p>
-            <code style="font-size: 18px; font-weight: bold; color: #111827; background: #e5e7eb; padding: 4px 10px; border-radius: 4px; display: inline-block; letter-spacing: 1px;">\${contrasenaTemporal}</code>
+            <code style="font-size: 18px; font-weight: bold; color: #111827; background: #e5e7eb; padding: 4px 10px; border-radius: 4px; display: inline-block; letter-spacing: 1px;">${contrasenaTemporal}</code>
           </div>
           <p style="margin: 0 0 15px; font-size: 13px; color: #dc2626; font-weight: bold;">⚠️ Por seguridad, el sistema te exigirá cambiar esta contraseña temporal inmediatamente al iniciar sesión.</p>
           <p style="margin: 0 0 15px;">Si tú no solicitaste este cambio, por favor ponte en contacto de inmediato con el administrador de seguridad del sistema.</p>
@@ -1708,5 +1718,38 @@ function SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo) {
       LOG_REGISTRAR_ERROR("SEG_SOLICITAR_RECUPERACION_CONTRASENA", "SEGURIDAD", error);
     }
     return { EXITO: false, MENSAJE: "Ocurrió un error al procesar la solicitud: " + error.message };
+  }
+}
+
+
+/**
+ * Auto-inicializa el usuario administrador por defecto si USR_USUARIOS está vacía.
+ */
+function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_USUARIOS);
+    if (!hoja) return;
+    
+    const ultimaFila = hoja.getLastRow();
+    if (ultimaFila >= 2) return; // Ya existen usuarios, no es necesario inicializar
+    
+    console.log("Inicializando usuario administrador por defecto...");
+    SEG_INICIALIZAR_ROLES_PREDEFINIDOS(); // Asegurar que existan los roles primero
+    
+    const adminUser = {
+      USUARIO: "ADMIN",
+      NOMBRE: "Administrador del Sistema",
+      CORREO: "admin@megudan.com",
+      ID_ROL: "ROL-000001",
+      ESTADO_USUARIO: "ACTIVO",
+      CONTRASENA_PLANA: "Admin123!",
+      DEBE_CAMBIAR_CONTRASENA: "NO"
+    };
+    
+    SEG_CREAR_USUARIO(adminUser);
+    console.log("Usuario admin creado exitosamente con contraseña Admin123!");
+  } catch (error) {
+    console.error("Error en SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS: " + error.toString());
   }
 }
