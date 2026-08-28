@@ -54,7 +54,7 @@ function SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, modulo, accion) {
     };
   } catch (uiError) {
     if (!tokenSesion || String(tokenSesion).trim() === "") {
-      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App.");
+      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App. Nota: Si está ejecutando una función local de Sheets (como cargar, actualizar o inactivar desde la hoja) directamente desde el Editor de Apps Script, recuerde que el editor corre en un contexto headless (sin interfaz gráfica) y requiere token. Ejecute la función directamente desde el menú físico de Google Sheets ('FORMULARIOS') para activar el bypass automático de seguridad local.");
     }
     const validacion = SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion);
     if (!validacion || validacion.AUTORIZADO !== true) {
