@@ -144,7 +144,7 @@
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
-    \1\n    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA(\'mantenimiento\')">⚙️ Mantenimiento</button>
+        <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('mantenimiento')">⚙️ Mantenimiento</button>
   </nav>
 
   <main class="content">
@@ -312,6 +312,72 @@
           </div>
           
           <button class="button button-primary" id="btn_guardar_logo" onclick="usrGuardarLogo()" disabled>Subir e Indexar Logotipo</button>
+        </div>
+      </div>
+    </section>
+    <!-- Pestaña: Mantenimiento -->
+    <section id="tab-mantenimiento" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">⚙️ Mantenimiento de Datos y Caché</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 20px; max-width: 600px;">
+          <p style="font-size: 13px; color: #4b5563; margin-bottom: 10px;">
+            Ejecute tareas operacionales de depuración, purga de historiales y liberación de caché global del ERP.
+          </p>
+
+          <!-- Fila: Caché -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #111827;">Purgar Caché de Sesión</strong>
+              <span style="font-size: 11px; color: #6b7280;">Libera la caché en memoria de Apps Script del ERP.</span>
+            </div>
+            <button class="button button-secondary" onclick="mntEjecutarPurgarCache()">Purgar Caché</button>
+          </div>
+
+          <!-- Fila: Auditorías -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #111827;">Depurar USR_AUDITORIA</strong>
+              <span style="font-size: 11px; color: #6b7280;">Elimina bitácoras antiguas conservando el período de retención.</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="mnt_retencion_aud" class="input" style="width: 110px; padding: 6px;">
+                <option value="30" selected>30 días</option>
+                <option value="60">60 días</option>
+                <option value="90">90 días</option>
+                <option value="0">Truncar (Todo)</option>
+              </select>
+              <button class="button button-danger" onclick="mntEjecutarPurgaAuditoria()">Depurar</button>
+            </div>
+          </div>
+
+          <!-- Fila: Sesiones -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #111827;">Depurar USR_SESIONES</strong>
+              <span style="font-size: 11px; color: #6b7280;">Depura registros de accesos antiguos.</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="mnt_retencion_ses" class="input" style="width: 110px; padding: 6px;">
+                <option value="15" selected>15 días</option>
+                <option value="30">30 días</option>
+                <option value="0">Vaciar (Todo)</option>
+              </select>
+              <button class="button button-danger" onclick="mntEjecutarPurgaSesiones()">Depurar</button>
+            </div>
+          </div>
+
+          <!-- Fila: Resetear Usuarios -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #b91c1c;">Reiniciar Tabla de Usuarios</strong>
+              <span style="font-size: 11px; color: #6b7280; display: block; margin-top: 3px; max-width: 380px;">
+                Vacía la base de datos de usuarios (`USR_USUARIOS`), re-inicializando únicamente el administrador de fábrica (`ADMIN` / `Admin123!`).
+              </span>
+            </div>
+            <button class="button button-danger" style="background: #dc2626;" onclick="mntEjecutarResetUsuarios()">Reiniciar BD</button>
+          </div>
         </div>
       </div>
     </section>
@@ -855,6 +921,7 @@
   }
 
   // Depurar sesiones antiguas
+    // Depurar sesiones antiguas
   function mntEjecutarPurgaSesiones() {
     const dias = parseInt(document.getElementById("mnt_retencion_ses").value, 10);
     const mensajeConfirmar = dias === 0 
@@ -877,6 +944,28 @@
         USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
       })
       .MNT_PURGAR_SESIONES_SISTEMA(dias, TOKEN_SESION);
+  }
+
+  // Reiniciar base de datos de usuarios (Vaciado completo + Inicialización ADMIN)
+  function mntEjecutarResetUsuarios() {
+    if (!confirm("⚠️ ¡ADVERTENCIA CRÍTICA! ⚠️\n\n¿Está absolutamente seguro de reiniciar la tabla de usuarios del ERP?\n\nEsta acción eliminará todos los usuarios registrados en Sheets de forma permanente y re-inicializará únicamente la cuenta del administrador por defecto (ADMIN / Admin123!).")) return;
+    
+    if (!confirm("Confirmación final: Esta operación es irreversible. ¿Desea proceder?")) return;
+    
+    USR_MOSTRAR_ALERTA("Iniciando vaciado y re-inicialización atómica de usuarios...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          USR_CARGAR_USUARIOS(); // Recargar lista visual de usuarios
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
+      })
+      .MNT_RESET_USUARIOS_SISTEMA(TOKEN_SESION);
   }
 </script>
 </body>

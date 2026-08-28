@@ -224,3 +224,64 @@ function MNT_PURGAR_HISTORIAL_CLIENTES(diasRetencion, tokenSesion) {
 function MNT_PURGAR_HISTORIAL_PROVEEDORES(diasRetencion, tokenSesion) {
   return MNT_PURGAR_TABLA_HISTORIAL(MNT_CONFIG.HOJA_PROV_HISTORIAL, "FECHA", diasRetencion, tokenSesion);
 }
+
+
+/**
+ * Purga de forma atómica la tabla de usuarios (USR_USUARIOS) del ERP,
+ * eliminando todos los registros y re-inicializando únicamente el administrador de fábrica.
+ * Requiere rol ADMINISTRADOR y permiso de ADMINISTRAR en el módulo SEGURIDAD.
+ * 
+ * @param {string} tokenSesion Token seguro de la Web App (opcional desde Sheets local).
+ * @returns {object} Estado de la transacción para el frontend.
+ */
+function MNT_RESET_USUARIOS_SISTEMA(tokenSesion) {
+  try {
+    // 1. Validar autorización de seguridad dual
+    const auth = MNT_VERIFICAR_ACCESO_MANTENIMIENTO(tokenSesion);
+    const usuarioEjecutor = auth.USUARIO || "SISTEMA";
+
+    // 2. Conectar y validar la existencia de la hoja física USR_USUARIOS
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_USUARIOS);
+    if (!hoja) {
+      throw new Error("La hoja '" + SEG_CONFIG.HOJA_USUARIOS + "' no existe en la base de datos.");
+    }
+
+    const ultimaFila = hoja.getLastRow();
+    
+    // 3. Vaciado atómico de registros (conservando la fila 1 de encabezados)
+    if (ultimaFila >= 2) {
+      hoja.getRange(2, 1, ultimaFila - 1, hoja.getLastColumn()).clearContent();
+    }
+
+    // 4. Re-inicializar de forma segura el usuario ADMIN por defecto (Admin123!)
+    if (typeof SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS === "function") {
+      SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS();
+    } else {
+      throw new Error("El servicio de autocuración de usuarios no está disponible.");
+    }
+
+    // 5. Registrar la acción destructiva controlada en el log de auditoría
+    if (typeof SEG_REGISTRAR_AUDITORIA === "function") {
+      SEG_REGISTRAR_AUDITORIA({
+        MODULO: "SEGURIDAD",
+        SUBMODULO: "MANTENIMIENTO",
+        ACCION: "RESET_USUARIOS",
+        TIPO_REGISTRO: "SISTEMA",
+        DESCRIPCION: "Base de datos de usuarios reiniciada e inicializada con ADMIN por " + usuarioEjecutor,
+        RESULTADO: "EXITOSO"
+      });
+    }
+
+    return {
+      EXITO: true,
+      MENSAJE: "¡Base de datos de usuarios reiniciada exitosamente! Se ha re-inicializado el usuario ADMIN por defecto (Clave: Admin123!)."
+    };
+
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("MNT_RESET_USUARIOS_SISTEMA", "MANTENIMIENTO", error);
+    }
+    return { EXITO: false, MENSAJE: "Error al reiniciar base de datos de usuarios: " + error.message };
+  }
+}
