@@ -153,7 +153,11 @@
         .withSuccessHandler(function(res) {
           const dot = document.getElementById("session-dot");
           const timeText = document.getElementById("session-time");
-
+          if (!res) {
+            dot.className = "status-dot status-warning";
+            timeText.textContent = "Conexión Incompleta";
+            return;
+          }
           if (!res.VALIDA) {
             window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad.");
           } else {
@@ -217,3 +221,4 @@
 </script>
 </body>
 </html>
+

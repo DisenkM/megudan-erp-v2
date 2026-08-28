@@ -547,6 +547,10 @@
     // Obtener ID temporal para el formulario mediante Apps Script
     google.script.run
       .withSuccessHandler(function(idGenerado) {
+        if (!idGenerado) {
+          mostrarMensaje("Error al generar ID: respuesta nula del servidor.", "error");
+          return;
+        }
         document.getElementById("ID_CLIENTE").value = idGenerado;
         mostrarMensaje("Formulario listo para nuevo tercero.", "success");
       })
@@ -595,6 +599,10 @@
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de comunicación de red al guardar cliente.", "error");
+            return;
+          }
           CLI_MODO = "EDICION";
           mostrarMensaje("Tercero registrado correctamente en CLI_MAESTRO con ID " + res.idCliente, "success");
           document.getElementById("ID_CLIENTE").value = res.idCliente;
@@ -608,6 +616,10 @@
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de comunicación de red al guardar proveedor.", "error");
+            return;
+          }
           CLI_MODO = "EDICION";
           mostrarMensaje("Tercero registrado correctamente en PROV_MAESTRO con ID " + res.idProveedor, "success");
           document.getElementById("ID_CLIENTE").value = res.idProveedor;
@@ -643,6 +655,10 @@
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de red al actualizar cliente.", "error");
+            return;
+          }
           mostrarMensaje("Tercero actualizado exitosamente en CLI_MAESTRO.", "success");
         })
         .withFailureHandler(function(err) {
@@ -654,6 +670,10 @@
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de red al actualizar proveedor.", "error");
+            return;
+          }
           mostrarMensaje("Tercero actualizado exitosamente en PROV_MAESTRO.", "success");
         })
         .withFailureHandler(function(err) {
@@ -723,9 +743,19 @@
       document.getElementById("tipo_otros").checked = false;
     }
 
+    const aliasMap = {
+      "ID_PROVEEDOR": "ID_CLIENTE",
+      "NIT_CC": "NUMERO_DOCUMENTO",
+      "NUMERO": "NUMERO_DOCUMENTO",
+      "DV": "DIGITO_VERIFICACION",
+      "ESTADO": "ESTADO_CLIENTE",
+      "FECHA_MODIFICACION": "FECHA_ACTUALIZACION"
+    };
+
     Object.keys(tercero).forEach(key => {
-      const input = document.getElementById(key);
-      if (input && key !== "RESPONSABILIDAD_FISCAL") {
+      const targetKey = aliasMap[key] || key;
+      const input = document.getElementById(targetKey);
+      if (input && targetKey !== "RESPONSABILIDAD_FISCAL") {
         input.value = tercero[key] || "";
       }
     });

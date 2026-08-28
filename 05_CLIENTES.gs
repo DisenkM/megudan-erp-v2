@@ -39,6 +39,12 @@ function CLI_VALIDAR_DUPLICADO(tipoDoc, numDoc, idExcluir) {
 }
 
 function CLI_GUARDAR_CLIENTE(datos, tokenSesion) {
+  if (datos) {
+    if (datos.NUMERO_DOCUMENTO === undefined && datos.NIT_CC !== undefined) datos.NUMERO_DOCUMENTO = datos.NIT_CC;
+    if (datos.DIGITO_VERIFICACION === undefined && datos.DV !== undefined) datos.DIGITO_VERIFICACION = datos.DV;
+    if (datos.ID_CLIENTE === undefined && datos.ID_PROVEEDOR !== undefined) datos.ID_CLIENTE = datos.ID_PROVEEDOR;
+    if (datos.ESTADO_CLIENTE === undefined && datos.ESTADO !== undefined) datos.ESTADO_CLIENTE = datos.ESTADO;
+  }
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "CREAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
   if (!datos) throw new Error("Datos no proporcionados.");
@@ -105,6 +111,12 @@ function CLI_REGISTRAR_HISTORIAL(idCliente, accion, obs, usuarioEjecutor) {
 }
 
 function CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion) {
+  if (datos) {
+    if (datos.NUMERO_DOCUMENTO === undefined && datos.NIT_CC !== undefined) datos.NUMERO_DOCUMENTO = datos.NIT_CC;
+    if (datos.DIGITO_VERIFICACION === undefined && datos.DV !== undefined) datos.DIGITO_VERIFICACION = datos.DV;
+    if (datos.ID_CLIENTE === undefined && datos.ID_PROVEEDOR !== undefined) datos.ID_CLIENTE = datos.ID_PROVEEDOR;
+    if (datos.ESTADO_CLIENTE === undefined && datos.ESTADO !== undefined) datos.ESTADO_CLIENTE = datos.ESTADO;
+  }
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "EDITAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
   if (!datos || !datos.ID_CLIENTE) throw new Error("ID_CLIENTE es obligatorio para actualizar.");
@@ -162,18 +174,30 @@ function CLI_BUSCAR_CLIENTE(criterio, tokenSesion) {
   const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return null;
 
-  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
+    const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
   const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
 
-  const idxId = encabezados.indexOf("ID_CLIENTE");
-  const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO");
+  const idxId = encabezados.indexOf("ID_CLIENTE") !== -1 ? encabezados.indexOf("ID_CLIENTE") : encabezados.indexOf("ID_PROVEEDOR");
+  const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : encabezados.indexOf("NUMERO"));
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
+  
+  if (idxId === -1 || idxDoc === -1) {
+    throw new Error("No se pudieron resolver las columnas críticas de identificación en CLI_MAESTRO.");
+  }
+
   const criterioNormalizado = String(criterio).trim().toUpperCase();
+  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, ""); // "90018294878"
 
   const filaEncontrada = registros.find(fila => {
-    return String(fila[idxId]).toUpperCase() === criterioNormalizado ||
-           String(fila[idxDoc]).toUpperCase() === criterioNormalizado ||
-           String(fila[idxRazon]).toUpperCase().includes(criterioNormalizado);
+    const valId = String(fila[idxId] || "").trim().toUpperCase();
+    const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
+    const valDocSoloNumeros = valDoc.replace(/\D/g, "");
+    const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
+
+    return valId === criterioNormalizado ||
+           valDoc === criterioNormalizado ||
+           (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) ||
+           valRazon.includes(criterioNormalizado);
   });
 
   if (!filaEncontrada) return null;

@@ -530,6 +530,10 @@
       .withSuccessHandler(function(res) {
         btn.disabled = false;
         btn.textContent = "Subir e Indexar Logotipo";
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor.");
+          return;
+        }
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
           document.getElementById("form_logo_file").value = "";
@@ -873,6 +877,10 @@
     USR_MOSTRAR_ALERTA("Purgando caché del servidor de Google...", "info");
     google.script.run
       .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
         } else {
@@ -897,6 +905,10 @@
     USR_MOSTRAR_ALERTA("Ejecutando lote de depuración y reajuste en Sheets...", "info");
     google.script.run
       .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
           USR_CARGAR_USUARIOS();
@@ -922,6 +934,10 @@
     USR_MOSTRAR_ALERTA("Ejecutando mantenimiento atómico en USR_SESIONES...", "info");
     google.script.run
       .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
           USR_CARGAR_SESIONES();
@@ -943,6 +959,10 @@
     USR_MOSTRAR_ALERTA("Reiniciando base de datos de usuarios y re-poblando ADMIN...", "info");
     google.script.run
       .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
           USR_CARGAR_USUARIOS();

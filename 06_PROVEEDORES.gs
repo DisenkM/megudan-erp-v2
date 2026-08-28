@@ -14,6 +14,12 @@ const PROV_CONFIG = {
 };
 
 function PROV_GUARDAR_PROVEEDOR(datos, tokenSesion) {
+  if (datos) {
+    if (datos.NIT_CC === undefined && datos.NUMERO_DOCUMENTO !== undefined) datos.NIT_CC = datos.NUMERO_DOCUMENTO;
+    if (datos.DV === undefined && datos.DIGITO_VERIFICACION !== undefined) datos.DV = datos.DIGITO_VERIFICACION;
+    if (datos.ID_PROVEEDOR === undefined && datos.ID_CLIENTE !== undefined) datos.ID_PROVEEDOR = datos.ID_CLIENTE;
+    if (datos.ESTADO === undefined && datos.ESTADO_CLIENTE !== undefined) datos.ESTADO = datos.ESTADO_CLIENTE;
+  }
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "PROVEEDORES", "CREAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
   if (!datos) throw new Error("Datos de proveedor no especificados.");
@@ -53,6 +59,12 @@ function PROV_OBTENER_SIGUIENTE_ID() {
 }
 
 function PROV_ACTUALIZAR_PROVEEDOR(datos, tokenSesion) {
+  if (datos) {
+    if (datos.NIT_CC === undefined && datos.NUMERO_DOCUMENTO !== undefined) datos.NIT_CC = datos.NUMERO_DOCUMENTO;
+    if (datos.DV === undefined && datos.DIGITO_VERIFICACION !== undefined) datos.DV = datos.DIGITO_VERIFICACION;
+    if (datos.ID_PROVEEDOR === undefined && datos.ID_CLIENTE !== undefined) datos.ID_PROVEEDOR = datos.ID_CLIENTE;
+    if (datos.ESTADO === undefined && datos.ESTADO_CLIENTE !== undefined) datos.ESTADO = datos.ESTADO_CLIENTE;
+  }
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "PROVEEDORES", "EDITAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
   if (!datos || !datos.ID_PROVEEDOR) throw new Error("ID_PROVEEDOR es requerido.");
@@ -107,18 +119,30 @@ function PROV_BUSCAR_PROVEEDOR(criterio, tokenSesion) {
   const hoja = ss.getSheetByName(PROV_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return null;
 
-  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
+    const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
   const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
 
-  const idxId = encabezados.indexOf("ID_PROVEEDOR");
-  const idxDoc = encabezados.indexOf("NIT_CC");
+  const idxId = encabezados.indexOf("ID_PROVEEDOR") !== -1 ? encabezados.indexOf("ID_PROVEEDOR") : encabezados.indexOf("ID_CLIENTE");
+  const idxDoc = encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : encabezados.indexOf("NUMERO"));
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
+  
+  if (idxId === -1 || idxDoc === -1) {
+    throw new Error("No se pudieron resolver las columnas críticas de identificación en PROV_MAESTRO.");
+  }
+
   const criterioNormalizado = String(criterio).trim().toUpperCase();
+  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, ""); // "90018294878"
 
   const filaEncontrada = registros.find(fila => {
-    return String(fila[idxId]).toUpperCase() === criterioNormalizado ||
-           String(fila[idxDoc]).toUpperCase() === criterioNormalizado ||
-           String(fila[idxRazon]).toUpperCase().includes(criterioNormalizado);
+    const valId = String(fila[idxId] || "").trim().toUpperCase();
+    const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
+    const valDocSoloNumeros = valDoc.replace(/\D/g, "");
+    const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
+
+    return valId === criterioNormalizado ||
+           valDoc === criterioNormalizado ||
+           (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) ||
+           valRazon.includes(criterioNormalizado);
   });
 
   if (!filaEncontrada) return null;
@@ -219,4 +243,3 @@ function PROV_SHEET_INACTIVAR() {
 function PROV_GENERAR_ID() {
   return PROV_OBTENER_SIGUIENTE_ID();
 }
-

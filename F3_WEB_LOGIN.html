@@ -172,6 +172,12 @@
 
     google.script.run
       .withSuccessHandler(function(autenticacion) {
+        if (!autenticacion) {
+          btn.disabled = false;
+          btn.textContent = "Ingresar al ERP";
+          mostrarAlerta("Error de red o autorización pendiente. Recargue la página.", "error");
+          return;
+        }
         if (!autenticacion.EXITO) {
           btn.disabled = false;
           btn.textContent = "Ingresar al ERP";
@@ -182,6 +188,12 @@
         mostrarAlerta("Credenciales validadas. Iniciando sesión...", "success");
         google.script.run
           .withSuccessHandler(function(sesion) {
+            if (!sesion) {
+              btn.disabled = false;
+              btn.textContent = "Ingresar al ERP";
+              mostrarAlerta("No se pudo recibir respuesta del servidor de sesión.", "error");
+              return;
+            }
             if (sesion.EXITO) {
               const url = window.location.origin + window.location.pathname + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
               window.top.location.replace(url);
@@ -218,6 +230,10 @@
       .withSuccessHandler(function(res) {
         btn.disabled = false;
         btn.textContent = "Enviar Contraseña Temporal";
+        if (!res) {
+          mostrarAlerta("Error de comunicación de red con el servidor.", "error");
+          return;
+        }
         if (res.EXITO) {
           mostrarAlerta(res.MENSAJE, "success");
           document.getElementById("correo-rec").value = "";
