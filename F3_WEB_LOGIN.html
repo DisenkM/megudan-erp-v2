@@ -196,7 +196,7 @@
             }
             if (sesion.EXITO) {
               const url = window.location.origin + window.location.pathname + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
-              window.top.location.replace(url);
+              try { window.top.location.replace(url); } catch (e) { window.location.replace(url); }
             } else {
               btn.disabled = false;
               btn.textContent = "Ingresar al ERP";

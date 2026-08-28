@@ -159,7 +159,7 @@
             return;
           }
           if (!res.VALIDA) {
-            window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad.");
+            try { window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad."); } catch (e) { window.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad."); }
           } else {
             dot.className = "status-dot";
             timeText.textContent = "Sesión Activa";
@@ -211,14 +211,13 @@
     if (!confirm("¿Desea cerrar sesión en el ERP?")) return;
     google.script.run
       .withSuccessHandler(function() {
-        window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente.");
+        try { window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente."); } catch (e) { window.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente."); }
       })
       .withFailureHandler(function() {
-        window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada.");
+        try { window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada."); } catch (e) { window.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada."); }
       })
       .SEG_CERRAR_SESION(TOKEN_SESION);
   }
 </script>
 </body>
 </html>
-

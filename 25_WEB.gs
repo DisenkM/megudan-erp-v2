@@ -147,9 +147,9 @@ function WEB_REDIRECCION_LOGIN(mensaje) {
     <base target="_top">
     <script>
       const urlDestino = window.location.origin + window.location.pathname + "?ruta=login&mensaje=" + "${parametroMensaje}";
-      if (window.top) {
+      try {
         window.top.location.replace(urlDestino);
-      } else {
+      } catch (e) {
         window.location.replace(urlDestino);
       }
     </script>
@@ -182,7 +182,7 @@ function WEB_MOSTRAR_ERROR(mensaje) {
     <div class="error-card">
       <h2>⚠️ Control de Acceso</h2>
       <p>${mensaje}</p>
-      <a href="javascript:void(0)" onclick="if(window.top){window.top.location.replace(window.location.origin + window.location.pathname + '?ruta=login');}else{window.location.replace(window.location.origin + window.location.pathname + '?ruta=login');}" class="btn">Volver al Login</a>
+      <a href="javascript:void(0)" onclick="try{window.top.location.replace(window.location.origin + window.location.pathname + '?ruta=login');}catch(e){window.location.replace(window.location.origin + window.location.pathname + '?ruta=login');}" class="btn">Volver al Login</a>
     </div>
   </body>
   </html>
