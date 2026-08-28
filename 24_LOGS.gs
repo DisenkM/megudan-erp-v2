@@ -7,6 +7,9 @@
 
 /**
  * Registra un error de forma centralizada en el sistema.
+ * @param {string} funcion Nombre de la función donde ocurrió el error.
+ * @param {string} modulo Módulo del sistema afectado.
+ * @param {Error} error Objeto de error capturado.
  */
 function LOG_REGISTRAR_ERROR(funcion, modulo, error) {
   const ahora = new Date();
@@ -77,16 +80,12 @@ function LOG_REGISTRAR_ACCION(modulo, accion, idRegistro, descripcion, resultado
         ORIGEN_ACCESO: "GOOGLE_SHEETS"
       });
     } else {
-      console.log(`[AUDIT] Modulo: ${modulo} | Accion: ${accion} | Desc: ${descripcion}`);
+      console.log("[AUDIT] Modulo: " + modulo + " | Accion: " + accion + " | Desc: " + descripcion);
     }
   } catch (error) {
     console.error("Error al registrar acción de auditoría: " + error.toString());
   }
 }
-
-// ============================================================
-// 🧪 SUITE DE DIAGNÓSTICO Y UNIT TESTS PARA DESARROLLADORES
-// ============================================================
 
 /**
  * Ejecuta un diagnóstico completo en caliente del ERP.
@@ -119,17 +118,18 @@ function LOG_EJECUTAR_DIAGNOSTICO_COMPLETO() {
   console.log("\n2. Diagnosticando Validador de Campos Obligatorios (Bug de la variable 'value'):");
   try {
     const datosPrueba = { TEST_CAMPO: "Valor Correcto" };
-    // Llamada con campo presente
     SEG_VALIDAR_OBLIGATORIOS(datosPrueba, ["TEST_CAMPO"]);
-    
-    // Provocar fallo de validación de forma intencional para verificar si se dispara el ReferenceError original
     try {
-      SEG_VALIDAR_OBLIGATORIOS(datosPrueba, ["CAMPO_FALTANTE"]);
-      console.error("   [FAIL] El validador no detectó el campo faltante.");
-      resultados.push({ prueba: "VALIDADOR_BUG", estado: "FALLA", detalle: "El validador ignoró campos obligatorios vacíos." });
+      if (typeof SEG_VALIDAR_OBLIGATORIOS === "function") {
+        SEG_VALIDAR_OBLIGATORIOS(datosPrueba, ["CAMPO_FALTANTE"]);
+        console.error("   [FAIL] El validador no detectó el campo faltante.");
+        resultados.push({ prueba: "VALIDADOR_BUG", estado: "FALLA", detalle: "El validador ignoró campos obligatorios vacíos." });
+      } else {
+        throw new Error("La función SEG_VALIDAR_OBLIGATORIOS no está disponible.");
+      }
     } catch (valErr) {
       if (valErr.toString().includes("ReferenceError")) {
-        console.error("   [BUG DETECTADO] El validador arrojó un ReferenceError. Bug de variable 'value' inactivo.");
+        console.error("   [BUG DETECTADO] El validador arrojó un ReferenceError. Bug de variable 'value' activo.");
         resultados.push({ prueba: "VALIDADOR_BUG", estado: "CRÍTICO", detalle: "ReferenceError detectado en el validador original." });
       } else {
         console.log("   [PASS] El validador detuvo la ejecución con un mensaje controlado de campo obligatorio.");

@@ -1,20 +1,11 @@
 /**************************************************************
 * 00_INSTALADOR.gs
-* ERP OPERATIVO MEGUDAN V2
 * RESPONSABILIDAD:
-* - Configurar e instalar el esqueleto inicial del Libro 1 (ERP Operativo).
-* - Crear las hojas de datos tabulares, formatear encabezados y colores.
-* - Inicializar los roles predefinidos en la tabla USR_ROLES de forma segura.
-* 
-* 🛡️ BLINDAJE DE DATOS (MECANISMO CAJA FUERTE):
-* - NO elimina hojas existentes que contengan datos reales para evitar pérdidas.
-* - Si una hoja ya existe y tiene 2 o más filas (datos reales), preserva TODO su contenido.
-* - Soporta e ignora filtros si el usuario ya formateó las hojas como Tablas de Google.
+* - Instalar, verificar y formatear la base de datos de 60 hojas.
+* - Inicializar los roles, permisos y usuarios de fábrica con autocuración.
+* - Blindar datos mediante mecanismo de "Caja Fuerte" ante reinicios accidentales.
 **************************************************************/
 
-// ============================================================
-// 01. CONFIGURACIÓN GENERAL DEL INSTALADOR
-// ============================================================
 const INST_CONFIG = {
   NOMBRE_MENU: "🏠MENU",
   COLOR_MENU: "#111827",
@@ -23,9 +14,6 @@ const INST_CONFIG = {
   ALTURA_ENCABEZADO: 30
 };
 
-// ============================================================
-// 02. ESTRUCTURA MAESTRA DE HOJAS Y ENCABEZADOS POR MÓDULO
-// ============================================================
 const INST_MODULOS = [
   {
     nombre: "⚙️ CONFIGURACIÓN",
@@ -402,33 +390,20 @@ const INST_MODULOS = [
   }
 ];
 
-// ============================================================
-// 03. INSTALAR ESTRUCTURAS DE DATOS
-// ============================================================
-
 function INSTALAR_ERP_OPERATIVO() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  // ----------------------------------------------------------
-  // 03.01 Inicialización de la hoja de Menú Principal
-  // ----------------------------------------------------------
   let menu = ss.getSheetByName(INST_CONFIG.NOMBRE_MENU);
   if (!menu) {
     menu = ss.insertSheet(INST_CONFIG.NOMBRE_MENU);
   }
   menu.clearContents();
   menu.setTabColor(INST_CONFIG.COLOR_MENU);
-  
   menu.getRange("A1").setValue("📘 ERP V2 — ERP OPERATIVO").setFontSize(18).setFontWeight("bold");
   menu.getRange("A3").setValue("MÓDULOS DEL SISTEMA").setFontWeight("bold");
   let filaMenu = 4;
-  
   let hojasPreservadasCount = 0;
   let hojasCreadasCount = 0;
-  
-  // ----------------------------------------------------------
-  // 03.02 Creación física de hojas, encabezados y filtros
-  // ----------------------------------------------------------
+
   INST_MODULOS.forEach(function(modulo) {
     menu.getRange(filaMenu, 1)
       .setValue(modulo.nombre)
@@ -436,7 +411,7 @@ function INSTALAR_ERP_OPERATIVO() {
       .setBackground(modulo.color)
       .setFontColor("#FFFFFF");
     filaMenu++;
-    
+
     Object.entries(modulo.hojas).forEach(function([nombreHoja, encabezados]) {
       let hoja = ss.getSheetByName(nombreHoja);
       let hojaNueva = false;
@@ -444,19 +419,13 @@ function INSTALAR_ERP_OPERATIVO() {
         hoja = ss.insertSheet(nombreHoja);
         hojaNueva = true;
       }
-      
-      // 🛡️ MECANISMO CAJA FUERTE (CONSERVADOR DE DATOS)
-      // Si la hoja ya tiene 2 o más filas (cabecera + datos), se preserva intacta para no perder registros.
       if (!hojaNueva && hoja.getLastRow() >= 2) {
         hojasPreservadasCount++;
         console.log("🛡️ [CAJA FUERTE] Preservada hoja con datos: " + nombreHoja);
       } else {
-        // Si está vacía o es nueva, aplicamos la configuración estructural limpia
         hojasCreadasCount++;
         hoja.clearContents();
         hoja.setTabColor(modulo.color);
-        
-        // Escribir fila de encabezados
         hoja.getRange(1, 1, 1, encabezados.length).setValues([encabezados]);
         hoja.getRange(1, 1, 1, encabezados.length)
           .setFontWeight("bold")
@@ -464,16 +433,12 @@ function INSTALAR_ERP_OPERATIVO() {
           .setFontColor("#FFFFFF")
           .setHorizontalAlignment("center")
           .setVerticalAlignment("middle");
-          
-        // Formato seguro de congelación y altura
         try {
           hoja.setFrozenRows(1);
           hoja.setRowHeight(1, INST_CONFIG.ALTURA_ENCABEZADO);
         } catch (err) {
           console.warn("Fijación de fila omitida en: " + nombreHoja);
         }
-        
-        // Auto-redimensionar con ancho mínimo para legibilidad
         hoja.autoResizeColumns(1, encabezados.length);
         for (let c = 1; c <= encabezados.length; c++) {
           const anchoActual = hoja.getColumnWidth(c);
@@ -481,8 +446,6 @@ function INSTALAR_ERP_OPERATIVO() {
             hoja.setColumnWidth(c, INST_CONFIG.ANCHO_COL_MIN);
           }
         }
-        
-        // Filtro Seguro (Manejo de excepciones por tablas nativas)
         try {
           if (hoja.getFilter()) {
             hoja.getFilter().remove();
@@ -492,30 +455,20 @@ function INSTALAR_ERP_OPERATIVO() {
           console.info("Filtro clásico omitido (Tabla nativa detectada): " + nombreHoja);
         }
       }
-      
-      // Vincular en el menú visual
       menu.getRange(filaMenu, 1)
         .setValue("   ↳ " + nombreHoja)
         .setFontColor(modulo.color);
       filaMenu++;
     });
-    
-    filaMenu++; // Separador estético
+    filaMenu++;
   });
-  
-  // ----------------------------------------------------------
-  // 03.03 Estética y estructura final del Menú Principal
-  // ----------------------------------------------------------
+
   menu.setColumnWidth(1, 320);
   menu.getRange("A1:A" + filaMenu).setVerticalAlignment("middle");
   menu.setFrozenRows(3);
-  
   ss.setActiveSheet(menu);
   ss.moveActiveSheet(1);
-  
-  // ----------------------------------------------------------
-  // 03.04 Poblar Roles del ERP por defecto en USR_ROLES
-  // ----------------------------------------------------------
+
   const hojaRoles = ss.getSheetByName(INST_CONFIG.HOJA_ROLES);
   if (hojaRoles && hojaRoles.getLastRow() < 2) {
     const ahora = new Date();
@@ -533,10 +486,7 @@ function INSTALAR_ERP_OPERATIVO() {
   } else {
     console.log("🛡️ [CAJA FUERTE] Se omitió poblar roles porque USR_ROLES ya contiene datos.");
   }
-  
-  // ----------------------------------------------------------
-  // 03.05 Generación automática de hipervínculos
-  // ----------------------------------------------------------
+
   if (typeof ACTUALIZAR_MENU === "function") {
     try {
       ACTUALIZAR_MENU();
@@ -546,23 +496,18 @@ function INSTALAR_ERP_OPERATIVO() {
     }
   }
 
-  // ----------------------------------------------------------
-  // 03.06 Diálogo emergente de Éxito (Blindado Headless)
-  // ----------------------------------------------------------
   let ui;
   try {
     ui = SpreadsheetApp.getUi();
   } catch (e) {
     ui = null;
   }
-  
   const msgTitulo = "¡SISTEMA OPERATIVO BLINDADO E INSTALADO!";
   const msgTexto = "Se completó la inicialización física del Libro 1 con éxito.\n\n" +
                     "• Hojas estructurales totales analizadas: 60\n" +
                     "• Hojas estructuradas / creadas limpias: " + hojasCreadasCount + "\n" +
                     "• Hojas protegidas por Caja Fuerte (CON VALORES): " + hojasPreservadasCount + "\n\n" +
                     "🛡️ Tu base de datos y tus archivos de configuración existentes han sido totalmente blindados y permanecieron inmutables durante este proceso.";
-
   if (ui) {
     ui.alert(msgTitulo, msgTexto, ui.ButtonSet.OK);
   } else {

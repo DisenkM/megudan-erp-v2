@@ -16,7 +16,6 @@ const PROV_CONFIG = {
 function PROV_GUARDAR_PROVEEDOR(datos, tokenSesion) {
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "PROVEEDORES", "CREAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-
   if (!datos) throw new Error("Datos de proveedor no especificados.");
 
   if (datos.TIPO_DOCUMENTO === "NIT") {
@@ -31,7 +30,6 @@ function PROV_GUARDAR_PROVEEDOR(datos, tokenSesion) {
 
   const idProveedor = PROV_OBTENER_SIGUIENTE_ID();
   const ahora = new Date();
-
   datos.ID_PROVEEDOR = idProveedor;
   datos.FECHA_CREACION = ahora;
   datos.FECHA_MODIFICACION = ahora;
@@ -57,7 +55,6 @@ function PROV_OBTENER_SIGUIENTE_ID() {
 function PROV_ACTUALIZAR_PROVEEDOR(datos, tokenSesion) {
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "PROVEEDORES", "EDITAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-
   if (!datos || !datos.ID_PROVEEDOR) throw new Error("ID_PROVEEDOR es requerido.");
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -76,7 +73,6 @@ function PROV_ACTUALIZAR_PROVEEDOR(datos, tokenSesion) {
       break;
     }
   }
-
   if (filaModificar === -1) throw new Error("No se encontró el proveedor '" + idProveedor + "'.");
 
   const valoresFilaActual = hoja.getRange(filaModificar, 1, 1, encabezados.length).getValues()[0];
@@ -106,7 +102,6 @@ function PROV_INACTIVAR_PROVEEDOR(idProveedor, tokenSesion) {
 
 function PROV_BUSCAR_PROVEEDOR(criterio, tokenSesion) {
   SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "PROVEEDORES", "VER");
-
   if (!criterio) return null;
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(PROV_CONFIG.HOJA_MAESTRO);
@@ -141,147 +136,87 @@ function PROV_GENERAR_ID(tokenSesion) {
   return PROV_OBTENER_SIGUIENTE_ID();
 }
 
-
-// ============================================================
-// 03. OPERACIONES EXCLUSIVAS DE HOJAS DE GOOGLE SHEETS (CRUD LOCAL)
-// ============================================================
-
-/**
- * Guarda un proveedor desde la fila de captura (Fila 2) de la hoja PROV_FORM.
- */
 function PROV_SHEET_GUARDAR() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaForm = ss.getSheetByName("PROV_FORM");
   const hojaMaestro = ss.getSheetByName("PROV_MAESTRO");
-  
   if (!hojaForm || !hojaMaestro) {
     throw new Error("No se encontraron las hojas físicas PROV_FORM o PROV_MAESTRO.");
   }
-  
   const headers = hojaForm.getRange(1, 1, 1, hojaForm.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
   const valores = hojaForm.getRange(2, 1, 1, hojaForm.getLastColumn()).getValues()[0];
-  
   const datos = {};
-  headers.forEach((h, idx) => {
-    datos[h] = valores[idx];
-  });
-  
+  headers.forEach((h, idx) => { datos[h] = valores[idx]; });
+
   if (!datos.TIPO_PERSONA || !datos.TIPO_DOCUMENTO || !datos.NIT_CC || !datos.EMAIL) {
     throw new Error("Por favor complete los campos obligatorios: TIPO_PERSONA, TIPO_DOCUMENTO, NIT_CC y EMAIL en la Fila 2.");
   }
-  
-  const res = PROV_GUARDAR_PROVEEDOR(datos);
-  
+
+  const res = PROV_GUARDAR_PROVEEDOR(datos, undefined);
   hojaForm.getRange(2, 1, 1, hojaForm.getLastColumn()).clearContent();
   hojaForm.getRange(2, headers.indexOf("ID_PROVEEDOR") + 1).setValue(res.idProveedor);
   hojaForm.getRange(2, headers.indexOf("ESTADO") + 1).setValue("ACTIVO");
-  
+
   const ui = SpreadsheetApp.getUi();
-  if (ui) {
-    ui.alert("Éxito", "Proveedor guardado correctamente con ID: " + res.idProveedor, ui.ButtonSet.OK);
-  }
+  if (ui) ui.alert("Éxito", "Proveedor guardado correctamente con ID: " + res.idProveedor, ui.ButtonSet.OK);
 }
 
-/**
- * Carga un proveedor en la Fila 2 de PROV_FORM buscando por el ID_PROVEEDOR o NIT_CC ingresado.
- */
 function PROV_SHEET_CARGAR() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaForm = ss.getSheetByName("PROV_FORM");
   const hojaMaestro = ss.getSheetByName("PROV_MAESTRO");
-  
   if (!hojaForm || !hojaMaestro) {
     throw new Error("No se encontraron las hojas físicas PROV_FORM o PROV_MAESTRO.");
   }
-  
   const headers = hojaForm.getRange(1, 1, 1, hojaForm.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
   const idxId = headers.indexOf("ID_PROVEEDOR");
   const idxDoc = headers.indexOf("NIT_CC");
-  
   const idBusqueda = hojaForm.getRange(2, idxId + 1).getValue().toString().trim();
   const docBusqueda = hojaForm.getRange(2, idxDoc + 1).getValue().toString().trim();
-  
-  let criterio = idBusqueda || docBusqueda;
-  if (!criterio) {
-    throw new Error("Debe ingresar un ID_PROVEEDOR o NIT_CC en la Fila 2 para realizar la búsqueda.");
-  }
-  
-  const proveedor = PROV_BUSCAR_PROVEEDOR(criterio);
-  if (!proveedor) {
-    throw new Error("No se encontró ningún proveedor con el criterio: " + criterio);
-  }
-  
+  const criterio = idBusqueda || docBusqueda;
+
+  if (!criterio) throw new Error("Debe ingresar un ID_PROVEEDOR o NIT_CC en la Fila 2.");
+  const proveedor = PROV_BUSCAR_PROVEEDOR(criterio, undefined);
+  if (!proveedor) throw new Error("No se encontró ningún proveedor.");
+
   const filaValores = headers.map(h => proveedor[h] !== undefined ? proveedor[h] : "");
   hojaForm.getRange(2, 1, 1, headers.length).setValues([filaValores]);
-  
+
   const ui = SpreadsheetApp.getUi();
-  if (ui) {
-    ui.toast("Proveedor cargado correctamente.", "ERP Operativo");
-  }
+  if (ui) ui.toast("Proveedor cargado correctamente.", "ERP Operativo");
 }
 
-/**
- * Actualiza un proveedor en PROV_MAESTRO con los valores modificados en la Fila 2 de PROV_FORM.
- */
 function PROV_SHEET_ACTUALIZAR() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaForm = ss.getSheetByName("PROV_FORM");
-  
-  if (!hojaForm) {
-    throw new Error("No se encontró la hoja física PROV_FORM.");
-  }
-  
+  if (!hojaForm) throw new Error("No se encontró la hoja física PROV_FORM.");
+
   const headers = hojaForm.getRange(1, 1, 1, hojaForm.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
   const valores = hojaForm.getRange(2, 1, 1, hojaForm.getLastColumn()).getValues()[0];
-  
   const datos = {};
-  headers.forEach((h, idx) => {
-    datos[h] = valores[idx];
-  });
-  
-  if (!datos.ID_PROVEEDOR) {
-    throw new Error("No se puede actualizar. Primero debe cargar un proveedor existente usando 'Cargar por ID/NIT'.");
-  }
-  
-  PROV_ACTUALIZAR_PROVEEDOR(datos);
-  
+  headers.forEach((h, idx) => { datos[h] = valores[idx]; });
+
+  if (!datos.ID_PROVEEDOR) throw new Error("ID_PROVEEDOR es requerido. Cargue un proveedor primero.");
+  PROV_ACTUALIZAR_PROVEEDOR(datos, undefined);
+
   const ui = SpreadsheetApp.getUi();
-  if (ui) {
-    ui.alert("Éxito", "Proveedor " + datos.ID_PROVEEDOR + " actualizado correctamente.", ui.ButtonSet.OK);
-  }
+  if (ui) ui.alert("Éxito", "Proveedor " + datos.ID_PROVEEDOR + " actualizado.", ui.ButtonSet.OK);
 }
 
-/**
- * Inactiva un proveedor cargado en la Fila 2 de PROV_FORM.
- */
 function PROV_SHEET_INACTIVAR() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaForm = ss.getSheetByName("PROV_FORM");
-  
-  if (!hojaForm) {
-    throw new Error("No se encontró la hoja física PROV_FORM.");
-  }
-  
+  if (!hojaForm) throw new Error("No se encontró la hoja física PROV_FORM.");
+
   const idProveedor = hojaForm.getRange(2, 1).getValue().toString().trim();
-  if (!idProveedor) {
-    throw new Error("Debe cargar un proveedor en el formulario antes de inactivarlo.");
-  }
-  
-  PROV_INACTIVAR_PROVEEDOR(idProveedor);
-  
+  if (!idProveedor) throw new Error("Debe cargar un proveedor antes de inactivarlo.");
+  PROV_INACTIVAR_PROVEEDOR(idProveedor, undefined);
+
   const headers = hojaForm.getRange(1, 1, 1, hojaForm.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
   hojaForm.getRange(2, headers.indexOf("ESTADO") + 1).setValue("INACTIVO");
-  
-  const ui = SpreadsheetApp.getUi();
-  if (ui) {
-    ui.toast("Proveedor inactivado correctamente.", "ERP Operativo");
-  }
 }
 
-
-/**
- * Wrapper de compatibilidad para el frontend del formulario de Proveedores.
- */
 function PROV_GENERAR_ID() {
   return PROV_OBTENER_SIGUIENTE_ID();
 }
+

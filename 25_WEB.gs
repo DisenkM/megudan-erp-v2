@@ -1,28 +1,21 @@
-// ============================================================
-// 25. WEB - SISTEMA DE ENRUTAMIENTO Y RENDERIZADO WEB APP (V3)
-// ARCHIVO: 25_WEB.gs
-// RESPONSABILIDAD: Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs
-//                  con validación estricta y protección contra fallos silenciosos.
-// ============================================================
+/**************************************************************
+* 25_WEB.gs
+* RESPONSABILIDAD:
+* - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
+**************************************************************/
 
 const WEB_CONFIG = {
   LOGIN: "F3_WEB_LOGIN",
   DASHBOARD: "F4_WEB_DASHBOARD",
   CLIENTES_FORM: "F1_CLI_FORM",
   SEGURIDAD_FORM: "F2_USR_GESTION",
-  
   RUTA_LOGIN: "login",
   RUTA_DASHBOARD: "dashboard",
   RUTA_CLIENTES: "clientes_form",
   RUTA_SEGURIDAD: "seguridad_form",
-  
   TITULO_ERP: "MEGUDAN ERP"
 };
 
-/**
- * Procesa la petición GET de la Web App delegada desde 22_TRIGGERS.gs.
- * Maneja las rutas GET del sistema y previene fallas silenciosas.
- */
 function WEB_doGet(e) {
   try {
     const parametros = e && e.parameter ? e.parameter : {};
@@ -48,9 +41,6 @@ function WEB_doGet(e) {
   }
 }
 
-/**
- * Carga la pantalla de inicio de sesión (F3_WEB_LOGIN).
- */
 function WEB_MOSTRAR_LOGIN() {
   try {
     return HtmlService
@@ -62,13 +52,10 @@ function WEB_MOSTRAR_LOGIN() {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("WEB_MOSTRAR_LOGIN", "WEB", error);
     }
-    return HtmlService.createHtmlOutput("<h2>Error de Carga</h2><p>No se pudo cargar la vista de login: " + error.toString() + "</p>");
+    return HtmlService.createHtmlOutput("<h2>Error de Carga</h2><p>No se pudo cargar la vista de login.</p>");
   }
 }
 
-/**
- * Carga el Dashboard Principal (F4_WEB_DASHBOARD) validando previamente el token.
- */
 function WEB_MOSTRAR_DASHBOARD(parametros) {
   try {
     const tokenSesion = String(parametros.token || "").trim();
@@ -76,7 +63,6 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
       return WEB_REDIRECCION_LOGIN("Debe iniciar sesión para acceder al panel.");
     }
     
-    // Validación robusta cruzada de sesión contra 23_SEGURIDAD.gs
     const validacion = SEG_VALIDAR_SESION(tokenSesion);
     if (!validacion || validacion.VALIDA !== true) {
       const msg = (validacion && validacion.MENSAJE) ? validacion.MENSAJE : "Sesión inválida o expirada. Por favor inicie sesión.";
@@ -84,8 +70,6 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
     }
     
     const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.DASHBOARD);
-    
-    // Inyección segura de variables asíncronas de sesión
     plantilla.TOKEN_SESION = tokenSesion;
     plantilla.ID_USUARIO = (validacion.SESION && validacion.SESION.ID_USUARIO) ? validacion.SESION.ID_USUARIO : "";
     plantilla.USUARIO = (validacion.SESION && validacion.SESION.USUARIO) ? validacion.SESION.USUARIO : "";
@@ -102,33 +86,17 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
   }
 }
 
-/**
- * Renderiza el formulario de Clientes (F1_CLI_FORM) dentro de la Web App.
- * Valida la existencia de la sesión activa a través de su token y verifica los permisos.
- */
 function WEB_MOSTRAR_CLIENTES_FORM(parametros) {
   try {
     const token = String(parametros.token || "").trim();
-    if (!token) {
-      return WEB_REDIRECCION_LOGIN("Debe iniciar sesión para acceder al módulo de clientes.");
-    }
-    
     const validacion = SEG_VALIDAR_SESION(token);
     if (!validacion || validacion.VALIDA !== true) {
-      const msg = (validacion && validacion.MENSAJE) ? validacion.MENSAJE : "Sesión inválida o expirada. Por favor inicie sesión.";
-      return WEB_REDIRECCION_LOGIN(msg);
-    }
-    
-    // Validar autorización de acceso al módulo CLIENTES para ver
-    const acceso = SEG_VALIDAR_ACCESO(token, "CLIENTES", "VER");
-    if (!acceso || acceso.AUTORIZADO !== true) {
-      const msgError = (acceso && acceso.MENSAJE) ? acceso.MENSAJE : "ACCESO DENEGADO: No cuenta con permisos para ver este módulo.";
-      return WEB_MOSTRAR_ERROR(msgError);
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
     }
     
     const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.CLIENTES_FORM);
     plantilla.TOKEN_SESION = token;
-    plantilla.USUARIO_ACTUAL = (validacion.SESION && validacion.SESION.USUARIO) ? validacion.SESION.USUARIO : "";
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
     
     return plantilla.evaluate()
       .setTitle("Gestión de Terceros | ERP")
@@ -141,32 +109,22 @@ function WEB_MOSTRAR_CLIENTES_FORM(parametros) {
   }
 }
 
-/**
- * Renderiza la interfaz de Seguridad y Usuarios (F2_USR_GESTION) en la Web App.
- * Valida la sesión y verifica que el rol cuente con el permiso de VER en el módulo SEGURIDAD.
- */
 function WEB_MOSTRAR_SEGURIDAD_FORM(parametros) {
   try {
     const token = String(parametros.token || "").trim();
-    if (!token) {
-      return WEB_REDIRECCION_LOGIN("Debe iniciar sesión para acceder al módulo de seguridad.");
-    }
-    
     const validacion = SEG_VALIDAR_SESION(token);
     if (!validacion || validacion.VALIDA !== true) {
-      const msg = (validacion && validacion.MENSAJE) ? validacion.MENSAJE : "Sesión inválida o expirada. Por favor inicie sesión.";
-      return WEB_REDIRECCION_LOGIN(msg);
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
     }
     
     const acceso = SEG_VALIDAR_ACCESO(token, "SEGURIDAD", "VER");
     if (!acceso || acceso.AUTORIZADO !== true) {
-      const msgError = (acceso && acceso.MENSAJE) ? acceso.MENSAJE : "ACCESO DENEGADO: No cuenta con permisos para ver este módulo.";
-      return WEB_MOSTRAR_ERROR(msgError);
+      return WEB_MOSTRAR_ERROR("ACCESO DENEGADO: No cuenta con permisos para ver este módulo.");
     }
     
     const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.SEGURIDAD_FORM);
     plantilla.TOKEN_SESION = token;
-    plantilla.USUARIO_ACTUAL = (validacion.SESION && validacion.SESION.USUARIO) ? validacion.SESION.USUARIO : "";
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
     
     return plantilla.evaluate()
       .setTitle("Gestión de Seguridad | ERP")
@@ -179,10 +137,6 @@ function WEB_MOSTRAR_SEGURIDAD_FORM(parametros) {
   }
 }
 
-/**
- * Genera la pantalla intermedia que fuerza la redirección JavaScript al login.
- * Utiliza window.location.replace() y encodeURIComponent() para mayor seguridad y evitar bucles.
- */
 function WEB_REDIRECCION_LOGIN(mensaje) {
   const mensajeSeguro = String(mensaje || "Debe iniciar sesión.");
   const parametroMensaje = encodeURIComponent(mensajeSeguro);
@@ -208,9 +162,6 @@ function WEB_REDIRECCION_LOGIN(mensaje) {
   return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Redirigiendo");
 }
 
-/**
- * Genera una página de error web uniforme.
- */
 function WEB_MOSTRAR_ERROR(mensaje) {
   const html = `
   <!DOCTYPE html>
@@ -220,10 +171,10 @@ function WEB_MOSTRAR_ERROR(mensaje) {
     <title>Error de Sistema</title>
     <style>
       body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f9fafb; color: #111827; padding: 40px; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-      .error-card { background: white; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 500px; text-align: center; }
-      h2 { margin: 0 0 15px; color: #dc2626; font-size: 20px; }
-      p { margin: 0 0 20px; font-size: 14px; color: #4b5563; line-height: 1.5; }
-      .btn { background-color: #1f2937; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
+      .error-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 500px; text-align: center; border: 1px solid #e5e7eb; }
+      h2 { color: #dc2626; margin-top: 0; }
+      p { font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 25px; }
+      .btn { background-color: #1f2937; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold; transition: background 0.2s; }
       .btn:hover { background-color: #111827; }
     </style>
   </head>

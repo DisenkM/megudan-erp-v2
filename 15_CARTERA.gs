@@ -1,8 +1,8 @@
 /**************************************************************
 * 15_CARTERA.gs
 * RESPONSABILIDAD:
-* - Controlar el saldo y antigüedad de Cuentas por Cobrar de clientes.
-* - Generar el recaudo contra las obligaciones vigentes de Cartera.
+* - Controlar el saldo y antigüedad de Cuentas por Cobrar.
+* - Aplicar abonos y actualizar el estado de las facturas.
 **************************************************************/
 
 const CAR_CONFIG = {
@@ -18,7 +18,7 @@ function CAR_CREAR_CUENTA_COBRAR(idVenta, idCliente, total) {
 
   const idCartera = CAR_CONFIG.PREFIJO_ID + "-" + String(Math.max(1, hoja.getLastRow())).padStart(CAR_CONFIG.DIGITOS_ID, "0");
   const ahora = new Date();
-  const vencimiento = new Date(ahora.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 días plazo por defecto
+  const vencimiento = new Date(ahora.getTime() + (30 * 24 * 60 * 60 * 1000));
 
   hoja.appendRow([
     idCartera, idCliente, idVenta, idVenta, ahora, vencimiento, total, 0, total, 0, "PENDIENTE"

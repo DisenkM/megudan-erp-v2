@@ -1,13 +1,10 @@
-/// ============================================================
-// 01. CORE - NAVEGACIÓN Y CONFIGURACIÓN DE INTERFAZ SPREADSHEET
-// ARCHIVO: 01_CORE.gs
-// RESPONSABILIDAD: Menús personalizados, diálogos modales y utilidades de UI seguras
-// ============================================================
+/**************************************************************
+* 01_CORE.gs
+* RESPONSABILIDAD:
+* - Menús personalizados, diálogos modales y utilidades de UI seguras.
+* - Control de errores de contexto headless para Google Sheets.
+**************************************************************/
 
-/**
- * Genera de forma segura el menú personalizado en Google Sheets.
- * Es invocado por el disparador central onOpen() en 22_TRIGGERS.gs.
- */
 function CORE_onOpen() {
   const ui = CORE_OBTENER_UI();
   if (!ui) {
@@ -37,22 +34,14 @@ function CORE_onOpen() {
   }
 }
 
-/**
- * Abre la ventana modal del Formulario de Clientes de forma segura.
- */
 function ABRIR_CLIENTES() {
   const ui = CORE_OBTENER_UI();
-  if (!ui) {
-    console.warn("Spreadsheet UI no disponible.");
-    return;
-  }
+  if (!ui) return;
   try {
     const template = HtmlService.createTemplateFromFile("F1_CLI_FORM");
     template.TOKEN_SESION = "SHEETS_CONTEXT";
     template.USUARIO_ACTUAL = Session.getActiveUser().getEmail() || "ADMIN_SHEETS";
-    const html = template.evaluate()
-      .setWidth(1200)
-      .setHeight(800);
+    const html = template.evaluate().setWidth(1200).setHeight(800);
     ui.showModalDialog(html, "👥 Gestión de Clientes");
   } catch (error) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
@@ -64,17 +53,12 @@ function ABRIR_CLIENTES() {
 
 function ABRIR_USUARIOS() {
   const ui = CORE_OBTENER_UI();
-  if (!ui) {
-    console.warn("Spreadsheet UI no disponible.");
-    return;
-  }
+  if (!ui) return;
   try {
     const template = HtmlService.createTemplateFromFile("F2_USR_GESTION");
     template.TOKEN_SESION = "SHEETS_CONTEXT";
     template.USUARIO_ACTUAL = Session.getActiveUser().getEmail() || "ADMIN_SHEETS";
-    const html = template.evaluate()
-      .setWidth(1200)
-      .setHeight(800);
+    const html = template.evaluate().setWidth(1200).setHeight(800);
     ui.showModalDialog(html, "🔐 Gestión de Seguridad y Control de Acceso");
   } catch (error) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {

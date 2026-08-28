@@ -10,18 +10,9 @@ const DOC_CONFIG = {
   FORMATO_DEFECTO: "PDF"
 };
 
-/**
- * Crea un PDF de forma automatizada y lo almacena en Google Drive.
- * @param {string} idDocumento ID operativo del documento.
- * @param {string} htmlTemplate Código HTML estructurado con la plantilla visual del documento.
- * @returns {string} URL de visualización del archivo generado.
- */
 function DOC_GENERAR_PDF_OPERATIVO(idDocumento, htmlTemplate) {
   try {
-    const blob = Utilities.newBlob(htmlTemplate, "text/html", "plantilla.html");
-    const pdf = blob.getAs("application/pdf").setName(idDocumento + ".pdf");
-    
-    // Buscar o crear carpeta de destino
+    const blob = Utilities.newBlob(htmlTemplate, "text/html", idDocumento + ".html");
     let carpeta;
     const carpetas = DriveApp.getFoldersByName(DOC_CONFIG.CARPETA_PDFS);
     if (carpetas.hasNext()) {
@@ -29,8 +20,8 @@ function DOC_GENERAR_PDF_OPERATIVO(idDocumento, htmlTemplate) {
     } else {
       carpeta = DriveApp.createFolder(DOC_CONFIG.CARPETA_PDFS);
     }
-
-    const archivo = carpeta.createFile(pdf);
+    const archivo = carpeta.createFile(blob);
+    archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return archivo.getUrl();
   } catch (err) {
     console.error("No se pudo compilar representación imprimible: " + err.toString());

@@ -1,9 +1,9 @@
 <!-- ============================================================
 * INTERFAZ: F2_USR_GESTION
 * MODULO: SEGURIDAD (ADMINISTRACIÓN CENTRAL)
-* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos y Sesiones del ERP
-* CONEXIÓN BACKEND: 23_SEGURIDAD.gs y 24_LOGS.gs
-* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
+* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos, Sesiones, Logo y Mantenimiento del ERP
+* CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 26_MANTENIMIENTO.gs
+* ESTADO: 100% Sincronizado, Modular y Seguro, con pestaña Mantenimiento y re-inicialización de Base de Datos
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -134,7 +134,7 @@
       <div class="header-icon">🔐</div>
       <div>
         <h1>Gestión de Seguridad</h1>
-        <p>Administración de usuarios, roles, permisos, sesiones y logo corporativo del ERP</p>
+        <p>Administración de usuarios, roles, permisos, sesiones, logo corporativo y mantenimiento del ERP</p>
       </div>
     </div>
   </header>
@@ -144,7 +144,8 @@
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
-        <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('mantenimiento')">⚙️ Mantenimiento</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('logo')">🖼️ Logo Empresa</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('mantenimiento')">⚙️ Mantenimiento</button>
   </nav>
 
   <main class="content">
@@ -298,7 +299,7 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px;">
           <p style="font-size: 13px; color: #4b5563;">
-            Cargue la imagen oficial de su logotipo para que se dibuje de forma dinámica en las plantillas del ERP (como facturas, compras y PDFs en Google Drive).
+            Cargue la imagen oficial de su logotipo para que se deba dibujar de forma dinámica en las plantillas del ERP (como facturas, compras y PDFs en Google Drive).
           </p>
           
           <div class="field" style="display: flex; flex-direction: column; gap: 6px;">
@@ -315,6 +316,7 @@
         </div>
       </div>
     </section>
+
     <!-- Pestaña: Mantenimiento -->
     <section id="tab-mantenimiento" class="tab-content">
       <div class="card">
@@ -323,40 +325,40 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 20px; max-width: 600px;">
           <p style="font-size: 13px; color: #4b5563; margin-bottom: 10px;">
-            Ejecute tareas operacionales de depuración, purga de historiales y liberación de caché global del ERP.
+            Ejecute tareas operacionales de depuración, purga de historiales y liberación de la caché global de Apps Script.
           </p>
-
+          
           <!-- Fila: Caché -->
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
             <div>
               <strong style="font-size: 14px; display: block; color: #111827;">Purgar Caché de Sesión</strong>
-              <span style="font-size: 11px; color: #6b7280;">Libera la caché en memoria de Apps Script del ERP.</span>
+              <span style="font-size: 11px; color: #6b7280;">Libera la caché en memoria de Apps Script del ERP de forma asíncrona.</span>
             </div>
             <button class="button button-secondary" onclick="mntEjecutarPurgarCache()">Purgar Caché</button>
           </div>
-
+          
           <!-- Fila: Auditorías -->
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
             <div>
               <strong style="font-size: 14px; display: block; color: #111827;">Depurar USR_AUDITORIA</strong>
-              <span style="font-size: 11px; color: #6b7280;">Elimina bitácoras antiguas conservando el período de retención.</span>
+              <span style="font-size: 11px; color: #6b7280;">Elimina bitácoras de auditoría conservando el período de retención seleccionado.</span>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
               <select id="mnt_retencion_aud" class="input" style="width: 110px; padding: 6px;">
                 <option value="30" selected>30 días</option>
                 <option value="60">60 días</option>
                 <option value="90">90 días</option>
-                <option value="0">Truncar (Todo)</option>
+                <option value="0">Vaciar (Todo)</option>
               </select>
               <button class="button button-danger" onclick="mntEjecutarPurgaAuditoria()">Depurar</button>
             </div>
           </div>
-
+          
           <!-- Fila: Sesiones -->
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
             <div>
               <strong style="font-size: 14px; display: block; color: #111827;">Depurar USR_SESIONES</strong>
-              <span style="font-size: 11px; color: #6b7280;">Depura registros de accesos antiguos.</span>
+              <span style="font-size: 11px; color: #6b7280;">Depura registros de accesos antiguos del ERP en Sheets.</span>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
               <select id="mnt_retencion_ses" class="input" style="width: 110px; padding: 6px;">
@@ -367,7 +369,7 @@
               <button class="button button-danger" onclick="mntEjecutarPurgaSesiones()">Depurar</button>
             </div>
           </div>
-
+          
           <!-- Fila: Resetear Usuarios -->
           <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px;">
             <div>
@@ -397,7 +399,7 @@
         <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
       </div>
       <div class="field">
-        <label for="form_nombre">Nombre Completo *</label>
+        <label_for form_nombre>Nombre Completo *</label>
         <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
       </div>
       <div class="field">
@@ -487,14 +489,6 @@
         el.style.display = "none";
       }
     }, 6000);
-  }
-
-  function USR_MOSTRAR_ERROR(mensaje) {
-    const el = document.getElementById("USR_MENSAJE_ALERT");
-    el.textContent = "❌ Error: " + mensaje;
-    el.className = "message error";
-    el.style.display = "block";
-    console.error(mensaje);
   }
 
   // Previsualizador local de logotipo
@@ -595,7 +589,7 @@
       return;
     }
 
-    if (!(contrasena.length >= 8)) {
+    if (contrasena.length < 8) {
       alert("La contraseña debe tener mínimo 8 caracteres.");
       return;
     }
@@ -616,7 +610,7 @@
     google.script.run
       .withSuccessHandler(function(resultado) {
         PROCESANDO_GUARDADO = false;
-        USR_MOSTRAR_ALERTA("Usuario '" + usuario + "' registrado con éxito.", "success");
+        USR_MOSTRAR_ALERTA("Usuario registrado con éxito.", "success");
         USR_CARGAR_USUARIOS();
       })
       .withFailureHandler(function(err) {
@@ -695,7 +689,7 @@
     const tbody = document.getElementById("USR_TABLA_USUARIOS");
     tbody.innerHTML = "";
 
-    if (!(usuarios.length > 0)) {
+    if (!usuarios || usuarios.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay usuarios registrados.</td></tr>`;
       return;
     }
@@ -707,27 +701,26 @@
       
       if (u.ESTADO_USUARIO === "ACTIVO") {
         badgeClass = "badge-active";
-        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'INACTIVO')">Inactivar</button>`;
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='USR_CAMBIAR_ESTADO(\\"" + u.ID_USUARIO + "\\", \\"INACTIVO\\")'>Inactivar</button>";
       } else if (u.ESTADO_USUARIO === "INACTIVO") {
         badgeClass = "badge-inactive";
-        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Activar</button>`;
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='USR_CAMBIAR_ESTADO(\\"" + u.ID_USUARIO + "\\", \\"ACTIVO\\")'>Activar</button>";
       } else if (u.ESTADO_USUARIO === "BLOQUEADO") {
         badgeClass = "badge-blocked";
-        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Desbloquear</button>`;
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='USR_CAMBIAR_ESTADO(\\"" + u.ID_USUARIO + "\\", \\"ACTIVO\\")'>Desbloquear</button>";
       } else if (u.ESTADO_USUARIO === "PENDIENTE") {
         badgeClass = "badge-pending";
-        accionesHtml = `<button class="button button-success" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="USR_ABRIR_APROBACION('${u.ID_USUARIO}', '${u.USUARIO}')">Aprobar Acceso</button>`;
+        accionesHtml = "<button class='button button-success' style='padding:4px 8px; font-size:11px; font-weight:700;' onclick='USR_ABRIR_APROBACION(\\"" + u.ID_USUARIO + "\\", \\"" + u.USUARIO + "\\")'>Aprobar Acceso</button>";
       }
       
-      tr.innerHTML = `
-        <td><strong>${u.ID_USUARIO}</strong></td>
-        <td>${u.USUARIO}</td>
-        <td>${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
-        <td>${u.CORREO}</td>
-        <td><span class="badge badge-session">${u.ID_ROL}</span></td>
-        <td><span class="badge ${badgeClass}">${u.ESTADO_USUARIO}</span></td>
-        <td>${accionesHtml}</td>
-      `;
+      tr.innerHTML = 
+        "<td><strong>" + u.ID_USUARIO + "</strong></td>" +
+        "<td>" + u.USUARIO + "</td>" +
+        "<td>" + (u.NOMBRE || u.NOMBRE_COMPLETO || "") + "</td>" +
+        "<td>" + u.CORREO + "</td>" +
+        "<td><span class='badge badge-session'>" + u.ID_ROL + "</span></td>" +
+        "<td><span class='badge " + badgeClass + "'>" + u.ESTADO_USUARIO + "</span></td>" +
+        "<td>" + accionesHtml + "</td>";
       tbody.appendChild(tr);
     });
   }
@@ -774,14 +767,13 @@
         const rolesValidos = roles.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
         rolesValidos.forEach(r => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><strong>${r.ID_ROL}</strong></td>
-            <td>${r.NOMBRE_ROL}</td>
-            <td>${r.DESCRIPCION}</td>
-            <td>Nivel ${r.NIVEL_JERARQUIA}</td>
-            <td>${r.ROL_SISTEMA}</td>
-            <td><span class="badge badge-active">${r.ESTADO_ROL}</span></td>
-          `;
+          tr.innerHTML = 
+            "<td><strong>" + r.ID_ROL + "</strong></td>" +
+            "<td>" + r.NOMBRE_ROL + "</td>" +
+            "<td>" + r.DESCRIPCION + "</td>" +
+            "<td>Nivel " + r.NIVEL_JERARQUIA + "</td>" +
+            "<td>" + r.ROL_SISTEMA + "</td>" +
+            "<td><span class='badge badge-active'>" + r.ESTADO_ROL + "</span></td>";
           tbody.appendChild(tr);
         });
       })
@@ -798,7 +790,7 @@
         const tbody = document.getElementById("USR_TABLA_PERMISOS");
         tbody.innerHTML = "";
 
-        if (!(permisos.length > 0)) {
+        if (!permisos || permisos.length === 0) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
           return;
         }
@@ -806,15 +798,14 @@
         const permisosValidos = permisos.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
         permisosValidos.forEach(p => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><strong>${p.ID_PERMISO}</strong></td>
-            <td>${p.ID_ROL}</td>
-            <td>${p.MODULO}</td>
-            <td>${p.SUBMODULO || "-"}</td>
-            <td>${p.ACCION}</td>
-            <td><span class="badge ${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">${p.PERMITIDO}</span></td>
-            <td>${p.ESTADO_PERMISO}</td>
-          `;
+          tr.innerHTML = 
+            "<td><strong>" + p.ID_PERMISO + "</strong></td>" +
+            "<td>" + p.ID_ROL + "</td>" +
+            "<td>" + p.MODULO + "</td>" +
+            "<td>" + (p.SUBMODULO || "-") + "</td>" +
+            "<td>" + p.ACCION + "</td>" +
+            "<td><span class='badge " + (p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive') + "'>" + p.PERMITIDO + "</span></td>" +
+            "<td>" + p.ESTADO_PERMISO + "</td>";
           tbody.appendChild(tr);
         });
       })
@@ -831,7 +822,7 @@
         const tbody = document.getElementById("USR_TABLA_SESIONES");
         tbody.innerHTML = "";
 
-        if (!(sesiones.length > 0)) {
+        if (!sesiones || sesiones.length === 0) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay sesiones registradas en USR_SESIONES.</td></tr>`;
           return;
         }
@@ -840,17 +831,16 @@
         sesionesValidas.forEach(s => {
           const tr = document.createElement("tr");
           const estadoClass = s.ESTADO_SESION === "ACTIVA" ? "badge-active" : "badge-inactive";
-          tr.innerHTML = `
-            <td><strong>${s.ID_SESION}</strong></td>
-            <td>${s.USUARIO} (${s.ID_USUARIO})</td>
-            <td>${s.FECHA_INICIO}</td>
-            <td>${s.ULTIMA_ACTIVIDAD}</td>
-            <td>${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
-            <td><span class="badge ${estadoClass}">${s.ESTADO_SESION}</span></td>
-            <td>
-              ${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('${s.TOKEN_SESION}')">Revocar</button>` : '-'}
-            </td>
-          `;
+          tr.innerHTML = 
+            "<td><strong>" + s.ID_SESION + "</strong></td>" +
+            "<td>" + s.USUARIO + " (" + s.ID_USUARIO + ")" + "</td>" +
+            "<td>" + s.FECHA_INICIO + "</td>" +
+            "<td>" + s.ULTIMA_ACTIVIDAD + "</td>" +
+            "<td>" + (s.EXPIRA_SESION || s.FECHA_EXPIRACION || "") + "</td>" +
+            "<td><span class='badge " + estadoClass + "'>" + s.ESTADO_SESION + "</span></td>" +
+            "<td>" +
+              (s.ESTADO_SESION === 'ACTIVA' ? "<button class='button button-danger' style='padding:4px 8px; font-size:11px;' onclick='USR_REVOCAR_SESION(\\"" + s.TOKEN_SESION + "\\")'>Revocar</button>" : '-') +
+            "</td>";
           tbody.appendChild(tr);
         });
       })
@@ -872,14 +862,10 @@
       })
       .SEG_CERRAR_SESION(token);
   }
-  // ==========================================================
-  // ⚙️ MANTENIMIENTO DEL ERP (PURGA DE DATOS Y CACHÉ)
-  // ==========================================================
 
-  // Limpiar caché de sesión de Apps Script
+  // Ejecutar purga de caché de sesión
   function mntEjecutarPurgarCache() {
     if (!confirm("¿Está seguro que desea purgar la caché de sesión global del ERP?")) return;
-    
     USR_MOSTRAR_ALERTA("Purgando caché del servidor de Google...", "info");
     google.script.run
       .withSuccessHandler(function(res) {
@@ -898,7 +884,7 @@
   // Depurar auditorías antiguas
   function mntEjecutarPurgaAuditoria() {
     const dias = parseInt(document.getElementById("mnt_retencion_aud").value, 10);
-    const mensajeConfirmar = dias === 0 
+    const mensajeConfirmar = dias === 0
       ? "¿Está seguro que desea TRUNCAR Y ELIMINAR TODA la auditoría física del ERP? Esta acción es irreversible."
       : "¿Desea purgar la tabla USR_AUDITORIA conservando solo los últimos " + dias + " días de registros?";
       
@@ -909,7 +895,7 @@
       .withSuccessHandler(function(res) {
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
-          USR_CARGAR_USUARIOS(); // Refrescar contexto
+          USR_CARGAR_USUARIOS();
         } else {
           USR_MOSTRAR_ERROR(res.MENSAJE);
         }
@@ -921,10 +907,9 @@
   }
 
   // Depurar sesiones antiguas
-    // Depurar sesiones antiguas
   function mntEjecutarPurgaSesiones() {
     const dias = parseInt(document.getElementById("mnt_retencion_ses").value, 10);
-    const mensajeConfirmar = dias === 0 
+    const mensajeConfirmar = dias === 0
       ? "¿Está seguro que desea VACIAR la base de datos de USR_SESIONES?"
       : "¿Desea purgar USR_SESIONES conservando solo los últimos " + dias + " días de inicio de sesión?";
       
@@ -935,7 +920,7 @@
       .withSuccessHandler(function(res) {
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
-          USR_CARGAR_SESIONES(); // Recargar tabla visual de sesiones
+          USR_CARGAR_SESIONES();
         } else {
           USR_MOSTRAR_ERROR(res.MENSAJE);
         }
@@ -946,18 +931,17 @@
       .MNT_PURGAR_SESIONES_SISTEMA(dias, TOKEN_SESION);
   }
 
-  // Reiniciar base de datos de usuarios (Vaciado completo + Inicialización ADMIN)
+  // Reiniciar base de datos de usuarios
   function mntEjecutarResetUsuarios() {
-    if (!confirm("⚠️ ¡ADVERTENCIA CRÍTICA! ⚠️\n\n¿Está absolutamente seguro de reiniciar la tabla de usuarios del ERP?\n\nEsta acción eliminará todos los usuarios registrados en Sheets de forma permanente y re-inicializará únicamente la cuenta del administrador por defecto (ADMIN / Admin123!).")) return;
+    if (!confirm("¿Está absolutamente seguro de que desea reiniciar la base de datos de usuarios? Se conservará únicamente el usuario administrador ADMIN de fábrica.")) return;
+    if (!confirm("⚠️ ¡ADVERTENCIA CRÍTICA! Esta acción es irreversible, vaciará todas las cuentas y forzará el cierre de sesión de cualquier otro operador en MEGUDAN. ¿Desea proceder?")) return;
     
-    if (!confirm("Confirmación final: Esta operación es irreversible. ¿Desea proceder?")) return;
-    
-    USR_MOSTRAR_ALERTA("Iniciando vaciado y re-inicialización atómica de usuarios...", "info");
+    USR_MOSTRAR_ALERTA("Reiniciando base de datos de usuarios y re-poblando ADMIN...", "info");
     google.script.run
       .withSuccessHandler(function(res) {
         if (res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
-          USR_CARGAR_USUARIOS(); // Recargar lista visual de usuarios
+          USR_CARGAR_USUARIOS();
         } else {
           USR_MOSTRAR_ERROR(res.MENSAJE);
         }

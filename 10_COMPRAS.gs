@@ -2,7 +2,7 @@
 * 10_COMPRAS.gs
 * RESPONSABILIDAD:
 * - Registrar las adquisiciones e insumos de proveedores.
-* - Sincronizar el costo promedio de inventario y registrar la cuenta por pagar (CXP_).
+* - Sincronizar costo promedio de inventario y registrar CxP.
 **************************************************************/
 
 const COM_CONFIG = {
@@ -12,9 +12,10 @@ const COM_CONFIG = {
   DIGITOS_ID: 6
 };
 
-function COM_GUARDAR_COMPRA(cabecera, detalles) {
+function COM_GUARDAR_COMPRA(cabecera, detalles, tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "COMPRAS", "CREAR");
   if (!cabecera || !detalles || detalles.length === 0) {
-    throw new Error("Transacción incompleta.");
+    throw new Error("Transacción incompleta de compra.");
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -44,11 +45,10 @@ function COM_GUARDAR_COMPRA(cabecera, detalles) {
 
     const idDetalle = "DET-" + Utilities.getUuid().substring(0, 8);
     hojaDet.appendRow([
-      idDetalle, idCompra, det.ID_PRODUCTO, det.DESCRIPCION, cant, 
-      det.ID_UNIDAD, costo, desc, lineaIva, (lineaSub - lineaDesc + lineaIva)
+      idDetalle, idCompra, det.ID_PRODUCTO, det.DESCRIPCION || "",
+      cant, det.ID_UNIDAD || "", costo, desc, lineaIva, (lineaSub - lineaDesc + lineaIva)
     ]);
 
-    // Afectar Inventario (Kardex de Entrada / Costo Promedio)
     try {
       INV_REGISTRAR_MOVIMIENTO({
         TIPO_MOVIMIENTO: "ENTRADA",
@@ -63,12 +63,13 @@ function COM_GUARDAR_COMPRA(cabecera, detalles) {
     }
   });
 
+  const total = subtotal - descuento + iva;
   cabecera.ID_COMPRA = idCompra;
   cabecera.FECHA = ahora;
   cabecera.SUBTOTAL = subtotal;
   cabecera.DESCUENTO = descuento;
   cabecera.IVA = iva;
-  cabecera.TOTAL = subtotal - descuento + iva;
+  cabecera.TOTAL = total;
   cabecera.ESTADO = "RECIBIDO";
   cabecera.FECHA_CREACION = ahora;
 
@@ -76,25 +77,22 @@ function COM_GUARDAR_COMPRA(cabecera, detalles) {
   const filaCab = encCab.map(col => cabecera[col] !== undefined ? cabecera[col] : "");
   hojaCab.appendRow(filaCab);
 
-  // Afectar Cuentas por Pagar si es a crédito
-  if (cabecera.FORMA_PAGO === "CREDITO") {
-    try {
-      CXP_CREAR_CUENTA_PAGAR(idCompra, cabecera.ID_PROVEEDOR, cabecera.TOTAL);
-    } catch (err) {
-      console.warn("No se pudo generar cuenta por pagar.");
+  try {
+    if (cabecera.FORMA_PAGO === "CREDITO") {
+      CXP_CREAR_CUENTA_PAGAR(idCompra, cabecera.ID_PROVEEDOR, total);
     }
+  } catch (err) {
+    console.warn("CxP no configurado para compra: " + idCompra);
   }
 
-  return { ok: true, idCompra: idCompra, total: cabecera.TOTAL };
+  return { ok: true, idCompra: idCompra, total: total };
 }
 
 function COM_OBTENER_SIGUIENTE_ID() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(COM_CONFIG.HOJA_CABECERA);
   const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) {
-    return COM_CONFIG.PREFIJO_ID + "-000001";
-  }
+  if (ultimaFila < 2) return COM_CONFIG.PREFIJO_ID + "-000001";
   const ultimoID = hoja.getRange(ultimaFila, 1).getValue().toString();
   const numero = parseInt(ultimoID.replace(COM_CONFIG.PREFIJO_ID + "-", ""), 10);
   return COM_CONFIG.PREFIJO_ID + "-" + String(numero + 1).padStart(COM_CONFIG.DIGITOS_ID, "0");

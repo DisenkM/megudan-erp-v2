@@ -2,8 +2,8 @@
 * 09_VENTAS.gs
 * RESPONSABILIDAD:
 * - Capturar las transacciones de ventas y pedidos de clientes.
-* - Calcular de forma modular: Subtotal, Descuento, IVA y Total de Venta.
-* - Afectar asíncronamente el stock (INV_) y generar la cuenta por cobrar (CAR_).
+* - Calcular de forma modular: Subtotal, Descuento, IVA y Total.
+* - Afectar asíncronamente stock (INV_) y generar cartera (CAR_).
 **************************************************************/
 
 const VEN_CONFIG = {
@@ -13,9 +13,10 @@ const VEN_CONFIG = {
   DIGITOS_ID: 6
 };
 
-function VEN_GUARDAR_VENTA(cabecera, detalles) {
+function VEN_GUARDAR_VENTA(cabecera, detalles, tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "VENTAS", "CREAR");
   if (!cabecera || !detalles || detalles.length === 0) {
-    throw new Error("Transacción incompleta.");
+    throw new Error("Transacción incompleta de venta.");
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -25,7 +26,6 @@ function VEN_GUARDAR_VENTA(cabecera, detalles) {
   const idVenta = VEN_OBTENER_SIGUIENTE_ID();
   const ahora = new Date();
 
-  // Calcular Totales Financieros
   let subtotal = 0;
   let descuento = 0;
   let iva = 0;
@@ -44,61 +44,56 @@ function VEN_GUARDAR_VENTA(cabecera, detalles) {
     descuento += lineaDesc;
     iva += lineaIva;
 
-    // Escribir Detalle físico
     const idDetalle = "DET-" + Utilities.getUuid().substring(0, 8);
     hojaDet.appendRow([
-      idDetalle, idVenta, det.ID_PRODUCTO, det.DESCRIPCION, cant, 
-      det.ID_UNIDAD, precio, desc, lineaIva, (lineaSub - lineaDesc + lineaIva)
+      idDetalle, idVenta, det.ID_PRODUCTO, det.DESCRIPCION || "",
+      cant, det.ID_UNIDAD || "", precio, desc, lineaIva, (lineaSub - lineaDesc + lineaIva)
     ]);
 
-    // Afectar Inventario (Kardex de Salida)
     try {
       INV_REGISTRAR_MOVIMIENTO({
         TIPO_MOVIMIENTO: "SALIDA",
         ID_PRODUCTO: det.ID_PRODUCTO,
         CANTIDAD: cant,
-        COSTO_UNITARIO: precio,
+        ID_OBRA: cabecera.ID_OBRA,
         DOCUMENTO_ORIGEN: "VENTA",
         ID_ORIGEN: idVenta
       });
     } catch (err) {
-      console.warn("Kardex no afectado para: " + det.ID_PRODUCTO);
+      console.warn("Inventario omitido para venta: " + idVenta);
     }
   });
 
-  // Escribir Cabecera física
+  const total = subtotal - descuento + iva;
   cabecera.ID_VENTA = idVenta;
   cabecera.FECHA = ahora;
   cabecera.SUBTOTAL = subtotal;
   cabecera.DESCUENTO = descuento;
   cabecera.IVA = iva;
-  cabecera.TOTAL = subtotal - descuento + iva;
-  cabecera.ESTADO = "EMITIDO";
+  cabecera.TOTAL = total;
+  cabecera.ESTADO = "EMITIDA";
   cabecera.FECHA_CREACION = ahora;
 
   const encCab = hojaCab.getRange(1, 1, 1, hojaCab.getLastColumn()).getValues()[0];
   const filaCab = encCab.map(col => cabecera[col] !== undefined ? cabecera[col] : "");
   hojaCab.appendRow(filaCab);
 
-  // Afectar Cartera si es venta a crédito
-  if (cabecera.FORMA_PAGO === "CREDITO") {
-    try {
-      CAR_CREAR_CUENTA_COBRAR(idVenta, cabecera.ID_CLIENTE, cabecera.TOTAL);
-    } catch (err) {
-      console.warn("No se pudo generar cuenta por cobrar.");
+  try {
+    if (cabecera.FORMA_PAGO === "CREDITO") {
+      CAR_CREAR_CUENTA_COBRAR(idVenta, cabecera.ID_CLIENTE, total);
     }
+  } catch (err) {
+    console.warn("Cartera no configurada para venta: " + idVenta);
   }
 
-  return { ok: true, idVenta: idVenta, total: cabecera.TOTAL };
+  return { ok: true, idVenta: idVenta, total: total };
 }
 
 function VEN_OBTENER_SIGUIENTE_ID() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(VEN_CONFIG.HOJA_CABECERA);
   const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) {
-    return VEN_CONFIG.PREFIJO_ID + "-000001";
-  }
+  if (ultimaFila < 2) return VEN_CONFIG.PREFIJO_ID + "-000001";
   const ultimoID = hoja.getRange(ultimaFila, 1).getValue().toString();
   const numero = parseInt(ultimoID.replace(VEN_CONFIG.PREFIJO_ID + "-", ""), 10);
   return VEN_CONFIG.PREFIJO_ID + "-" + String(numero + 1).padStart(VEN_CONFIG.DIGITOS_ID, "0");

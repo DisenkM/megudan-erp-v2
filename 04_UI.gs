@@ -1,8 +1,8 @@
-// ============================================================
-// 04. UI - APARIENCIA Y DISEÑO VISUAL
-// ARCHIVO: 04_UI.gs
-// RESPONSABILIDAD: Coloreado e identidad visual de las pestañas de Sheets
-// ============================================================
+/**************************************************************
+* 04_UI.gs
+* RESPONSABILIDAD:
+* - Coloreado e identidad visual de las pestañas de Sheets de forma segura.
+**************************************************************/
 
 const COLORES_ERP = {
   CONFIGURACION: "#6B7280",
@@ -25,101 +25,52 @@ const COLORES_ERP = {
 
 const HOJAS_ERP = {
   CONFIGURACION: [
-    "CFG_EMPRESA",
-    "CFG_SISTEMA",
-    "CFG_DOCUMENTOS",
-    "CFG_IMPUESTOS",
-    "CFG_CONTABILIDAD",
-    "CFG_INVENTARIO",
-    "CFG_COSTOS"
+    "CFG_EMPRESA", "CFG_SISTEMA", "CFG_DOCUMENTOS", "CFG_IMPUESTOS", "CFG_CONTABILIDAD", "CFG_INVENTARIO", "CFG_COSTOS"
   ],
   CLIENTES: [
-    "CLI_MAESTRO",
-    "CLI_HISTORIAL"
+    "CLI_MAESTRO", "CLI_HISTORIAL"
   ],
   PROVEEDORES: [
-    "PROV_MAESTRO",
-    "PROV_FORM",
-    "PROV_HISTORIAL"
+    "PROV_MAESTRO", "PROV_FORM", "PROV_HISTORIAL"
   ],
   PRODUCTOS: [
-    "PROD_MAESTRO",
-    "PROD_CATEGORIAS",
-    "PROD_UNIDADES",
-    "PROD_TIPOS",
-    "PROD_PRECIOS"
+    "PROD_MAESTRO", "PROD_CATEGORIAS", "PROD_UNIDADES", "PROD_TIPOS", "PROD_PRECIOS"
   ],
   OBRAS: [
-    "OBR_MAESTRO",
-    "OBR_PRESUPUESTO",
-    "OBR_AVANCE",
-    "OBR_RECURSOS"
+    "OBR_MAESTRO", "OBR_PRESUPUESTO", "OBR_AVANCE", "OBR_RECURSOS"
   ],
   VENTAS: [
-    "VEN_CABECERA",
-    "VEN_DETALLE",
-    "VEN_DOCUMENTOS",
-    "VEN_HISTORIAL"
+    "VEN_CABECERA", "VEN_DETALLE", "VEN_DOCUMENTOS", "VEN_HISTORIAL"
   ],
   COMPRAS: [
-    "COM_CABECERA",
-    "COM_DETALLE",
-    "COM_DOCUMENTOS",
-    "COM_HISTORIAL"
+    "COM_CABECERA", "COM_DETALLE", "COM_DOCUMENTOS", "COM_HISTORIAL"
   ],
   INVENTARIO: [
-    "INV_MOVIMIENTOS",
-    "INV_SALDOS",
-    "INV_KARDEX",
-    "INV_AJUSTES",
-    "INV_TRASLADOS"
+    "INV_MOVIMIENTOS", "INV_SALDOS", "INV_KARDEX", "INV_AJUSTES", "INV_TRASLADOS"
   ],
   INGRESOS: [
-    "ING_MOVIMIENTOS",
-    "ING_RECAUDOS",
-    "ING_HISTORIAL"
+    "ING_MOVIMIENTOS", "ING_RECAUDOS", "ING_HISTORIAL"
   ],
   COSTOS: [
-    "COS_MOVIMIENTOS",
-    "COS_CATEGORIAS",
-    "COS_HISTORIAL"
+    "COS_MOVIMIENTOS", "COS_CATEGORIAS", "COS_HISTORIAL"
   ],
   GASTOS: [
-    "GAS_MOVIMIENTOS",
-    "GAS_CATEGORIAS",
-    "GAS_HISTORIAL"
+    "GAS_MOVIMIENTOS", "GAS_CATEGORIAS", "GAS_HISTORIAL"
   ],
   CARTERA: [
-    "CAR_CUENTAS",
-    "CAR_RECAUDOS",
-    "CAR_VENCIMIENTOS",
-    "CAR_HISTORIAL"
+    "CAR_CUENTAS", "CAR_RECAUDOS", "CAR_VENCIMIENTOS", "CAR_HISTORIAL"
   ],
   CUENTAS_POR_PAGAR: [
-    "CXP_CUENTAS",
-    "CXP_PAGOS",
-    "CXP_VENCIMIENTOS",
-    "CXP_HISTORIAL"
+    "CXP_CUENTAS", "CXP_PAGOS", "CXP_VENCIMIENTOS", "CXP_HISTORIAL"
   ],
   TESORERIA: [
-    "TES_CUENTAS",
-    "TES_MOVIMIENTOS",
-    "TES_PAGOS",
-    "TES_RECAUDOS",
-    "TES_CONCILIACION"
+    "TES_CUENTAS", "TES_MOVIMIENTOS", "TES_PAGOS", "TES_RECAUDOS", "TES_CONCILIACION"
   ],
   SEGURIDAD: [
-    "USR_USUARIOS",
-    "USR_ROLES",
-    "USR_PERMISOS",
-    "USR_SESIONES",
-    "USR_AUDITORIA"
+    "USR_USUARIOS", "USR_ROLES", "USR_PERMISOS", "USR_SESIONES", "USR_AUDITORIA"
   ]
 };
 
-/**
- * Colorea de forma segura y automatizada las pestañas físicas de Sheets.
- */
 function COLOREAR_TODAS_LAS_PESTANAS() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let coloreadas = 0;
@@ -128,7 +79,6 @@ function COLOREAR_TODAS_LAS_PESTANAS() {
   Object.keys(HOJAS_ERP).forEach(function(modulo) {
     const color = COLORES_ERP[modulo];
     const hojas = HOJAS_ERP[modulo];
-
     hojas.forEach(function(nombreHoja) {
       try {
         const hoja = ss.getSheetByName(nombreHoja);
@@ -144,7 +94,6 @@ function COLOREAR_TODAS_LAS_PESTANAS() {
     });
   });
 
-  // Colorear hoja unificada de inicio de forma segura
   try {
     const menu = ss.getSheetByName("🏠MENU");
     if (menu) {
