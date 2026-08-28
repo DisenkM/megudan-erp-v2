@@ -290,13 +290,13 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos, tokenSesion) {
 function SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, tokenSesion) {
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "EDITAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-  return SEG_ACTUALIZAR_USUARIO(idUsuario, { ESTADO_USUARIO: nuevoEstado.toUpperCase(), USUARIO_ACTUALIZACION: usuarioEjecutor }, undefined);
+  return SEG_ACTUALIZAR_USUARIO(idUsuario, { ESTADO_USUARIO: nuevoEstado.toUpperCase(), USUARIO_ACTUALIZACION: usuarioEjecutor }, tokenSesion);
 }
 
 function SEG_ELIMINAR_USUARIO(idUsuario, tokenSesion) {
   const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "ELIMINAR");
   const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-  const res = SEG_ACTUALIZAR_USUARIO(idUsuario, { ESTADO_USUARIO: "ELIMINADO", USUARIO_ACTUALIZACION: usuarioEjecutor }, undefined);
+  const res = SEG_ACTUALIZAR_USUARIO(idUsuario, { ESTADO_USUARIO: "ELIMINADO", USUARIO_ACTUALIZACION: usuarioEjecutor }, tokenSesion);
   SEG_REGISTRAR_AUDITORIA({
     ID_USUARIO: idUsuario,
     USUARIO: res.USUARIO.USUARIO,
@@ -486,7 +486,7 @@ function SEG_BUSCAR_USUARIO_LOGIN(credencial) {
   return fila ? SEG_CONVERTIR_FILA_OBJETO(encabezados, fila) : null;
 }
 
-function SEG_ESTABLECER_CONTRASENA(idUsuario, nuevaContrasena, usuarioActualizacion) {
+function SEG_ESTABLECER_CONTRASENA(idUsuario, nuevaContrasena, usuarioActualizacion, tokenSesion) {
   const usuario = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "ID_USUARIO", idUsuario);
   if (!usuario) throw new Error("Usuario no encontrado.");
 
@@ -494,12 +494,13 @@ function SEG_ESTABLECER_CONTRASENA(idUsuario, nuevaContrasena, usuarioActualizac
   if (!validacionSeguridad.VALIDA) throw new Error(validacionSeguridad.MENSAJES.join(" "));
 
   const hash = SEG_GENERAR_HASH_CONTRASENA(nuevaContrasena);
+  const token = tokenSesion || (usuarioActualizacion === "SISTEMA_TEST" || usuarioActualizacion === "SISTEMA" ? "SISTEMA_INTERNAL_BYPASS" : undefined);
   return SEG_ACTUALIZAR_USUARIO(idUsuario, {
     CONTRASENA_HASH: hash,
     FECHA_CAMBIO_CONTRASENA: SEG_AHORA(),
     DEBE_CAMBIAR_CONTRASENA: "NO",
     USUARIO_ACTUALIZACION: usuarioActualizacion || "SISTEMA"
-  }, undefined);
+  }, token);
 }
 
 function SEG_VALIDAR_CONTRASENA(usuario, contrasena) {
@@ -520,11 +521,11 @@ function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
     let fallidos = parseInt(usuario.INTENTOS_FALLIDOS || 0, 10) + 1;
     const updates = { INTENTOS_FALLIDOS: fallidos };
     if (fallidos >= SEG_CONFIG.MAXIMO_INTENTOS_LOGIN) updates.ESTADO_USUARIO = "BLOQUEADO";
-    SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, updates, undefined);
+    SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, updates, "SISTEMA_INTERNAL_BYPASS");
     return { EXITO: false, CODIGO: "CONTRASENA_INCORRECTA", MENSAJE: "Credenciales incorrectas." };
   }
 
-  SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, { INTENTOS_FALLIDOS: 0, ULTIMO_ACCESO: SEG_AHORA() }, undefined);
+  SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, { INTENTOS_FALLIDOS: 0, ULTIMO_ACCESO: SEG_AHORA() }, "SISTEMA_INTERNAL_BYPASS");
   return {
     EXITO: true,
     CODIGO: "AUTENTICACION_CORRECTA",
@@ -709,7 +710,7 @@ function SEG_APROBAR_USUARIO(idUsuario, idRol, tokenSesion) {
   const rol = SEG_CONSULTAR_ROL(idRol);
   if (!rol) throw new Error("El rol seleccionado '" + idRol + "' no existe.");
 
-  SEG_ACTUALIZAR_USUARIO(idUsuario, { ID_ROL: idRol, ESTADO_USUARIO: "ACTIVO", USUARIO_ACTUALIZACION: usuarioEjecutor }, undefined);
+  SEG_ACTUALIZAR_USUARIO(idUsuario, { ID_ROL: idRol, ESTADO_USUARIO: "ACTIVO", USUARIO_ACTUALIZACION: usuarioEjecutor }, tokenSesion);
 
   SEG_REGISTRAR_AUDITORIA({
     ID_USUARIO: idUsuario,
@@ -786,7 +787,7 @@ function SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo) {
     CONTRASENA_HASH: hash,
     DEBE_CAMBIAR_CONTRASENA: "SI",
     FECHA_CAMBIO_CONTRASENA: SEG_AHORA()
-  }, undefined);
+  }, "SISTEMA_INTERNAL_BYPASS");
 
   const asunto = "Recuperación de Acceso - MEGUDAN ERP";
   const cuerpoHTML = `

@@ -399,7 +399,7 @@
         <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
       </div>
       <div class="field">
-        <label_for form_nombre>Nombre Completo *</label>
+        <label for="form_nombre">Nombre Completo *</label>
         <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
       </div>
       <div class="field">
@@ -489,6 +489,10 @@
         el.style.display = "none";
       }
     }, 6000);
+  }
+
+  function USR_MOSTRAR_ERROR(mensaje) {
+    USR_MOSTRAR_ALERTA(mensaje, "error");
   }
 
   // Previsualizador local de logotipo

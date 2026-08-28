@@ -223,7 +223,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
     };
 
     console.log("   -> Registrando nuevo producto en el catálogo...");
-    const resProd = PROD_GUARDAR_PRODUCTO(datosProducto);
+    const resProd = PROD_GUARDAR_PRODUCTO(datosProducto, tokenSesionActiva);
     idProductoCreado = resProd.idProducto;
     console.log("   [PASS] Producto creado con éxito con ID: " + idProductoCreado);
 
@@ -269,7 +269,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
     }];
 
     console.log("   -> Registrando transacción de compra a crédito...");
-    const resCompra = COM_GUARDAR_COMPRA(cabeceraCompra, detalleCompra);
+    const resCompra = COM_GUARDAR_COMPRA(cabeceraCompra, detalleCompra, tokenSesionActiva);
     idCompraCreada = resCompra.idCompra;
     console.log("   [PASS] Compra registrada con éxito con ID: " + idCompraCreada);
     console.log("   [PASS] Total de Compra: " + resCompra.total + " COP.");
@@ -328,7 +328,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
     }];
 
     console.log("   -> Registrando transacción de venta a crédito...");
-    const resVenta = VEN_GUARDAR_VENTA(cabeceraVenta, detalleVenta);
+    const resVenta = VEN_GUARDAR_VENTA(cabeceraVenta, detalleVenta, tokenSesionActiva);
     idVentaCreada = resVenta.idVenta;
     console.log("   [PASS] Venta registrada con éxito con ID: " + idVentaCreada);
     console.log("   [PASS] Total de Venta: " + resVenta.total + " COP.");
@@ -380,7 +380,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
     };
 
     console.log("   -> Registrando egreso administrativo en la tabla de gastos...");
-    const resGasto = GAS_REGISTRAR_GASTO(datosGasto);
+    const resGasto = GAS_REGISTRAR_GASTO(datosGasto, tokenSesionActiva);
     idGastoCreado = resGasto.idGasto;
     console.log("   [PASS] Gasto registrado correctamente con ID: " + idGastoCreado);
 
