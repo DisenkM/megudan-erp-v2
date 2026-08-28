@@ -1,4 +1,4 @@
-// ============================================================
+/// ============================================================
 // 01. CORE - NAVEGACIÓN Y CONFIGURACIÓN DE INTERFAZ SPREADSHEET
 // ARCHIVO: 01_CORE.gs
 // RESPONSABILIDAD: Menús personalizados, diálogos modales y utilidades de UI seguras
@@ -47,7 +47,10 @@ function ABRIR_CLIENTES() {
     return;
   }
   try {
-    const html = HtmlService.createHtmlOutputFromFile("F1_CLI_FORM")
+    const template = HtmlService.createTemplateFromFile("F1_CLI_FORM");
+    template.TOKEN_SESION = "SHEETS_CONTEXT";
+    template.USUARIO_ACTUAL = Session.getActiveUser().getEmail() || "ADMIN_SHEETS";
+    const html = template.evaluate()
       .setWidth(1200)
       .setHeight(800);
     ui.showModalDialog(html, "👥 Gestión de Clientes");
@@ -59,9 +62,6 @@ function ABRIR_CLIENTES() {
   }
 }
 
-/**
- * Abre el panel de Gestión de Usuarios y Seguridad de forma segura.
- */
 function ABRIR_USUARIOS() {
   const ui = CORE_OBTENER_UI();
   if (!ui) {
@@ -69,7 +69,10 @@ function ABRIR_USUARIOS() {
     return;
   }
   try {
-    const html = HtmlService.createHtmlOutputFromFile("F2_USR_GESTION")
+    const template = HtmlService.createTemplateFromFile("F2_USR_GESTION");
+    template.TOKEN_SESION = "SHEETS_CONTEXT";
+    template.USUARIO_ACTUAL = Session.getActiveUser().getEmail() || "ADMIN_SHEETS";
+    const html = template.evaluate()
       .setWidth(1200)
       .setHeight(800);
     ui.showModalDialog(html, "🔐 Gestión de Seguridad y Control de Acceso");
@@ -81,11 +84,6 @@ function ABRIR_USUARIOS() {
   }
 }
 
-/**
- * Obtiene el objeto UI de Google Sheets de forma segura.
- * Evita el error fatal "Cannot call SpreadsheetApp.getUi() from this context"
- * retornando null en hilos automatizados o peticiones web.
- */
 function CORE_OBTENER_UI() {
   try {
     return SpreadsheetApp.getUi();

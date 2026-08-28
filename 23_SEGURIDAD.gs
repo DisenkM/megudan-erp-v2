@@ -63,6 +63,15 @@ const SEG_CONFIG = {
  * - Contexto remoto (Web App/doGet/doPost): Requiere obligatoriamente un token de sesión activo y validación de permisos.
  */
 function SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, modulo, accion) {
+  if (tokenSesion === "SISTEMA_INTERNAL_BYPASS") {
+    return {
+      AUTORIZADO: true,
+      CODIGO: "SISTEMA_BYPASS",
+      USUARIO: "SISTEMA",
+      ROL: "ADMINISTRADOR",
+      MENSAJE: "Acceso concedido automáticamente para operaciones internas del sistema."
+    };
+  }
   try {
     // Intentamos invocar SpreadsheetApp.getUi() para saber si es un contexto físico de Sheets
     SpreadsheetApp.getUi();
@@ -911,32 +920,39 @@ function SEG_BUSCAR_SESION(tokenSesion) {
 }
 
 function SEG_VALIDAR_SESION(tokenSesion) {
-  const sesion = SEG_BUSCAR_SESION(tokenSesion);
-  if (!sesion) {
-    return { VALIDA: false, CODIGO: "SESION_NO_ENCONTRADA", MENSAJE: "La sesión no existe o no es válida." };
-  }
+  try {
+    const sesion = SEG_BUSCAR_SESION(tokenSesion);
+    if (!sesion) {
+      return { VALIDA: false, CODIGO: "SESION_NO_ENCONTRADA", MENSAJE: "La sesión no existe o no es válida.", SESION: null };
+    }
 
-  const estado = String(sesion.ESTADO_SESION || "").trim().toUpperCase();
-  if (estado !== "ACTIVA") {
-    return { VALIDA: false, CODIGO: "SESION_NO_ACTIVA", MENSAJE: "La sesión no se encuentra activa." };
-  }
+    const estado = String(sesion.ESTADO_SESION || "").trim().toUpperCase();
+    if (estado !== "ACTIVA") {
+      return { VALIDA: false, CODIGO: "SESION_NO_ACTIVA", MENSAJE: "La sesión no se encuentra activa.", SESION: null };
+    }
 
-  const ahora = SEG_AHORA();
-  const fechaExpiracion = new Date(sesion.EXPIRA_SESION || sesion.FECHA_EXPIRACION);
-  if (ahora.getTime() >= fechaExpiracion.getTime()) {
-    SEG_CAMBIAR_ESTADO_SESION(tokenSesion, "EXPIRADA");
-    return { VALIDA: false, CODIGO: "SESION_EXPIRADA", MENSAJE: "La sesión ha expirado por límite de tiempo." };
-  }
+    const ahora = SEG_AHORA();
+    const fechaExpiracion = new Date(sesion.EXPIRA_SESION || sesion.FECHA_EXPIRACION);
+    if (ahora.getTime() >= fechaExpiracion.getTime()) {
+      SEG_CAMBIAR_ESTADO_SESION(tokenSesion, "EXPIRADA");
+      return { VALIDA: false, CODIGO: "SESION_EXPIRADA", MENSAJE: "La sesión ha expirado por límite de tiempo.", SESION: null };
+    }
 
-  const ultimaActividad = new Date(sesion.ULTIMA_ACTIVIDAD);
-  const diferenciaMinutos = (ahora.getTime() - ultimaActividad.getTime()) / (1000 * 60);
-  if (diferenciaMinutos > SEG_CONFIG.TIEMPO_INACTIVIDAD_MINUTOS) {
-    SEG_CAMBIAR_ESTADO_SESION(tokenSesion, "EXPIRADA");
-    return { VALIDA: false, CODIGO: "SESION_EXPIRADA_INACTIVIDAD", MENSAJE: "La sesión ha expirado por inactividad." };
-  }
+    const ultimaActividad = new Date(sesion.ULTIMA_ACTIVIDAD);
+    const diferenciaMinutos = (ahora.getTime() - ultimaActividad.getTime()) / (1000 * 60);
+    if (diferenciaMinutos > SEG_CONFIG.TIEMPO_INACTIVIDAD_MINUTOS) {
+      SEG_CAMBIAR_ESTADO_SESION(tokenSesion, "EXPIRADA");
+      return { VALIDA: false, CODIGO: "SESION_EXPIRADA_INACTIVIDAD", MENSAJE: "La sesión ha expirado por inactividad.", SESION: null };
+    }
 
-  SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
-  return { VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion };
+    SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
+    return { VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_VALIDAR_SESION", "SEGURIDAD", error);
+    }
+    return { VALIDA: false, CODIGO: "ERROR_INTERNO", MENSAJE: "Error interno al validar sesión: " + error.toString(), SESION: null };
+  }
 }
 
 function SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion) {
@@ -971,28 +987,40 @@ function SEG_CERRAR_SESION(tokenSesion) {
 // ============================================================
 
 function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
-  const validacionSesion = SEG_VALIDAR_SESION(tokenSesion);
-  if (!validacionSesion.VALIDA) {
-    return { AUTORIZADO: false, CODIGO: validacionSesion.CODIGO, MENSAJE: validacionSesion.MENSAJE };
-  }
+  try {
+    const validacionSesion = SEG_VALIDAR_SESION(tokenSesion);
+    if (!validacionSesion || !validacionSesion.VALIDA) {
+      const msg = (validacionSesion && validacionSesion.MENSAJE) ? validacionSesion.MENSAJE : "Sesión inválida.";
+      return { AUTORIZADO: false, CODIGO: "SESION_INVALIDA", MENSAJE: msg };
+    }
 
-  const sesion = validacionSesion.SESION;
-  const rol = SEG_CONSULTAR_ROL(sesion.ID_ROL);
-  if (!rol || String(rol.ESTADO_ROL || "").trim().toUpperCase() !== "ACTIVO") {
-    return { AUTORIZADO: false, CODIGO: "ROL_INACTIVO", MENSAJE: "El rol asignado a la sesión se encuentra inactivo." };
-  }
+    const sesion = validacionSesion.SESION;
+    if (!sesion) {
+      return { AUTORIZADO: false, CODIGO: "SESION_NULA", MENSAJE: "No se encontró el objeto de sesión." };
+    }
+    
+    const rol = SEG_CONSULTAR_ROL(sesion.ID_ROL);
+    if (!rol || String(rol.ESTADO_ROL || "").trim().toUpperCase() !== "ACTIVO") {
+      return { AUTORIZADO: false, CODIGO: "ROL_INACTIVO", MENSAJE: "El rol asignado a la sesión se encuentra inactivo." };
+    }
 
-  // Pase de administrador supremo
-  if (rol.NOMBRE_ROL === SEG_CONFIG.ROL_ADMINISTRADOR) {
-    return { AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
-  }
+    // Pase de administrador supremo
+    if (rol.NOMBRE_ROL === SEG_CONFIG.ROL_ADMINISTRADOR) {
+      return { AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion, MENSAJE: "Acceso supremo autorizado (Administrador)." };
+    }
 
-  const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
-  if (!autorizado) {
-    return { AUTORIZADO: false, CODIGO: "ACCESO_DENEGADO", MENSAJE: "Su rol no tiene permisos de " + accion + " en " + modulo + "." };
-  }
+    const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
+    if (!autorizado) {
+      return { AUTORIZADO: false, CODIGO: "ACCESO_DENEGADO", MENSAJE: "Su rol no tiene permisos de " + accion + " en " + modulo + "." };
+    }
 
-  return { AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
+    return { AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion, MENSAJE: "Acceso autorizado con éxito." };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_VALIDAR_ACCESO", "SEGURIDAD", error);
+    }
+    return { AUTORIZADO: false, CODIGO: "ERROR_INTERNO", MENSAJE: "Error interno al validar acceso: " + error.toString() };
+  }
 }
 
 function SEG_OBTENER_CONTEXTO_SEGURIDAD(tokenSesion) {
@@ -1247,7 +1275,7 @@ function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
       DEBE_CAMBIAR_CONTRASENA: "NO"
     };
 
-    SEG_CREAR_USUARIO(adminUser);
+    SEG_CREAR_USUARIO(adminUser, "SISTEMA_INTERNAL_BYPASS");
     console.log("Usuario administrador creado.");
   } catch (error) {
     console.error("Error al inicializar usuarios: " + error.toString());

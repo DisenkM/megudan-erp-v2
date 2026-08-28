@@ -144,7 +144,7 @@
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
-    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('logo')">🖼️ Logo Empresa</button>
+    \1\n    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA(\'mantenimiento\')">⚙️ Mantenimiento</button>
   </nav>
 
   <main class="content">
@@ -557,7 +557,7 @@
         PROCESANDO_GUARDADO = false;
         USR_MOSTRAR_ERROR("No se pudo crear el usuario: " + err.message);
       })
-      .SEG_CREAR_USUARIO(datos);
+      .SEG_CREAR_USUARIO(datos, TOKEN_SESION);
   }
 
   // Aprobaciones
@@ -805,6 +805,78 @@
         alert("Error al cerrar sesión: " + err.message);
       })
       .SEG_CERRAR_SESION(token);
+  }
+  // ==========================================================
+  // ⚙️ MANTENIMIENTO DEL ERP (PURGA DE DATOS Y CACHÉ)
+  // ==========================================================
+
+  // Limpiar caché de sesión de Apps Script
+  function mntEjecutarPurgarCache() {
+    if (!confirm("¿Está seguro que desea purgar la caché de sesión global del ERP?")) return;
+    
+    USR_MOSTRAR_ALERTA("Purgando caché del servidor de Google...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error al conectar: " + err.message);
+      })
+      .MNT_PURGAR_CACHE_SISTEMA(TOKEN_SESION);
+  }
+
+  // Depurar auditorías antiguas
+  function mntEjecutarPurgaAuditoria() {
+    const dias = parseInt(document.getElementById("mnt_retencion_aud").value, 10);
+    const mensajeConfirmar = dias === 0 
+      ? "¿Está seguro que desea TRUNCAR Y ELIMINAR TODA la auditoría física del ERP? Esta acción es irreversible."
+      : "¿Desea purgar la tabla USR_AUDITORIA conservando solo los últimos " + dias + " días de registros?";
+      
+    if (!confirm(mensajeConfirmar)) return;
+    
+    USR_MOSTRAR_ALERTA("Ejecutando lote de depuración y reajuste en Sheets...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          USR_CARGAR_USUARIOS(); // Refrescar contexto
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
+      })
+      .MNT_PURGAR_AUDITORIA_SISTEMA(dias, TOKEN_SESION);
+  }
+
+  // Depurar sesiones antiguas
+  function mntEjecutarPurgaSesiones() {
+    const dias = parseInt(document.getElementById("mnt_retencion_ses").value, 10);
+    const mensajeConfirmar = dias === 0 
+      ? "¿Está seguro que desea VACIAR la base de datos de USR_SESIONES?"
+      : "¿Desea purgar USR_SESIONES conservando solo los últimos " + dias + " días de inicio de sesión?";
+      
+    if (!confirm(mensajeConfirmar)) return;
+    
+    USR_MOSTRAR_ALERTA("Ejecutando mantenimiento atómico en USR_SESIONES...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          USR_CARGAR_SESIONES(); // Recargar tabla visual de sesiones
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
+      })
+      .MNT_PURGAR_SESIONES_SISTEMA(dias, TOKEN_SESION);
   }
 </script>
 </body>
