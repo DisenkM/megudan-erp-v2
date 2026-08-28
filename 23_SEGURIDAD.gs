@@ -1,95 +1,98 @@
-// ============================================================
-// 23. SEGURIDAD Y CONTROL DE ACCESO
-// ARCHIVO: 23_SEGURIDAD.gs
-// ============================================================
+/**************************************************************
+* 23_SEGURIDAD.gs
+* RESPONSABILIDAD:
+* - Administrar el control de acceso multidimensional del ERP (Token -> Sesión -> Usuario -> Rol -> Permiso).
+* - Proteger las macros y Web Apps mediante un Sistema de Control de Acceso Dual.
+* - Encriptar contraseñas mediante Hash SHA-256 y proveer auto-inicialización de roles/permisos.
+* - Soportar recuperación de claves por correo y subida segura de logotipos.
+**************************************************************/
 
 // ============================================================
 // 01. CONFIGURACIÓN DEL MÓDULO DE SEGURIDAD
 // ============================================================
 const SEG_CONFIG = {
-  // Hojas de base de datos
   HOJA_USUARIOS: "USR_USUARIOS",
   HOJA_ROLES: "USR_ROLES",
   HOJA_PERMISOS: "USR_PERMISOS",
   HOJA_SESIONES: "USR_SESIONES",
   HOJA_AUDITORIA: "USR_AUDITORIA",
-
-  // Prefijos de identificadores únicos
+  
   PREFIJO_USUARIO: "USR",
   PREFIJO_ROL: "ROL",
   PREFIJO_PERMISO: "PER",
   PREFIJO_SESION: "SES",
   PREFIJO_AUDITORIA: "AUD",
-
-  // Formato de IDs (dígitos para autoincremento)
   DIGITOS_ID: 6,
-
-  // Estados del sistema
+  
+  // Tiempos y seguridad
+  TIEMPO_INACTIVIDAD_MINUTOS: 30,
+  DURACION_SESION_HORAS: 8,
+  MAXIMO_INTENTOS_LOGIN: 5,
+  BLOQUEO_USUARIO_MINUTOS: 15,
+  
+  // Estados lógicos
   ESTADO_USUARIO_ACTIVO: "ACTIVO",
   ESTADO_USUARIO_INACTIVO: "INACTIVO",
   ESTADO_USUARIO_BLOQUEADO: "BLOQUEADO",
   ESTADO_USUARIO_PENDIENTE: "PENDIENTE",
-
+  
   ESTADO_ROL_ACTIVO: "ACTIVO",
-  ESTADO_ROL_INACTIVO: "INACTIVO",
-
-  ESTADO_PERMISO_ACTIVO: "ACTIVO",
-  ESTADO_PERMISO_INACTIVO: "INACTIVO",
-
   ESTADO_SESION_ACTIVA: "ACTIVA",
-  ESTADO_SESION_CERRADA: "CERRADA",
-  ESTADO_SESION_EXPIRADA: "EXPIRADA",
-  ESTADO_SESION_BLOQUEADA: "BLOQUEADA",
-  ESTADO_SESION_REVOCADA: "REVOCADA",
-
-  // Control de tiempos y duración
-  DURACION_SESION_HORAS: 8,
-  TIEMPO_INACTIVIDAD_MINUTOS: 30,
-
-  // Seguridad de fuerza bruta
-  MAXIMO_INTENTOS_LOGIN: 5,
-  BLOQUEO_USUARIO_MINUTOS: 30,
-
-  // Orígenes de acceso
-  ORIGEN_GOOGLE_SHEETS: "GOOGLE_SHEETS",
-  ORIGEN_APLICACION_WEB: "APLICACION_WEB",
-  ORIGEN_SISTEMA: "SISTEMA",
-
-  // Tipos de acceso
-  TIPO_ACCESO_WEB: "WEB",
-  TIPO_ACCESO_GOOGLE_SHEETS: "GOOGLE_SHEETS",
-
-  // Resultados de auditoría
-  RESULTADO_EXITOSO: "EXITOSO",
-  RESULTADO_DENEGADO: "DENEGADO",
-  RESULTADO_ERROR: "ERROR",
-
-  // Catálogo de acciones de auditoría
-  ACCION_ACCEDER: "ACCEDER",
-  ACCION_VER: "VER",
+  
+  // Acciones auditoría
   ACCION_CREAR: "CREAR",
-  ACCION_EDITAR: "EDITAR",
+  ACCION_MODIFICAR: "MODIFICAR",
   ACCION_ELIMINAR: "ELIMINAR",
-  ACCION_ANULAR: "ANULAR",
-  ACCION_APROBAR: "APROBAR",
-  ACCION_EXPORTAR: "EXPORTAR",
-  ACCION_IMPORTAR: "IMPORTAR",
-  ACCION_CONFIGURAR: "CONFIGURAR",
-  ACCION_ADMINISTRAR: "ADMINISTRAR",
-  ACCION_INICIAR_SESION: "INICIAR_SESION",
+  ACCION_LOGIN: "LOGIN",
   ACCION_CERRAR_SESION: "CERRAR_SESION",
-
-  // Roles protegidos del ERP
+  
+  // Roles de sistema protegidos
   ROL_ADMINISTRADOR: "ADMINISTRADOR",
-
-  // Parámetros de auditoría
-  REGISTRAR_AUDITORIA: true,
-  REGISTRAR_LOGIN: true,
-  REGISTRAR_ERRORES_SEGURIDAD: true
+  
+  // Registro global
+  REGISTRAR_AUDITORIA: true
 };
 
 // ============================================================
-// 02. AUXILIARES Y ACCESO A BASE DE DATOS
+// 02. SISTEMA DE SEGURIDAD DUAL Y ACCESO DE ENTORNO
+// ============================================================
+
+/**
+ * Sistema de Control Dual (Sheets Confiable vs Web App con Token).
+ * - Contexto local (Sheets/Editor): Permite operar con privilegios supremos de ADMINISTRADOR automáticamente.
+ * - Contexto remoto (Web App/doGet/doPost): Requiere obligatoriamente un token de sesión activo y validación de permisos.
+ */
+function SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, modulo, accion) {
+  try {
+    // Intentamos invocar SpreadsheetApp.getUi() para saber si es un contexto físico de Sheets
+    SpreadsheetApp.getUi();
+    // Si no lanza excepción, estamos dentro de Google Sheets (botón físico, macro local o menú).
+    // Concedemos de forma implícita privilegios de administrador supremo para la sesión local.
+    return {
+      AUTORIZADO: true,
+      CODIGO: "CONTEXTO_SHEETS_TRUSTED",
+      USUARIO: "ADMINISTRADOR_LOCAL_SHEETS",
+      ROL: "ADMINISTRADOR",
+      MENSAJE: "Acceso concedido automáticamente en entorno confiable de Google Sheets."
+    };
+  } catch (uiError) {
+    // Si lanza excepción, estamos en un hilo sin interfaz gráfica (Web App externa).
+    // Exigimos obligatoriamente un inicio de sesión y validación de Token.
+    if (!tokenSesion || String(tokenSesion).trim() === "") {
+      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App.");
+    }
+    
+    const validacion = SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion);
+    if (!validacion.AUTORIZADO) {
+      throw new Error("ACCESO DENEGADO [" + validacion.CODIGO + "]: " + validacion.MENSAJE);
+    }
+    
+    return validacion;
+  }
+}
+
+// ============================================================
+// 03. AUXILIARES Y ACCESO A BASE DE DATOS
 // ============================================================
 
 /**
@@ -242,8 +245,7 @@ function SEG_BUSCAR_FILA_REGISTRO(nombreHoja, campoBusqueda, valorBusqueda) {
 
 /**
  * Valida de forma estricta que campos indicados como obligatorios tengan valor.
- * [CORREGIDO] Se usaba la variable "value" (no definida) en lugar de "valor",
- * lo que provocaba un ReferenceError cada vez que se invocaba esta función.
+ * [CORREGIDO] Se solucionó el ReferenceError reemplazando la variable incorrecta "value" por "valor" en la validación.
  */
 function SEG_VALIDAR_OBLIGATORIOS(datos, camposObligatorios) {
   camposObligatorios.forEach(function(campo) {
@@ -262,19 +264,21 @@ function SEG_AHORA() {
 }
 
 // ============================================================
-// 03. CRUD DE USUARIOS
+// 04. CRUD DE USUARIOS (BACKEND CON CONTROL DUAL)
 // ============================================================
 
 /**
  * Crea un usuario en USR_USUARIOS con su validación de estructura dinámica.
  */
-function SEG_CREAR_USUARIO(datos) {
+function SEG_CREAR_USUARIO(datos, tokenSesion) {
+  // Validación de permisos duales
+  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "CREAR");
+  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
+
   if (!datos || typeof datos !== "object") {
     throw new Error("Debe proporcionar la información del usuario.");
   }
 
-  // [CORREGIDO] SEG_VALIDAR_OBLIGATORIOS existía pero nunca se llamaba desde aquí,
-  // por lo que se podían crear usuarios sin USUARIO ni CORREO.
   SEG_VALIDAR_OBLIGATORIOS(datos, ["USUARIO", "CORREO"]);
 
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_USUARIOS);
@@ -315,12 +319,13 @@ function SEG_CREAR_USUARIO(datos) {
   usuario.USUARIO = datos.USUARIO;
   usuario[campoNombre] = datos[campoNombre] || datos.NOMBRE || datos.NOMBRE_COMPLETO || "";
   usuario.CORREO = datos.CORREO;
-  usuario.ESTADO_USUARIO = datos.ESTADO_USUARIO || SEG_CONFIG.ESTADO_USUARIO_ACTIVO || "ACTIVO";
+  usuario.ID_ROL = datos.ID_ROL || "ROL-000007"; // Consulta por defecto
+  usuario.ESTADO_USUARIO = datos.ESTADO_USUARIO || "PENDIENTE"; // Por defecto ingresa como pendiente para aprobación
   usuario.INTENTOS_FALLIDOS = 0;
   usuario.FECHA_CREACION = ahora;
   usuario.FECHA_ACTUALIZACION = ahora;
-  usuario.USUARIO_CREACION = datos.USUARIO_CREACION || Session.getActiveUser().getEmail() || "SISTEMA";
-  usuario.USUARIO_ACTUALIZACION = datos.USUARIO_ACTUALIZACION || usuario.USUARIO_CREACION;
+  usuario.USUARIO_CREACION = usuarioEjecutor;
+  usuario.USUARIO_ACTUALIZACION = usuarioEjecutor;
 
   // Si se incluye una contraseña plana para crear
   if (datos.CONTRASENA_PLANA) {
@@ -344,28 +349,34 @@ function SEG_CREAR_USUARIO(datos) {
     ACCION: SEG_CONFIG.ACCION_CREAR,
     TIPO_REGISTRO: "USUARIOS",
     ID_REGISTRO: idUsuario,
-    DESCRIPCION: "Usuario " + usuario.USUARIO + " creado con éxito.",
+    DESCRIPCION: "Usuario " + usuario.USUARIO + " creado con éxito. Creador: " + usuarioEjecutor,
     RESULTADO: SEG_CONFIG.RESULTADO_EXITOSO
   });
 
   return {
     EXITO: true,
     ID_USUARIO: idUsuario,
-    USUARIO: usuario
+    USUARIO: usuario,
+    MENSAJE: "Usuario creado exitosamente en estado PENDIENTE."
   };
 }
 
 /**
  * Consulta la ficha completa de un usuario por su ID.
  */
-function SEG_CONSULTAR_USUARIO(idUsuario) {
+function SEG_CONSULTAR_USUARIO(idUsuario, tokenSesion) {
+  if (tokenSesion !== undefined) {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+  }
   return SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "ID_USUARIO", idUsuario);
 }
 
 /**
  * Recupera un listado completo con todos los usuarios registrados.
  */
-function SEG_LISTAR_USUARIOS() {
+function SEG_LISTAR_USUARIOS(tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+  
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
   return registros
@@ -379,8 +390,19 @@ function SEG_LISTAR_USUARIOS() {
 
 /**
  * Actualiza los campos permitidos de un usuario en base a su ID.
+ * [SOPORTE SOBRECARGADO]: Soporta firmas con (datos, tokenSesion) y (idUsuario, datos, tokenSesion)
  */
-function SEG_ACTUALIZAR_USUARIO(idUsuario, datos) {
+function SEG_ACTUALIZAR_USUARIO(idUsuario, datos, tokenSesion) {
+  // Desempaquetar firma sobrecargada de 2 argumentos desde el frontend: SEG_ACTUALIZAR_USUARIO(datos, tokenSesion)
+  if (tokenSesion === undefined && typeof idUsuario === "object" && idUsuario !== null) {
+    tokenSesion = datos;
+    datos = idUsuario;
+    idUsuario = datos.ID_USUARIO || datos.id_usuario;
+  }
+
+  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "EDITAR");
+  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
+
   if (!idUsuario || String(idUsuario).trim() === "") {
     throw new Error("Debe indicar el ID_USUARIO.");
   }
@@ -388,7 +410,7 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos) {
     throw new Error("Debe proporcionar los datos a actualizar.");
   }
 
-  const usuarioActual = SEG_CONSULTAR_USUARIO(idUsuario);
+  const usuarioActual = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "ID_USUARIO", idUsuario);
   if (!usuarioActual) {
     throw new Error("No se encontró el usuario '" + idUsuario + "'.");
   }
@@ -407,7 +429,7 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos) {
     }
   });
 
-  // Validaciones adicionales si se actualiza campos sensibles
+  // Validaciones adicionales si se actualizan campos sensibles
   if (datos.USUARIO !== undefined) {
     usuarioActualizado.USUARIO = String(datos.USUARIO || "").trim().toUpperCase().replace(/\s+/g, "");
     const duplicado = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "USUARIO", usuarioActualizado.USUARIO);
@@ -424,8 +446,17 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos) {
     }
   }
 
+  // Si incluye nueva clave temporal o de re-establecimiento
+  if (datos.CONTRASENA_PLANA && String(datos.CONTRASENA_PLANA).trim() !== "") {
+    const seguridadValida = SEG_VALIDAR_SEGURIDAD_CONTRASENA(datos.CONTRASENA_PLANA);
+    if (!seguridadValida.VALIDA) {
+      throw new Error(seguridadValida.MENSAJES.join(" "));
+    }
+    usuarioActualizado.CONTRASENA_HASH = SEG_GENERAR_HASH_CONTRASENA(datos.CONTRASENA_PLANA);
+  }
+
   usuarioActualizado.FECHA_ACTUALIZACION = SEG_AHORA();
-  usuarioActualizado.USUARIO_ACTUALIZACION = datos.USUARIO_ACTUALIZACION || Session.getActiveUser().getEmail() || "SISTEMA";
+  usuarioActualizado.USUARIO_ACTUALIZACION = usuarioEjecutor;
 
   const filaActualizada = SEG_CONVERTIR_OBJETO_FILA(encabezados, usuarioActualizado);
   hoja.getRange(filaUsuario, 1, 1, encabezados.length).setValues([filaActualizada]);
@@ -433,20 +464,25 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos) {
   return {
     EXITO: true,
     ID_USUARIO: idUsuario,
-    USUARIO: usuarioActualizado
+    USUARIO: usuarioActualizado,
+    MENSAJE: "Usuario actualizado exitosamente."
   };
 }
 
 /**
  * Modifica el estado operacional de un usuario (ACTIVO, INACTIVO, BLOQUEADO).
  */
-function SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, usuarioActualizacion) {
+function SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, tokenSesion) {
+  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "EDITAR");
+  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
+
   const estado = String(nuevoEstado || "").trim().toUpperCase();
   const estadosPermitidos = [
     SEG_CONFIG.ESTADO_USUARIO_ACTIVO,
     SEG_CONFIG.ESTADO_USUARIO_INACTIVO,
     SEG_CONFIG.ESTADO_USUARIO_BLOQUEADO,
-    SEG_CONFIG.ESTADO_USUARIO_PENDIENTE
+    SEG_CONFIG.ESTADO_USUARIO_PENDIENTE,
+    "ELIMINADO"
   ];
 
   if (!estadosPermitidos.includes(estado)) {
@@ -455,26 +491,62 @@ function SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, usuarioActualizacion
 
   return SEG_ACTUALIZAR_USUARIO(idUsuario, {
     ESTADO_USUARIO: estado,
-    USUARIO_ACTUALIZACION: usuarioActualizacion || "SISTEMA"
-  });
+    USUARIO_ACTUALIZACION: usuarioEjecutor
+  }, tokenSesion);
 }
-
-function SEG_BLOQUEAR_USUARIO(idUsuario, usuarioActualizacion) {
-  return SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, SEG_CONFIG.ESTADO_USUARIO_BLOQUEADO, usuarioActualizacion);
-}
-
-function SEG_DESBLOQUEAR_USUARIO(idUsuario, usuarioActualizacion) {
-  return SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, SEG_CONFIG.ESTADO_USUARIO_ACTIVO, usuarioActualizacion);
-}
-
-// ============================================================
-// 04. CRUD DE ROLES
-// ============================================================
 
 /**
- * Crea un rol en la hoja USR_ROLES.
+ * Elimina lógicamente un usuario en Sheets asignándole el estado "ELIMINADO".
+ * [COMPATIBILIDAD FRONTEND]: Soluciona la ausencia de este método en la base de código inicial.
  */
-function SEG_CREAR_ROL(datos) {
+function SEG_ELIMINAR_USUARIO(idUsuario, tokenSesion) {
+  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "ELIMINAR");
+  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
+
+  try {
+    const resultado = SEG_ACTUALIZAR_USUARIO(idUsuario, {
+      ESTADO_USUARIO: "ELIMINADO",
+      USUARIO_ACTUALIZACION: usuarioEjecutor
+    }, tokenSesion);
+    
+    if (resultado.EXITO) {
+      SEG_REGISTRAR_AUDITORIA({
+        ID_USUARIO: idUsuario,
+        USUARIO: resultado.USUARIO.USUARIO,
+        MODULO: "SEGURIDAD",
+        SUBMODULO: "USUARIOS",
+        ACCION: "ELIMINAR",
+        TIPO_REGISTRO: "USUARIOS",
+        ID_REGISTRO: idUsuario,
+        DESCRIPCION: "Usuario " + resultado.USUARIO.USUARIO + " eliminado lógicamente por " + usuarioEjecutor,
+        RESULTADO: "EXITOSO"
+      });
+    }
+    
+    return { EXITO: true, MENSAJE: "Usuario eliminado de forma lógica correctamente." };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_ELIMINAR_USUARIO", "SEGURIDAD", error);
+    }
+    throw new Error("No se pudo eliminar el usuario: " + error.message);
+  }
+}
+
+function SEG_BLOQUEAR_USUARIO(idUsuario, tokenSesion) {
+  return SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, SEG_CONFIG.ESTADO_USUARIO_BLOQUEADO, tokenSesion);
+}
+
+function SEG_DESBLOQUEAR_USUARIO(idUsuario, tokenSesion) {
+  return SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, SEG_CONFIG.ESTADO_USUARIO_ACTIVO, tokenSesion);
+}
+
+// ============================================================
+// 05. CRUD DE ROLES
+// ============================================================
+
+function SEG_CREAR_ROL(datos, tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "CREAR");
+  
   if (!datos || typeof datos !== "object") {
     throw new Error("Debe proporcionar la información del rol.");
   }
@@ -509,24 +581,17 @@ function SEG_CREAR_ROL(datos) {
   const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, rol);
   hoja.appendRow(nuevaFila);
 
-  return {
-    EXITO: true,
-    ID_ROL: idRol,
-    ROL: rol
-  };
+  return { EXITO: true, ID_ROL: idRol, ROL: rol };
 }
 
-/**
- * Consulta un rol específico de la base de datos por su ID.
- */
 function SEG_CONSULTAR_ROL(idRol) {
   return SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_ROLES, "ID_ROL", idRol);
 }
 
-/**
- * Obtiene el listado completo de todos los roles.
- */
-function SEG_LISTAR_ROLES() {
+function SEG_LISTAR_ROLES(tokenSesion) {
+  if (tokenSesion !== undefined) {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+  }
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_ROLES);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_ROLES);
   return registros
@@ -538,17 +603,12 @@ function SEG_LISTAR_ROLES() {
     });
 }
 
-/**
- * Actualiza los campos de un rol según su ID.
- */
-function SEG_ACTUALIZAR_ROL(idRol, datos) {
+function SEG_ACTUALIZAR_ROL(idRol, datos, tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "EDITAR");
+  
   if (!idRol || String(idRol).trim() === "") {
     throw new Error("Debe indicar el ID_ROL.");
   }
-  if (!datos || typeof datos !== "object") {
-    throw new Error("Debe proporcionar los datos a actualizar.");
-  }
-
   const rolActual = SEG_CONSULTAR_ROL(idRol);
   if (!rolActual) {
     throw new Error("No se encontró el rol '" + idRol + "'.");
@@ -582,43 +642,17 @@ function SEG_ACTUALIZAR_ROL(idRol, datos) {
   const filaActualizada = SEG_CONVERTIR_OBJETO_FILA(encabezados, rolActualizado);
   hoja.getRange(filaRol, 1, 1, encabezados.length).setValues([filaActualizada]);
 
-  return {
-    EXITO: true,
-    ID_ROL: idRol,
-    ROL: rolActualizado
-  };
+  return { EXITO: true, ID_ROL: idRol, ROL: rolActualizado };
 }
 
-/**
- * Modifica el estado lógico de un rol (ACTIVO, INACTIVO).
- */
-function SEG_CAMBIAR_ESTADO_ROL(idRol, nuevoEstado, usuarioActualizacion) {
-  const estado = String(nuevoEstado || "").trim().toUpperCase();
-  const estadosPermitidos = ["ACTIVO", "INACTIVO"];
-  if (!estadosPermitidos.includes(estado)) {
-    throw new Error("Estado de rol no válido: " + nuevoEstado);
-  }
-  return SEG_ACTUALIZAR_ROL(idRol, {
-    ESTADO_ROL: estado,
-    USUARIO_ACTUALIZACION: usuarioActualizacion || "SISTEMA"
-  });
-}
-
-function SEG_ACTIVAR_ROL(idRol, usuarioActualizacion) {
-  return SEG_CAMBIAR_ESTADO_ROL(idRol, "ACTIVO", usuarioActualizacion);
-}
-
-function SEG_INACTIVAR_ROL(idRol, usuarioActualizacion) {
-  return SEG_CAMBIAR_ESTADO_ROL(idRol, "INACTIVO", usuarioActualizacion);
+function SEG_CAMBIAR_ESTADO_ROL(idRol, nuevoEstado, tokenSesion) {
+  return SEG_ACTUALIZAR_ROL(idRol, { ESTADO_ROL: nuevoEstado }, tokenSesion);
 }
 
 // ============================================================
-// 05. GESTIÓN Y VALIDACIÓN DE PERMISOS
+// 06. GESTIÓN Y VALIDACIÓN DE PERMISOS
 // ============================================================
 
-/**
- * Obtiene todos los registros de permisos asignados a un ID_ROL.
- */
 function SEG_OBTENER_PERMISOS_ROL(idRol) {
   if (!idRol || String(idRol).trim() === "") {
     throw new Error("Debe indicar el ID_ROL.");
@@ -626,9 +660,6 @@ function SEG_OBTENER_PERMISOS_ROL(idRol) {
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_PERMISOS);
   const idxIdRol = encabezados.indexOf("ID_ROL");
-  if (idxIdRol === -1) {
-    throw new Error("No se encontró la columna ID_ROL en la hoja de permisos.");
-  }
   
   const filtrados = registros.filter(function(fila) {
     return String(fila[idxIdRol] || "").trim().toUpperCase() === String(idRol).trim().toUpperCase();
@@ -639,9 +670,6 @@ function SEG_OBTENER_PERMISOS_ROL(idRol) {
   });
 }
 
-/**
- * Busca una regla de permiso específica para un rol dentro de un módulo y acción.
- */
 function SEG_BUSCAR_PERMISO(idRol, modulo, accion) {
   const permisos = SEG_OBTENER_PERMISOS_ROL(idRol);
   const moduloNormalizado = SEG_NORMALIZAR_TEXTO(modulo);
@@ -654,9 +682,6 @@ function SEG_BUSCAR_PERMISO(idRol, modulo, accion) {
   }) || null;
 }
 
-/**
- * Determina si un Rol específico está habilitado para realizar una Acción en un Módulo.
- */
 function SEG_VALIDAR_PERMISO_ROL(idRol, modulo, accion) {
   const rol = SEG_CONSULTAR_ROL(idRol);
   if (!rol || String(rol.ESTADO_ROL || "").trim().toUpperCase() !== "ACTIVO") {
@@ -669,53 +694,29 @@ function SEG_VALIDAR_PERMISO_ROL(idRol, modulo, accion) {
   }
 
   const permitido = String(permiso.PERMITIDO || "").trim().toUpperCase();
-  const valoresVerdaderos = ["SI", "SÍ", "TRUE", "1", "VERDADERO"];
-  return valoresVerdaderos.includes(permitido);
+  return ["SI", "SÍ", "TRUE", "1", "VERDADERO"].includes(permitido);
 }
 
-/**
- * Determina si el usuario activo tiene permiso para ejecutar una Acción en un Módulo.
- */
 function SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion) {
-  const usuario = SEG_CONSULTAR_USUARIO(idUsuario);
-  if (!usuario || String(usuario.ESTADO_USUARIO || "").trim().toUpperCase() !== SEG_CONFIG.ESTADO_USUARIO_ACTIVO) {
-    return false;
-  }
-  if (!usuario.ID_ROL || String(usuario.ID_ROL).trim() === "") {
+  const usuario = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "ID_USUARIO", idUsuario);
+  if (!usuario || String(usuario.ESTADO_USUARIO || "").trim().toUpperCase() !== "ACTIVO") {
     return false;
   }
   return SEG_VALIDAR_PERMISO_ROL(usuario.ID_ROL, modulo, accion);
 }
 
-/**
- * Verifica acceso a nivel de usuario, deteniendo la ejecución con error en caso de denegación.
- */
 function SEG_VERIFICAR_ACCESO(idUsuario, modulo, accion) {
   const autorizado = SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion);
   if (!autorizado) {
-    throw new Error("ACCESO DENEGADO. El usuario no cuenta con autorización para '" + accion + "' en el módulo '" + modulo + "'.");
+    throw new Error("ACCESO DENEGADO. No tiene autorización para '" + accion + "' en el módulo '" + modulo + "'.");
   }
   return true;
 }
 
-/**
- * Obtiene el listado de reglas de permisos cargados para el usuario actual.
- */
-function SEG_LISTAR_PERMISOS_USUARIO(idUsuario) {
-  const usuario = SEG_CONSULTAR_USUARIO(idUsuario);
-  if (!usuario || !usuario.ID_ROL) {
-    return [];
-  }
-  return SEG_OBTENER_PERMISOS_ROL(usuario.ID_ROL);
-}
-
 // ============================================================
-// 06. AUTENTICACIÓN Y CONTRASEÑAS
+// 07. CRIPTOGRAFÍA Y AUTENTICACIÓN (SHA-256)
 // ============================================================
 
-/**
- * Convierte una contraseña en texto plano en un Hash hexadecimal robusto bajo SHA-256.
- */
 function SEG_GENERAR_HASH_CONTRASENA(contrasena) {
   if (contrasena === undefined || contrasena === null || String(contrasena) === "") {
     throw new Error("Debe proporcionar una contraseña para procesar.");
@@ -728,15 +729,9 @@ function SEG_GENERAR_HASH_CONTRASENA(contrasena) {
   }).join("");
 }
 
-/**
- * Valida los requisitos de seguridad corporativa para las contraseñas del ERP.
- */
 function SEG_VALIDAR_SEGURIDAD_CONTRASENA(contrasena) {
   const password = String(contrasena || "");
-  const resultado = {
-    VALIDA: false,
-    MENSAJES: []
-  };
+  const resultado = { VALIDA: false, MENSAJES: [] };
 
   if (password.length < 8) {
     resultado.MENSAJES.push("La contraseña debe tener al menos 8 caracteres.");
@@ -758,9 +753,6 @@ function SEG_VALIDAR_SEGURIDAD_CONTRASENA(contrasena) {
   return resultado;
 }
 
-/**
- * Busca a un usuario elegible para el login comparando contra su campo USUARIO o CORREO.
- */
 function SEG_BUSCAR_USUARIO_LOGIN(credencial) {
   if (!credencial || String(credencial).trim() === "") {
     return null;
@@ -769,15 +761,10 @@ function SEG_BUSCAR_USUARIO_LOGIN(credencial) {
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
   const ultimaFila = hoja.getLastRow();
   const ultimaColumna = hoja.getLastColumn();
-  if (ultimaFila < 2) {
-    return null;
-  }
+  if (ultimaFila < 2) return null;
 
   const idxUsuario = encabezados.indexOf("USUARIO");
   const idxCorreo = encabezados.indexOf("CORREO");
-  if (idxUsuario === -1 || idxCorreo === -1) {
-    throw new Error("No existen las columnas necesarias (USUARIO, CORREO) en USR_USUARIOS.");
-  }
 
   const criterio = String(credencial).trim().toUpperCase();
   const registros = hoja.getRange(2, 1, ultimaFila - 1, ultimaColumna).getValues();
@@ -788,18 +775,11 @@ function SEG_BUSCAR_USUARIO_LOGIN(credencial) {
     return usuarioReg === criterio || correoReg === criterio;
   });
 
-  if (!filaEncontrada) {
-    return null;
-  }
-
-  return SEG_CONVERTIR_FILA_OBJETO(encabezados, filaEncontrada);
+  return filaEncontrada ? SEG_CONVERTIR_FILA_OBJETO(encabezados, filaEncontrada) : null;
 }
 
-/**
- * Encripta y establece una contraseña para un usuario determinado de la base de datos.
- */
 function SEG_ESTABLECER_CONTRASENA(idUsuario, nuevaContrasena, usuarioActualizacion) {
-  const usuario = SEG_CONSULTAR_USUARIO(idUsuario);
+  const usuario = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "ID_USUARIO", idUsuario);
   if (!usuario) {
     throw new Error("No se encontró el usuario indicado para cambiar contraseña.");
   }
@@ -818,66 +798,44 @@ function SEG_ESTABLECER_CONTRASENA(idUsuario, nuevaContrasena, usuarioActualizac
   });
 }
 
-/**
- * Compara y valida una contraseña enviada en texto plano contra el hash almacenado del usuario.
- */
 function SEG_VALIDAR_CONTRASENA(usuario, contrasena) {
   if (!usuario || !usuario.CONTRASENA_HASH || String(usuario.CONTRASENA_HASH).trim() === "") {
     return false;
   }
-  const hashIngresado = SEG_GENERAR_HASH_CONTRASENA(contrasena);
-  return String(hashIngresado) === String(usuario.CONTRASENA_HASH);
+  return String(SEG_GENERAR_HASH_CONTRASENA(contrasena)) === String(usuario.CONTRASENA_HASH);
 }
 
-/**
- * Autentica credenciales de ingreso (usuario/correo + contraseña) y retorna su contexto.
- */
 function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
-  SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS(); // Self-healing de administrador por defecto
-
+  SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS(); // Asegurar autocuración en login
+  
   const usuario = SEG_BUSCAR_USUARIO_LOGIN(credencial);
   if (!usuario) {
     return { EXITO: false, CODIGO: "USUARIO_NO_ENCONTRADO", MENSAJE: "Credenciales incorrectas de acceso." };
   }
 
   const estado = String(usuario.ESTADO_USUARIO || "").trim().toUpperCase();
-  if (estado === SEG_CONFIG.ESTADO_USUARIO_PENDIENTE) {
+  if (estado === "PENDIENTE") {
     return { EXITO: false, CODIGO: "USUARIO_PENDIENTE", MENSAJE: "Su cuenta está pendiente de aprobación por un administrador." };
   }
-  if (estado === SEG_CONFIG.ESTADO_USUARIO_BLOQUEADO) {
+  if (estado === "BLOQUEADO") {
     return { EXITO: false, CODIGO: "USUARIO_BLOQUEADO", MENSAJE: "El usuario se encuentra temporalmente bloqueado." };
   }
-  if (estado !== SEG_CONFIG.ESTADO_USUARIO_ACTIVO) {
+  if (estado !== "ACTIVO") {
     return { EXITO: false, CODIGO: "USUARIO_INACTIVO", MENSAJE: "El usuario no está activo en el ERP." };
   }
 
-  const contrasenaValida = SEG_VALIDAR_CONTRASENA(usuario, contrasena);
-  if (!contrasenaValida) {
-    // Control de intentos fallidos
+  if (!SEG_VALIDAR_CONTRASENA(usuario, contrasena)) {
     let fallidos = parseInt(usuario.INTENTOS_FALLIDOS || 0, 10) + 1;
     const updates = { INTENTOS_FALLIDOS: fallidos };
     if (fallidos >= SEG_CONFIG.MAXIMO_INTENTOS_LOGIN) {
-      updates.ESTADO_USUARIO = SEG_CONFIG.ESTADO_USUARIO_BLOQUEADO;
-      updates.BLOQUEADO_HASTA = new Date(SEG_AHORA().getTime() + (SEG_CONFIG.BLOQUEO_USUARIO_MINUTOS * 60 * 1000));
+      updates.ESTADO_USUARIO = "BLOQUEADO";
     }
     SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, updates);
-    
-    return { 
-      EXITO: false, 
-      CODIGO: "CONTRASENA_INCORRECTA", 
-      MENSAJE: fallidos >= SEG_CONFIG.MAXIMO_INTENTOS_LOGIN 
-        ? "Contraseña incorrecta. El usuario ha sido bloqueado por superar el límite de intentos."
-        : "Credenciales incorrectas de acceso." 
-    };
+    return { EXITO: false, CODIGO: "CONTRASENA_INCORRECTA", MENSAJE: "Credenciales incorrectas de acceso." };
   }
 
-  // Login Exitoso: Resetear intentos fallidos
-  SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, {
-    INTENTOS_FALLIDOS: 0,
-    BLOQUEADO_HASTA: "",
-    ULTIMO_ACCESO: SEG_AHORA()
-  });
-
+  // Éxito
+  SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, { INTENTOS_FALLIDOS: 0, ULTIMO_ACCESO: SEG_AHORA() });
   return {
     EXITO: true,
     CODIGO: "AUTENTICACION_CORRECTA",
@@ -889,51 +847,22 @@ function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
       CORREO: usuario.CORREO,
       ID_ROL: usuario.ID_ROL
     },
-    DEBE_CAMBIAR_CONTRASENA: String(usuario.DEBE_CAMBIAR_CONTRASENA || "").trim().toUpperCase() === "SI" || String(usuario.DEBE_CAMBIAR_CONTRASENA || "").trim().toUpperCase() === "SÍ"
+    DEBE_CAMBIAR_CONTRASENA: String(usuario.DEBE_CAMBIAR_CONTRASENA || "").trim().toUpperCase() === "SI"
   };
 }
 
-/**
- * Modifica la contraseña validando previamente que la contraseña actual sea la correcta.
- */
-function SEG_CAMBIAR_CONTRASENA(idUsuario, contrasenaActual, nuevaContrasena, usuarioActualizacion) {
-  const usuario = SEG_CONSULTAR_USUARIO(idUsuario);
-  if (!usuario) {
-    throw new Error("No se encontró el usuario indicado.");
-  }
-
-  if (!SEG_VALIDAR_CONTRASENA(usuario, contrasenaActual)) {
-    throw new Error("La contraseña actual es incorrecta.");
-  }
-
-  if (String(contrasenaActual) === String(nuevaContrasena)) {
-    throw new Error("La nueva contraseña debe ser diferente de la contraseña actual.");
-  }
-
-  return SEG_ESTABLECER_CONTRASENA(idUsuario, nuevaContrasena, usuarioActualizacion || usuario.USUARIO);
-}
-
 // ============================================================
-// 07. GESTIÓN DE SESIONES
+// 08. CONTROL DE SESIONES DE BASE DE DATOS
 // ============================================================
 
-/**
- * Genera un Token robusto y único de sesión utilizando un identificador UUID doble.
- */
 function SEG_GENERAR_TOKEN_SESION() {
   return Utilities.getUuid() + "-" + Utilities.getUuid();
 }
 
-/**
- * Crea una sesión de base de datos activa para un usuario autenticado correctamente.
- */
 function SEG_CREAR_SESION(idUsuario) {
-  const usuario = SEG_CONSULTAR_USUARIO(idUsuario);
-  if (!usuario) {
-    throw new Error("No se encontró el usuario para crear la sesión.");
-  }
-  if (String(usuario.ESTADO_USUARIO || "").trim().toUpperCase() !== SEG_CONFIG.ESTADO_USUARIO_ACTIVO) {
-    throw new Error("No se puede crear sesión para un usuario no activo.");
+  const usuario = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "ID_USUARIO", idUsuario);
+  if (!usuario || String(usuario.ESTADO_USUARIO || "").trim().toUpperCase() !== "ACTIVO") {
+    throw new Error("No se puede iniciar sesión para un usuario que no esté activo.");
   }
 
   const ahora = SEG_AHORA();
@@ -944,56 +873,33 @@ function SEG_CREAR_SESION(idUsuario) {
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
 
-  const sesion = {};
-  encabezados.forEach(function(campo) {
-    sesion[campo] = "";
-  });
-
-  sesion.ID_SESION = idSesion;
-  sesion.ID_USUARIO = usuario.ID_USUARIO;
-  sesion.USUARIO = usuario.USUARIO;
-  sesion.ID_ROL = usuario.ID_ROL;
-  sesion.TOKEN_SESION = tokenSesion;
-  sesion.ESTADO_SESION = SEG_CONFIG.ESTADO_SESION_ACTIVA || "ACTIVA";
-  sesion.FECHA_INICIO = ahora;
-  sesion.EXPIRA_SESION = fechaExpiracion;
-  sesion.ULTIMA_ACTIVIDAD = ahora;
-  sesion.TIPO_ACCESO = SEG_CONFIG.TIPO_ACCESO_WEB || "WEB";
-  sesion.ORIGEN_ACCESO = SEG_CONFIG.ORIGEN_APLICACION_WEB || "APLICACION_WEB";
+  const sesion = {
+    ID_SESION: idSesion,
+    ID_USUARIO: usuario.ID_USUARIO,
+    USUARIO: usuario.USUARIO,
+    ID_ROL: usuario.ID_ROL,
+    TOKEN_SESION: tokenSesion,
+    ESTADO_SESION: "ACTIVA",
+    FECHA_INICIO: ahora,
+    EXPIRA_SESION: fechaExpiracion,
+    ULTIMA_ACTIVIDAD: ahora,
+    TIPO_ACCESO: "WEB",
+    ORIGEN_ACCESO: "APLICACION_WEB"
+  };
 
   const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, sesion);
   hoja.appendRow(nuevaFila);
 
-  return {
-    EXITO: true,
-    ID_SESION: idSesion,
-    TOKEN_SESION: tokenSesion,
-    ID_USUARIO: usuario.ID_USUARIO,
-    FECHA_EXPIRACION: fechaExpiracion
-  };
+  return { EXITO: true, ID_SESION: idSesion, TOKEN_SESION: tokenSesion, ID_USUARIO: usuario.ID_USUARIO, FECHA_EXPIRACION: fechaExpiracion };
 }
 
-/**
- * Busca y retorna un objeto de sesión recuperado mediante su token único.
- */
 function SEG_BUSCAR_SESION(tokenSesion) {
-  if (!tokenSesion || String(tokenSesion).trim() === "") {
-    return null;
-  }
+  if (!tokenSesion || String(tokenSesion).trim() === "") return null;
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
-  const ultimaFila = hoja.getLastRow();
-  const ultimaColumna = hoja.getLastColumn();
-  if (ultimaFila < 2) {
-    return null;
-  }
-
+  const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_SESIONES);
   const idxToken = encabezados.indexOf("TOKEN_SESION");
-  if (idxToken === -1) {
-    throw new Error("No existe la columna TOKEN_SESION en USR_SESIONES.");
-  }
 
-  const registros = hoja.getRange(2, 1, ultimaFila - 1, ultimaColumna).getValues();
   for (let i = 0; i < registros.length; i++) {
     if (String(registros[i][idxToken]) === String(tokenSesion)) {
       const sesion = SEG_CONVERTIR_FILA_OBJETO(encabezados, registros[i]);
@@ -1004,9 +910,6 @@ function SEG_BUSCAR_SESION(tokenSesion) {
   return null;
 }
 
-/**
- * Valida minuciosamente si una sesión activa está vigente y libre de inactividad o timeouts.
- */
 function SEG_VALIDAR_SESION(tokenSesion) {
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) {
@@ -1019,15 +922,12 @@ function SEG_VALIDAR_SESION(tokenSesion) {
   }
 
   const ahora = SEG_AHORA();
-  
-  // Validar expiración absoluta de duración máxima
-  const fechaExpiracion = new Date(sesion.EXPIRA_SESION);
+  const fechaExpiracion = new Date(sesion.EXPIRA_SESION || sesion.FECHA_EXPIRACION);
   if (ahora.getTime() >= fechaExpiracion.getTime()) {
     SEG_CAMBIAR_ESTADO_SESION(tokenSesion, "EXPIRADA");
-    return { VALIDA: false, CODIGO: "SESION_EXPIRADA", MENSAJE: "La sesión ha expirado por duración máxima." };
+    return { VALIDA: false, CODIGO: "SESION_EXPIRADA", MENSAJE: "La sesión ha expirado por límite de tiempo." };
   }
 
-  // Validar timeout de inactividad
   const ultimaActividad = new Date(sesion.ULTIMA_ACTIVIDAD);
   const diferenciaMinutos = (ahora.getTime() - ultimaActividad.getTime()) / (1000 * 60);
   if (diferenciaMinutos > SEG_CONFIG.TIEMPO_INACTIVIDAD_MINUTOS) {
@@ -1035,406 +935,253 @@ function SEG_VALIDAR_SESION(tokenSesion) {
     return { VALIDA: false, CODIGO: "SESION_EXPIRADA_INACTIVIDAD", MENSAJE: "La sesión ha expirado por inactividad." };
   }
 
-  // Sesión válida: Actualizar la última actividad
   SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
-  return {
-    VALIDA: true,
-    CODIGO: "SESION_VALIDA",
-    MENSAJE: "Sesión válida.",
-    SESION: sesion
-  };
+  return { VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion };
 }
 
-/**
- * Actualiza la última hora de actividad registrada para una sesión.
- */
 function SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion) {
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) return false;
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
   const idxActividad = encabezados.indexOf("ULTIMA_ACTIVIDAD");
-  if (idxActividad === -1) return false;
-  
   hoja.getRange(sesion._FILA, idxActividad + 1).setValue(SEG_AHORA());
   return true;
 }
 
-/**
- * Cambia el estado de una sesión de base de datos.
- */
 function SEG_CAMBIAR_ESTADO_SESION(tokenSesion, nuevoEstado) {
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) return false;
-  
-  const estado = String(nuevoEstado || "").trim().toUpperCase();
-  const estadosPermitidos = ["ACTIVA", "CERRADA", "EXPIRADA", "BLOQUEADA", "REVOCADA"];
-  if (!estadosPermitidos.includes(estado)) {
-    throw new Error("Estado de sesión no válido: " + nuevoEstado);
-  }
-
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
   const idxEstado = encabezados.indexOf("ESTADO_SESION");
-  if (idxEstado === -1) {
-    throw new Error("No existe la columna ESTADO_SESION en USR_SESIONES.");
-  }
-
-  hoja.getRange(sesion._FILA, idxEstado + 1).setValue(estado);
+  hoja.getRange(sesion._FILA, idxEstado + 1).setValue(nuevoEstado.toUpperCase());
   return true;
 }
 
-/**
- * Cierra voluntariamente una sesión de base de datos.
- */
 function SEG_CERRAR_SESION(tokenSesion) {
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
-  if (!sesion) {
-    return { EXITO: false, MENSAJE: "No se encontró la sesión activa." };
-  }
-
+  if (!sesion) return { EXITO: false, MENSAJE: "Sesión no encontrada." };
   SEG_CAMBIAR_ESTADO_SESION(tokenSesion, "CERRADA");
-  const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
-  const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
-  
-  const idxFechaCierre = encabezados.indexOf("FECHA_CIERRE");
-  const idxMotivo = encabezados.indexOf("MOTIVO_CIERRE");
-  if (idxFechaCierre !== -1) {
-    hoja.getRange(sesion._FILA, idxFechaCierre + 1).setValue(SEG_AHORA());
-  }
-  if (idxMotivo !== -1) {
-    hoja.getRange(sesion._FILA, idxMotivo + 1).setValue("CIERRE_VOLUNTARIO");
-  }
-
   return { EXITO: true, MENSAJE: "Sesión cerrada correctamente." };
 }
 
 // ============================================================
-// 08. VALIDACIÓN DE ACCESO GENERAL
+// 09. AUTORIZACIONES POR ROL Y CONTEXTO
 // ============================================================
 
-/**
- * Obtiene el objeto completo de usuario de la base de datos asociado a una sesión.
- */
-function SEG_OBTENER_USUARIO_SESION(tokenSesion) {
-  const sesion = SEG_BUSCAR_SESION(tokenSesion);
-  if (!sesion) return null;
-  return SEG_CONSULTAR_USUARIO(sesion.ID_USUARIO);
-}
-
-/**
- * Verifica y valida que el usuario de la sesión se mantenga Activo.
- */
-function SEG_VALIDAR_USUARIO_SESION(tokenSesion) {
-  const usuario = SEG_OBTENER_USUARIO_SESION(tokenSesion);
-  if (!usuario) {
-    return { VALIDO: false, CODIGO: "USUARIO_SESION_NO_ENCONTRADO", MENSAJE: "No se encontró un usuario válido para la sesión." };
-  }
-  if (String(usuario.ESTADO_USUARIO || "").trim().toUpperCase() !== SEG_CONFIG.ESTADO_USUARIO_ACTIVO) {
-    return { VALIDO: false, CODIGO: "USUARIO_INACTIVO", MENSAJE: "El usuario asignado a la sesión se encuentra inactivo." };
-  }
-  return { VALIDO: true, USUARIO: usuario };
-}
-
-/**
- * Valida la existencia y estado del Rol asociado a la sesión del usuario.
- */
-function SEG_VALIDAR_ROL_SESION(tokenSesion) {
-  const validacionUsuario = SEG_VALIDAR_USUARIO_SESION(tokenSesion);
-  if (!validacionUsuario.VALIDO) {
-    return { VALIDO: false, CODIGO: validacionUsuario.CODIGO, MENSAJE: validacionUsuario.MENSAJE };
-  }
-
-  const usuario = validacionUsuario.USUARIO;
-  if (!usuario.ID_ROL || String(usuario.ID_ROL).trim() === "") {
-    return { VALIDO: false, CODIGO: "USUARIO_SIN_ROL", MENSAJE: "El usuario de la sesión no tiene rol asignado." };
-  }
-
-  const rol = SEG_CONSULTAR_ROL(usuario.ID_ROL);
-  if (!rol) {
-    return { VALIDO: false, CODIGO: "ROL_NO_ENCONTRADO", MENSAJE: "No se encontró el rol asignado al usuario." };
-  }
-
-  if (String(rol.ESTADO_ROL || "").trim().toUpperCase() !== "ACTIVO") {
-    return { VALIDO: false, CODIGO: "ROL_INACTIVO", MENSAJE: "El rol asignado al usuario de la sesión no está activo." };
-  }
-
-  return { VALIDO: true, USUARIO: usuario, ROL: rol };
-}
-
-/**
- * Valida el acceso total de un token a una acción de un módulo específico.
- */
 function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
-  if (!tokenSesion || String(tokenSesion).trim() === "") {
-    return { AUTORIZADO: false, CODIGO: "TOKEN_NO_PROPORCIONADO", MENSAJE: "Debe proporcionar un token de sesión." };
-  }
-  if (!modulo || String(modulo).trim() === "") {
-    return { AUTORIZADO: false, CODIGO: "MODULO_NO_PROPORCIONADO", MENSAJE: "Debe indicar el módulo a validar." };
-  }
-  if (!accion || String(accion).trim() === "") {
-    return { AUTORIZADO: false, CODIGO: "ACCION_NO_PROPORCIONADA", MENSAJE: "Debe indicar la acción a validar." };
-  }
-
-  const validacionSession = SEG_VALIDAR_SESION(tokenSesion);
-  if (!validacionSession.VALIDA) {
-    return { AUTORIZADO: false, CODIGO: validacionSession.CODIGO, MENSAJE: validacionSession.MENSAJE };
-  }
-
-  const validacionRol = SEG_VALIDAR_ROL_SESION(tokenSesion);
-  if (!validacionRol.VALIDO) {
-    return { AUTORIZADO: false, CODIGO: validacionRol.CODIGO, MENSAJE: validacionRol.MENSAJE };
-  }
-
-  const usuario = validacionRol.USUARIO;
-  const rol = validacionRol.ROL;
-
-  // REGLA SUPREMA: El administrador de sistema tiene pase libre para todo
-  if (rol.NOMBRE_ROL === SEG_CONFIG.ROL_ADMINISTRADOR) {
-    return {
-      AUTORIZADO: true,
-      CODIGO: "ACCESO_AUTORIZADO",
-      MENSAJE: "Acceso supremo autorizado (Administrador).",
-      ID_USUARIO: usuario.ID_USUARIO,
-      USUARIO: usuario.USUARIO,
-      ID_ROL: rol.ID_ROL,
-      ROL: rol.NOMBRE_ROL,
-      MODULO: modulo,
-      ACCION: accion,
-      SESION: validacionSession.SESION
-    };
-  }
-
-  // Validación de permisos detallados
-  const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
-  if (!autorizado) {
-    return {
-      AUTORIZADO: false,
-      CODIGO: "PERMISO_DENEGADO",
-      MENSAJE: "Acceso denegado. El rol no cuenta con la regla de permiso activa para esta acción.",
-      ID_USUARIO: usuario.ID_USUARIO,
-      ID_ROL: rol.ID_ROL,
-      MODULO: modulo,
-      ACCION: accion
-    };
-  }
-
-  return {
-    AUTORIZADO: true,
-    CODIGO: "ACCESO_AUTORIZADO",
-    MENSAJE: "Acceso autorizado con éxito.",
-    ID_USUARIO: usuario.ID_USUARIO,
-    USUARIO: usuario.USUARIO,
-    ID_ROL: rol.ID_ROL,
-    ROL: rol.NOMBRE_ROL,
-    MODULO: modulo,
-    ACCION: accion,
-    SESION: validacionSession.SESION
-  };
-}
-
-/**
- * Valida acceso obligatorio, rompiendo ejecución con throw Error en caso de desautorización.
- */
-function SEG_VERIFICAR_ACCESO_SESION(tokenSesion, modulo, accion) {
-  const resultado = SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion);
-  if (!resultado.AUTORIZADO) {
-    throw new Error("ACCESO DENEGADO [" + resultado.CODIGO + "]: " + resultado.MENSAJE);
-  }
-  return resultado;
-}
-
-/**
- * Devuelve todo el contexto lógico de seguridad para un token de sesión válido.
- */
-function SEG_OBTENER_CONTEXTO_SEGURIDAD(tokenSesion) {
   const validacionSesion = SEG_VALIDAR_SESION(tokenSesion);
   if (!validacionSesion.VALIDA) {
-    return { VALIDO: false, CODIGO: validacionSesion.CODIGO, MENSAJE: validacionSesion.MENSAJE };
+    return { AUTORIZADO: false, CODIGO: validacionSesion.CODIGO, MENSAJE: validacionSesion.MENSAJE };
   }
-  const validacionRol = SEG_VALIDAR_ROL_SESION(tokenSesion);
-  if (!validacionRol.VALIDO) {
-    return { VALIDO: false, CODIGO: validacionRol.CODIGO, MENSAJE: validacionRol.MENSAJE };
+
+  const sesion = validacionSesion.SESION;
+  const rol = SEG_CONSULTAR_ROL(sesion.ID_ROL);
+  if (!rol || String(rol.ESTADO_ROL || "").trim().toUpperCase() !== "ACTIVO") {
+    return { AUTORIZADO: false, CODIGO: "ROL_INACTIVO", MENSAJE: "El rol asignado a la sesión se encuentra inactivo." };
   }
-  return {
-    VALIDO: true,
-    CODIGO: "CONTEXTO_VALIDO",
-    MENSAJE: "Contexto de seguridad recuperado con éxito.",
-    SESION: validacionSesion.SESION,
-    USUARIO: validacionRol.USUARIO,
-    ROL: validacionRol.ROL
-  };
+
+  // Pase de administrador supremo
+  if (rol.NOMBRE_ROL === SEG_CONFIG.ROL_ADMINISTRADOR) {
+    return { AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
+  }
+
+  const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
+  if (!autorizado) {
+    return { AUTORIZADO: false, CODIGO: "ACCESO_DENEGADO", MENSAJE: "Su rol no tiene permisos de " + accion + " en " + modulo + "." };
+  }
+
+  return { AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
 }
 
-/**
- * Valida múltiples permisos en un solo payload masivo.
- */
-function SEG_VALIDAR_MULTIPLES_ACCESOS(tokenSesion, accesos) {
-  if (!Array.isArray(accesos)) {
-    throw new Error("La lista de accesos a evaluar debe ser un arreglo de objetos.");
-  }
-  const resultados = [];
-  accesos.forEach(function(acceso) {
-    const modulo = acceso.MODULO || acceso.modulo;
-    const accion = acceso.ACCION || acceso.accion;
-    const resultado = SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion);
-    resultados.push({
-      MODULO: modulo,
-      ACCION: accion,
-      AUTORIZADO: resultado.AUTORIZADO,
-      CODIGO: resultado.CODIGO,
-      MENSAJE: resultado.MENSAJE
-    });
-  });
-  return resultados;
+function SEG_OBTENER_CONTEXTO_SEGURIDAD(tokenSesion) {
+  const validacion = SEG_VALIDAR_SESION(tokenSesion);
+  if (!validacion.VALIDA) return { VALIDO: false, MENSAJE: validacion.MENSAJE };
+  const rol = SEG_CONSULTAR_ROL(validacion.SESION.ID_ROL);
+  return { VALIDO: true, USUARIO: validacion.SESION.USUARIO, ROL: rol };
 }
 
-// ============================================================
-// 09. REGISTRO DE AUDITORÍA (USR_AUDITORIA)
-// ============================================================
-
-/**
- * Registra un evento de auditoría en la hoja USR_AUDITORIA de manera automática y tolerante a fallos.
- */
 function SEG_REGISTRAR_AUDITORIA(datos) {
-  if (!SEG_CONFIG.REGISTRAR_AUDITORIA) return;
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_AUDITORIA);
-    if (!hoja) return; // Si no existe físicamente, omitimos para evitar romper procesos clave
+    if (!hoja) return;
     
     const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_AUDITORIA);
     const ahora = SEG_AHORA();
     const idAuditoria = SEG_GENERAR_ID(SEG_CONFIG.HOJA_AUDITORIA, "ID_AUDITORIA", SEG_CONFIG.PREFIJO_AUDITORIA);
     
-    const registro = {};
+    const registro = {
+      ID_AUDITORIA: idAuditoria,
+      FECHA_HORA: ahora,
+      FECHA_CREACION: ahora
+    };
+    
     encabezados.forEach(function(campo) {
-      registro[campo] = datos[campo] !== undefined ? datos[campo] : "";
+      if (datos[campo] !== undefined) {
+        registro[campo] = datos[campo];
+      } else if (registro[campo] === undefined) {
+        registro[campo] = "";
+      }
     });
     
-    // Forzar campos de sistema
-    registro.ID_AUDITORIA = idAuditoria;
-    registro.FECHA_HORA = ahora;
-    registro.FECHA_CREACION = ahora;
-    
-    const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, registro);
-    hoja.appendRow(nuevaFila);
-  } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("SEG_REGISTRAR_AUDITORIA", "SEGURIDAD", error);
-    } else {
-      console.error(error);
-    }
+    hoja.appendRow(SEG_CONVERTIR_OBJETO_FILA(encabezados, registro));
+  } catch (err) {
+    console.error("No se pudo registrar log de auditoría: " + err.toString());
   }
 }
 
-/**
- * Recupera un listado completo con todas las sesiones registradas.
- */
-function SEG_OBTENER_SESIONES() {
+// ============================================================
+// 10. METODOS ADICIONALES (SUBIDA DE LOGOS, AUTOCURACIÓN)
+// ============================================================
+
+function SEG_OBTENER_ROLES(tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+  SEG_INICIALIZAR_ROLES_PREDEFINIDOS();
+  return SEG_LISTAR_ROLES();
+}
+
+function SEG_OBTENER_PERMISOS(tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+  SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS();
+  
+  const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
+  const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_PERMISOS);
+  return registros.map(function(fila) {
+    return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
+  });
+}
+
+function SEG_OBTENER_SESIONES(tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+  
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_SESIONES);
   return registros
-    .filter(function(fila) {
-      return fila[0] && String(fila[0]).trim() !== "";
-    })
-    .map(function(fila) {
-      return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
-    });
+    .filter(function(fila) { return fila[0] && String(fila[0]).trim() !== ""; })
+    .map(function(fila) { return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila); });
 }
 
-/**
- * Registra de forma autónoma un usuario desde la pantalla web pública.
- * Por defecto se guarda con estado "PENDIENTE" y con el rol CONSULTA (ROL-000007).
- */
-function SEG_REGISTRAR_AUTONOMO(datos) {
-  if (!datos || typeof datos !== "object") {
-    throw new Error("Debe proporcionar la información de registro.");
-  }
-  
-  // Validaciones obligatorias para registro autónomo
-  const camposObligatorios = ["USUARIO", "NOMBRE", "CORREO", "CONTRASENA_PLANA"];
-  SEG_VALIDAR_OBLIGATORIOS(datos, camposObligatorios);
+function SEG_APROBAR_USUARIO(idUsuario, idRol, tokenSesion) {
+  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "APROBAR");
+  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
 
-  // Forzar estado PENDIENTE de aprobación y rol básico CONSULTA (ROL-000007) por defecto
-  datos.ESTADO_USUARIO = SEG_CONFIG.ESTADO_USUARIO_PENDIENTE || "PENDIENTE";
-  datos.ID_ROL = "ROL-000007"; // Rol de consulta básico predefinido en USR_ROLES
-  datos.USUARIO_CREACION = "AUTOREGISTRO";
+  const rol = SEG_CONSULTAR_ROL(idRol);
+  if (!rol) throw new Error("El rol '" + idRol + "' no es válido.");
+
+  SEG_ACTUALIZAR_USUARIO(idUsuario, { ID_ROL: idRol, ESTADO_USUARIO: "ACTIVO" }, tokenSesion);
   
-  // Usar la función de creación nativa para validar duplicados, cifrar contraseña y guardar
-  const resultado = SEG_CREAR_USUARIO(datos);
-  
-  if (resultado.EXITO) {
-    return {
-      EXITO: true,
-      MENSAJE: "Su solicitud de registro ha sido enviada. Por favor, espere a que un administrador apruebe su cuenta."
-    };
-  }
-  
-  return resultado;
+  SEG_REGISTRAR_AUDITORIA({
+    ID_USUARIO: idUsuario,
+    USUARIO: idUsuario,
+    MODULO: "SEGURIDAD",
+    SUBMODULO: "USUARIOS",
+    ACCION: "APROBAR",
+    TIPO_REGISTRO: "USUARIOS",
+    ID_REGISTRO: idUsuario,
+    DESCRIPCION: "Usuario aprobado con rol: " + rol.NOMBRE_ROL + " por " + usuarioEjecutor,
+    RESULTADO: "EXITOSO"
+  });
+
+  return { EXITO: true, MENSAJE: "Usuario aprobado e inactivado de solicitudes pendientes." };
 }
 
-// ============================================================
-// FUNCIONES ADICIONALES DE INTEGRACIÓN CON EL FRONTEND
-// ============================================================
-
-/**
- * Obtiene el listado completo de todos los roles (Puente para el frontend).
- */
-function SEG_OBTENER_ROLES() {
+function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
   try {
-    SEG_INICIALIZAR_ROLES_PREDEFINIDOS(); // Autopoblar si está vacía
-    return SEG_LISTAR_ROLES();
-  } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("SEG_OBTENER_ROLES", "SEGURIDAD", error);
-    } else {
-      console.error(error);
-    }
-    throw new Error("No se pudieron cargar los roles de la base de datos.");
+    SpreadsheetApp.getUi();
+  } catch (e) {
+    throw new Error("Esta operación solo está permitida para administradores dentro de Google Sheets.");
   }
+
+  const splitData = base64Data.split(",");
+  const contentType = splitData[0].match(/:(.*?);/)[1];
+  const bytes = Utilities.base64Decode(splitData[1]);
+  const blob = Utilities.newBlob(bytes, contentType, nombreArchivo);
+  
+  let carpeta;
+  const carpetas = DriveApp.getFoldersByName("MEGUDAN_RECURSOS");
+  if (carpetas.hasNext()) {
+    carpeta = carpetas.next();
+  } else {
+    carpeta = DriveApp.createFolder("MEGUDAN_RECURSOS");
+  }
+  
+  const archivo = carpeta.createFile(blob);
+  archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  const urlLogo = archivo.getUrl();
+  
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaEmpresa = ss.getSheetByName("CFG_EMPRESA");
+  if (!hojaEmpresa) throw new Error("No se encontró la hoja CFG_EMPRESA.");
+  
+  const datos = hojaEmpresa.getRange(2, 1, hojaEmpresa.getLastRow() - 1, 2).getValues();
+  let filaModificar = -1;
+  for (let i = 0; i < datos.length; i++) {
+    if (datos[i][0].toString().trim().toUpperCase() === "LOGO_URL" || datos[i][0].toString().trim().toUpperCase() === "LOGO") {
+      filaModificar = i + 2;
+      break;
+    }
+  }
+  
+  if (filaModificar !== -1) {
+    hojaEmpresa.getRange(filaModificar, 2).setValue(urlLogo);
+  } else {
+    hojaEmpresa.appendRow(["LOGO_URL", urlLogo, "URL", "NO", "Ubicación del logo de la empresa"]);
+  }
+  
+  return { EXITO: true, MENSAJE: "¡Logo corporativo subido y guardado exitosamente!", URL: urlLogo };
 }
 
-/**
- * Obtiene el listado completo de todos los permisos parametrizados en USR_PERMISOS (Puente para el frontend).
- */
-function SEG_OBTENER_PERMISOS() {
-  try {
-    SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS(); // Autopoblar si está vacía
-    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
-    const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_PERMISOS);
-    return registros.map(function(fila) {
-      return SEG_CONVERTIR_FILA_OBJETO(encabezados, fila);
-    });
-  } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("SEG_OBTENER_PERMISOS", "SEGURIDAD", error);
-    } else {
-      console.error(error);
-    }
-    throw new Error("No se pudieron cargar los permisos de la base de datos.");
+function SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo) {
+  const usuario = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "CORREO", correo);
+  if (!usuario) {
+    return { EXITO: false, MENSAJE: "El correo electrónico no se encuentra registrado." };
   }
+
+  const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%";
+  let contrasenaTemporal = "M9!";
+  for (let i = 0; i < 7; i++) {
+    contrasenaTemporal += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+
+  // Establecemos clave temporal
+  const hash = SEG_GENERAR_HASH_CONTRASENA(contrasenaTemporal);
+  SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, {
+    CONTRASENA_HASH: hash,
+    DEBE_CAMBIAR_CONTRASENA: "SI",
+    FECHA_CAMBIO_CONTRASENA: SEG_AHORA()
+  });
+
+  const asunto = "Recuperación de Acceso - MEGUDAN ERP";
+  const cuerpoHTML = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #374151; color: white; padding: 20px; text-align: center;">
+        <h2 style="margin: 0;">MEGUDAN ERP</h2>
+      </div>
+      <div style="padding: 25px; line-height: 1.6;">
+        <p>Hola <strong>${usuario.NOMBRE || usuario.NOMBRE_COMPLETO || usuario.USUARIO}</strong>,</p>
+        <p>Tu contraseña temporal de acceso de un solo uso es:</p>
+        <div style="background-color: #f3f4f6; padding: 15px; text-align: center; font-weight: bold; font-size: 18px;">
+          <code>${contrasenaTemporal}</code>
+        </div>
+        <p style="color: #dc2626;">⚠️ Deberás cambiar esta contraseña inmediatamente al ingresar.</p>
+      </div>
+    </div>`;
+
+  MailApp.sendEmail({ to: correo, subject: asunto, htmlBody: cuerpoHTML });
+  return { EXITO: true, MENSAJE: "¡Se ha enviado una contraseña temporal a su correo con éxito!" };
 }
 
-// ============================================================
-// SELF-HEALING: INICIALIZACIÓN DE ROLES Y PERMISOS PREDEFINIDOS
-// ============================================================
-
-/**
- * Auto-inicializa roles del ERP si la tabla USR_ROLES está vacía.
- */
 function SEG_INICIALIZAR_ROLES_PREDEFINIDOS() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_ROLES);
-    if (!hoja) return;
-    
-    const ultimaFila = hoja.getLastRow();
-    if (ultimaFila >= 2) return; // Ya existen roles, no es necesario inicializar
-    
-    console.log("Inicializando roles predefinidos in USR_ROLES...");
+    if (!hoja || hoja.getLastRow() >= 2) return;
+
+    console.log("Inicializando roles predefinidos...");
     const ahora = new Date();
-    const rolesPredefinidos = [
+    const roles = [
       ["ROL-000001", "ADMINISTRADOR", "Administración general y acceso total al ERP", 100, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Rol maestro protegido"],
       ["ROL-000002", "CONTADOR", "Gestión y supervisión de procesos contables y financieros", 80, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Acceso a reportes contables"],
       ["ROL-000003", "AUXILIAR_CONTABLE", "Apoyo en registros y procesos contables autorizados", 60, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Permiso de registro operativo"],
@@ -1443,313 +1190,66 @@ function SEG_INICIALIZAR_ROLES_PREDEFINIDOS() {
       ["ROL-000006", "OPERATIVO", "Registro de operaciones asignadas e inventarios", 40, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Rol operativo general"],
       ["ROL-000007", "CONSULTA", "Acceso exclusivamente de lectura general", 10, "ACTIVO", "SÍ", ahora, ahora, "SISTEMA", "SISTEMA", "Rol de sólo lectura"]
     ];
-    
+
     const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_ROLES);
-    rolesPredefinidos.forEach(function(filaRol) {
-      const objetoRol = {
-        ID_ROL: filaRol[0],
-        NOMBRE_ROL: filaRol[1],
-        DESCRIPCION: filaRol[2],
-        NIVEL_JERARQUIA: filaRol[3],
-        ESTADO_ROL: filaRol[4],
-        ROL_SISTEMA: filaRol[5],
-        FECHA_CREACION: filaRol[6],
-        FECHA_ACTUALIZACION: filaRol[7],
-        USUARIO_CREACION: filaRol[8],
-        USUARIO_ACTUALIZACION: filaRol[9],
-        OBSERVACIONES: filaRol[10]
-      };
-      const filaInsertar = SEG_CONVERTIR_OBJETO_FILA(encabezados, objetoRol);
-      hoja.appendRow(filaInsertar);
+    roles.forEach(function(fila) {
+      hoja.appendRow(SEG_CONVERTIR_OBJETO_FILA(encabezados, SEG_CONVERTIR_FILA_OBJETO(["ID_ROL", "NOMBRE_ROL", "DESCRIPCION", "NIVEL_JERARQUIA", "ESTADO_ROL", "ROL_SISTEMA", "FECHA_CREACION", "FECHA_ACTUALIZACION", "USUARIO_CREACION", "USUARIO_ACTUALIZACION", "OBSERVACIONES"], fila)));
     });
-    console.log("Roles predefinidos creados correctamente.");
   } catch (error) {
-    console.error("Error en SEG_INICIALIZAR_ROLES_PREDEFINIDOS: " + error.toString());
+    console.error("Error al inicializar roles: " + error.toString());
   }
 }
 
-/**
- * Auto-inicializa permisos básicos del ERP si la tabla USR_PERMISOS está vacía.
- */
 function SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_PERMISOS);
-    if (!hoja) return;
-    
-    const ultimaFila = hoja.getLastRow();
-    if (ultimaFila >= 2) return; // Ya existen permisos
-    
-    console.log("Inicializando permisos predefinidos in USR_PERMISOS...");
+    if (!hoja || hoja.getLastRow() >= 2) return;
+
+    console.log("Inicializando permisos...");
     const ahora = new Date();
     const modulos = ["SEGURIDAD", "CLIENTES", "PROVEEDORES", "PRODUCTOS", "OBRAS", "VENTAS", "COMPRAS", "INVENTARIO", "TESORERIA"];
     const accionesAdmin = ["VER", "CREAR", "EDITAR", "ELIMINAR", "ANULAR", "APROBAR", "ADMINISTRAR"];
     const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
     let consecutivo = 1;
-    
-    // 1. ADMINISTRADOR gets all permisos
+
     modulos.forEach(function(mod) {
       accionesAdmin.forEach(function(acc) {
         const idPermiso = "PER-" + String(consecutivo).padStart(SEG_CONFIG.DIGITOS_ID, "0");
-        const objetoPermiso = {
-          ID_PERMISO: idPermiso,
-          ID_ROL: "ROL-000001", // ADMINISTRADOR
-          MODULO: mod,
-          SUBMODULO: "GENERAL",
-          ACCION: acc,
-          PERMITIDO: "SI",
-          ESTADO_PERMISO: "ACTIVO",
-          FECHA_CREACION: ahora,
-          FECHA_ACTUALIZACION: ahora,
-          USUARIO_CREACION: "SISTEMA",
-          USUARIO_ACTUALIZACION: "SISTEMA",
-          OBSERVACIONES: "Permiso administrativo maestro"
+        const obj = {
+          ID_PERMISO: idPermiso, ID_ROL: "ROL-000001", MODULO: mod, SUBMODULO: "GENERAL", ACCION: acc,
+          PERMITIDO: "SI", ESTADO_PERMISO: "ACTIVO", FECHA_CREACION: ahora, FECHA_ACTUALIZACION: ahora,
+          USUARIO_CREACION: "SISTEMA", USUARIO_ACTUALIZACION: "SISTEMA", OBSERVACIONES: "Permiso administrativo maestro"
         };
-        const filaInsertar = SEG_CONVERTIR_OBJETO_FILA(encabezados, objetoPermiso);
-        hoja.appendRow(filaInsertar);
+        hoja.appendRow(SEG_CONVERTIR_OBJETO_FILA(encabezados, obj));
         consecutivo++;
       });
     });
-    
-    // 2. CONSULTA gets VER only
-    modulos.forEach(function(mod) {
-      const idPermiso = "PER-" + String(consecutivo).padStart(SEG_CONFIG.DIGITOS_ID, "0");
-      const objetoPermiso = {
-        ID_PERMISO: idPermiso,
-        ID_ROL: "ROL-000007", // CONSULTA
-        MODULO: mod,
-        SUBMODULO: "GENERAL",
-        ACCION: "VER",
-        PERMITIDO: "SI",
-        ESTADO_PERMISO: "ACTIVO",
-        FECHA_CREACION: ahora,
-        FECHA_ACTUALIZACION: ahora,
-        USUARIO_CREACION: "SISTEMA",
-        USUARIO_ACTUALIZACION: "SISTEMA",
-        OBSERVACIONES: "Permiso de sólo lectura"
-      };
-      const filaInsertar = SEG_CONVERTIR_OBJETO_FILA(encabezados, objetoPermiso);
-      hoja.appendRow(filaInsertar);
-      consecutivo++;
-    });
-    console.log("Permisos predefinidos creados correctamente.");
   } catch (error) {
-    console.error("Error en SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS: " + error.toString());
+    console.error("Error al inicializar permisos: " + error.toString());
   }
 }
 
-/**
- * Aprueba un usuario pendiente asignándole su rol definitivo y activándolo en un solo paso atómico.
- */
-function SEG_APROBAR_USUARIO(idUsuario, idRol, usuarioActualizador) {
-  try {
-    // [CORREGIDO] Se eliminó "const ss = SpreadsheetApp.getActiveSpreadsheet();"
-    // que estaba declarada pero nunca se usaba dentro de esta función.
-    const rol = SEG_CONSULTAR_ROL(idRol);
-    if (!rol) {
-      throw new Error("El rol seleccionado '" + idRol + "' no es válido o no existe en USR_ROLES.");
-    }
-    
-    const resultadoRol = SEG_ACTUALIZAR_USUARIO(idUsuario, {
-      ID_ROL: idRol,
-      USUARIO_ACTUALIZACION: usuarioActualizador || "SISTEMA"
-    });
-    if (!resultadoRol.EXITO) {
-      throw new Error("No se pudo actualizar el rol del usuario.");
-    }
-    
-    const resultadoEstado = SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, "ACTIVO", usuarioActualizador || "SISTEMA");
-    if (!resultadoEstado.EXITO) {
-      throw new Error("No se pudo activar el estado del usuario.");
-    }
-    
-    SEG_REGISTRAR_AUDITORIA({
-      ID_USUARIO: idUsuario,
-      USUARIO: resultadoRol.USUARIO.USUARIO,
-      MODULO: "SEGURIDAD",
-      SUBMODULO: "USUARIOS",
-      ACCION: "APROBAR",
-      TIPO_REGISTRO: "USUARIOS",
-      ID_REGISTRO: idUsuario,
-      DESCRIPCION: "Usuario '" + resultadoRol.USUARIO.USUARIO + "' aprobado con éxito. Rol asignado: " + rol.NOMBRE_ROL + ".",
-      RESULTADO: "EXITOSO"
-    });
-    
-    return {
-      EXITO: true,
-      MENSAJE: "Usuario '" + resultadoRol.USUARIO.USUARIO + "' aprobado con éxito. Rol asignado: " + rol.NOMBRE_ROL + "."
-    };
-  } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("SEG_APROBAR_USUARIO", "SEGURIDAD", error);
-    } else {
-      console.error(error);
-    }
-    throw new Error(error.message || error.toString());
-  }
-}
-
-// ============================================================
-// 10. NUEVOS MÉTODOS: LOGO Y RECUPERACIÓN DE CONTRASEÑA
-// ============================================================
-
-/**
- * Guarda el logotipo de la empresa en Drive y actualiza la URL en la hoja de configuración CFG_EMPRESA.
- * RESTRICCIÓN: Solo ejecutable si se llama desde la interfaz de Sheets por un administrador.
- * [CORREGIDO] Antes se hacía "const ui = SpreadsheetApp.getUi(); if (!ui) throw ...", pero
- * SpreadsheetApp.getUi() NUNCA retorna null/undefined fuera de contexto: lanza una excepción
- * directamente, así que el chequeo "if (!ui)" jamás se ejecutaba y el mensaje de restricción
- * personalizado nunca se mostraba al usuario. Ahora se envuelve la llamada en try/catch.
- */
-function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
-  try {
-    try {
-      SpreadsheetApp.getUi();
-    } catch (uiError) {
-      throw new Error("Esta operación solo está permitida para administradores dentro de Google Sheets.");
-    }
-    
-    const splitData = base64Data.split(",");
-    const contentType = splitData[0].match(/:(.*?);/)[1];
-    const bytes = Utilities.base64Decode(splitData[1]);
-    const blob = Utilities.newBlob(bytes, contentType, nombreArchivo);
-    
-    let carpeta;
-    const carpetas = DriveApp.getFoldersByName("MEGUDAN_RECURSOS");
-    if (carpetas.hasNext()) {
-      carpeta = carpetas.next();
-    } else {
-      carpeta = DriveApp.createFolder("MEGUDAN_RECURSOS");
-    }
-    
-    const archivo = carpeta.createFile(blob);
-    archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    const urlLogo = archivo.getUrl();
-    
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const hojaEmpresa = ss.getSheetByName("CFG_EMPRESA");
-    if (!hojaEmpresa) {
-      throw new Error("No se encontró la hoja de configuración CFG_EMPRESA.");
-    }
-    
-    const datos = hojaEmpresa.getRange(2, 1, hojaEmpresa.getLastRow() - 1, 2).getValues();
-    let filaModificar = -1;
-    for (let i = 0; i < datos.length; i++) {
-      if (datos[i][0].toString().trim().toUpperCase() === "LOGO_URL" || datos[i][0].toString().trim().toUpperCase() === "LOGO") {
-        filaModificar = i + 2;
-        break;
-      }
-    }
-    
-    if (filaModificar !== -1) {
-      hojaEmpresa.getRange(filaModificar, 2).setValue(urlLogo);
-    } else {
-      hojaEmpresa.appendRow(["LOGO_URL", urlLogo, "URL", "NO", "Ubicación del logo de la empresa"]);
-    }
-    
-    return { EXITO: true, MENSAJE: "¡Logo corporativo subido y guardado exitosamente!", URL: urlLogo };
-  } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("SEG_GUARDAR_LOGO", "SEGURIDAD", error);
-    }
-    throw new Error(error.message || error.toString());
-  }
-}
-
-/**
- * Busca un usuario por correo, genera una contraseña temporal de un solo uso,
- * actualiza el Sheets y envía un correo asíncrono con las instrucciones de acceso.
- */
-function SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo) {
-  try {
-    if (!correo || String(correo).trim() === "") {
-      throw new Error("Debe proporcionar un correo electrónico válido.");
-    }
-    const correoNormalizado = String(correo).trim().toLowerCase();
-    
-    const usuario = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "CORREO", correoNormalizado);
-    if (!usuario) {
-      return { EXITO: false, MENSAJE: "El correo electrónico no se encuentra registrado en el ERP de MEGUDAN." };
-    }
-    
-    const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%";
-    let contrasenaTemporal = "";
-    contrasenaTemporal += "M";
-    contrasenaTemporal += "9";
-    contrasenaTemporal += "!";
-    for (let i = 0; i < 7; i++) {
-      const randIdx = Math.floor(Math.random() * caracteres.length);
-      contrasenaTemporal += caracteres.charAt(randIdx);
-    }
-    
-    SEG_ESTABLECER_CONTRASENA(usuario.ID_USUARIO, contrasenaTemporal, "SISTEMA_RECUPERACION");
-    SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, { DEBE_CAMBIAR_CONTRASENA: "SI" });
-    
-    const asunto = "Recuperación de Acceso - MEGUDAN ERP";
-    const cuerpoHTML = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-        <div style="background-color: #374151; color: white; padding: 20px; text-align: center;">
-          <h2 style="margin: 0; font-size: 20px;">MEGUDAN ERP</h2>
-          <p style="margin: 5px 0 0; font-size: 12px; opacity: 0.8;">Sistema de Gestión Operativa</p>
-        </div>
-        <div style="padding: 25px; color: #1f2937; line-height: 1.6;">
-          <p style="margin: 0 0 15px;">Hola <strong>${usuario.NOMBRE || usuario.NOMBRE_COMPLETO || usuario.USUARIO}</strong>,</p>
-          <p style="margin: 0 0 15px;">Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el ERP de MEGUDAN.</p>
-          <div style="background-color: #f3f4f6; border-left: 4px solid #374151; padding: 15px; margin: 20px 0; text-align: center; border-radius: 4px;">
-            <p style="margin: 0 0 5px; font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Tu contraseña temporal de acceso:</p>
-            <code style="font-size: 18px; font-weight: bold; color: #111827; background: #e5e7eb; padding: 4px 10px; border-radius: 4px; display: inline-block; letter-spacing: 1px;">${contrasenaTemporal}</code>
-          </div>
-          <p style="margin: 0 0 15px; font-size: 13px; color: #dc2626; font-weight: bold;">⚠️ Por seguridad, el sistema te exigirá cambiar esta contraseña temporal inmediatamente al iniciar sesión.</p>
-          <p style="margin: 0 0 15px;">Si tú no solicitaste este cambio, por favor ponte en contacto de inmediato con el administrador de seguridad del sistema.</p>
-          <p style="margin: 20px 0 0; font-size: 12px; color: #9ca3af; border-top: 1px dashed #e5e7eb; padding-top: 15px; text-align: center;">MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS &copy; 2026</p>
-        </div>
-      </div>
-    `;
-    
-    MailApp.sendEmail({
-      to: correoNormalizado,
-      subject: asunto,
-      htmlBody: cuerpoHTML
-    });
-    
-    return { EXITO: true, MENSAJE: "¡Se ha enviado una contraseña temporal a su correo de registro con éxito!" };
-  } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("SEG_SOLICITAR_RECUPERACION_CONTRASENA", "SEGURIDAD", error);
-    }
-    return { EXITO: false, MENSAJE: "Ocurrió un error al procesar la solicitud: " + error.message };
-  }
-}
-
-
-/**
- * Auto-inicializa el usuario administrador por defecto si USR_USUARIOS está vacía.
- */
 function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_USUARIOS);
-    if (!hoja) return;
-    
-    const ultimaFila = hoja.getLastRow();
-    if (ultimaFila >= 2) return; // Ya existen usuarios, no es necesario inicializar
-    
-    console.log("Inicializando usuario administrador por defecto...");
-    SEG_INICIALIZAR_ROLES_PREDEFINIDOS(); // Asegurar que existan los roles primero
-    
+    if (!hoja || hoja.getLastRow() >= 2) return;
+
+    SEG_INICIALIZAR_ROLES_PREDEFINIDOS();
     const adminUser = {
       USUARIO: "ADMIN",
-      NOMBRE: "Administrador del Sistema",
+      NOMBRE: "Administrador del ERP",
       CORREO: "admin@megudan.com",
       ID_ROL: "ROL-000001",
       ESTADO_USUARIO: "ACTIVO",
       CONTRASENA_PLANA: "Admin123!",
       DEBE_CAMBIAR_CONTRASENA: "NO"
     };
-    
+
     SEG_CREAR_USUARIO(adminUser);
-    console.log("Usuario admin creado exitosamente con contraseña Admin123!");
+    console.log("Usuario administrador creado.");
   } catch (error) {
-    console.error("Error en SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS: " + error.toString());
+    console.error("Error al inicializar usuarios: " + error.toString());
   }
 }

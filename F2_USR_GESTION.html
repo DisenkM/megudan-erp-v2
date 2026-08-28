@@ -1,608 +1,233 @@
 <!-- ============================================================
-INTERFAZ: F2_USR_GESTION
-MODULO: SEGURIDAD
-RESPONSABILIDAD:
-Gestión de Usuarios, Roles, Permisos, Sesiones y Logo del ERP
-
-BACKEND:
-23_SEGURIDAD.gs
-24_LOGS.gs
+* INTERFAZ: F2_USR_GESTION
+* MODULO: SEGURIDAD (ADMINISTRACIÓN CENTRAL)
+* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos y Sesiones del ERP
+* CONEXIÓN BACKEND: 23_SEGURIDAD.gs y 24_LOGS.gs
+* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
 ============================================================ -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Gestión de Seguridad | MEGUDAN ERP</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f4f6f8;
-      color: #1f2937;
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f4f6f8; color: #1f2937;
     }
-
-    .app {
-      min-height: 100vh;
-    }
-
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Header */
     .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 25px;
-      background: #374151;
-      color: #ffffff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 25px; background-color: #374151; color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-
-    .header-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-icon {
-      font-size: 28px;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    .header p {
-      margin: 4px 0 0;
-      font-size: 13px;
-      opacity: .85;
-    }
-
+    .header-title { display: flex; align-items: center; gap: 12px; }
+    .header-icon { font-size: 28px; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.8; }
+    
+    /* Tabs Navigation */
     .tabs {
-      display: flex;
-      background: #ffffff;
-      border-bottom: 1px solid #d1d5db;
-      overflow-x: auto;
+      display: flex; gap: 0; background-color: #ffffff;
+      border-bottom: 1px solid #d1d5db; overflow-x: auto;
     }
-
     .tab-button {
-      border: none;
-      background: transparent;
-      padding: 15px 22px;
-      cursor: pointer;
-      font-weight: 700;
-      color: #6b7280;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
+      border: none; background: transparent; padding: 16px 24px;
+      cursor: pointer; font-size: 14px; font-weight: 700; color: #6b7280;
+      border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s;
     }
-
-    .tab-button:hover {
-      background: #f9fafb;
-    }
-
-    .tab-button.active {
-      color: #374151;
-      border-bottom-color: #374151;
-      background: #f9fafb;
-    }
-
-    .content {
-      padding: 25px;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
+    .tab-button:hover { background-color: #f9fafb; color: #111827; }
+    .tab-button.active { color: #374151; border-bottom-color: #374151; background-color: #f9fafb; }
+    
+    /* Content wrapper */
+    .content { flex: 1; padding: 25px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Cards and Elements */
     .card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 22px;
-      margin-bottom: 20px;
+      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .card-title {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
+    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+    .card-title { margin: 0; font-size: 18px; font-weight: 700; }
+    
     .button {
-      border: none;
-      border-radius: 6px;
-      padding: 10px 15px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
+      border: none; border-radius: 6px; padding: 10px 16px;
+      cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;
     }
-
-    .button-primary {
-      background: #374151;
-      color: white;
+    .button-primary { background: #374151; color: #ffffff; }
+    .button-primary:hover { background: #1f2937; }
+    .button-secondary { background: #e5e7eb; color: #374151; }
+    .button-secondary:hover { background: #d1d5db; }
+    .button-danger { background: #b91c1c; color: #ffffff; }
+    .button-danger:hover { background: #991b1b; }
+    .button-success { background: #16a34a; color: #ffffff; }
+    .button-success:hover { background: #15803d; }
+    
+    /* Search and inputs */
+    .search-container { display: flex; gap: 10px; margin-bottom: 20px; }
+    .input, select {
+      width: 100%; padding: 11px 12px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 14px; outline: none; background: white;
     }
-
-    .button-primary:hover {
-      background: #1f2937;
-    }
-
-    .button-secondary {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .button-success {
-      background: #16a34a;
-      color: white;
-    }
-
-    .button-warning {
-      background: #d97706;
-      color: white;
-    }
-
-    .button-danger {
-      background: #b91c1c;
-      color: white;
-    }
-
-    .button-info {
-      background: #2563eb;
-      color: white;
-    }
-
-    .button-small {
-      padding: 5px 8px;
-      font-size: 11px;
-      margin: 2px;
-    }
-
-    .search-container {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .input,
-    select {
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 14px;
-      background: white;
-    }
-
-    .search-container .input {
-      flex: 1;
-      min-width: 250px;
-    }
-
-    .input:focus,
-    select:focus {
-      outline: none;
-      border-color: #374151;
-    }
-
-    .filters {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .filters select {
-      min-width: 180px;
-    }
-
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      min-width: 850px;
-      border-collapse: collapse;
-    }
-
+    .input:focus, select:focus { border-color: #374151; box-shadow: 0 0 0 3px rgba(55,65,81,0.10); }
+    
+    /* Tables design */
+    .table-container { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 750px; }
     th {
-      background: #f3f4f6;
-      padding: 12px;
-      text-align: left;
-      font-size: 12px;
-      border-bottom: 1px solid #d1d5db;
+      background: #f3f4f6; padding: 12px; text-align: left; font-size: 12px;
+      color: #374151; border-bottom: 1px solid #d1d5db; white-space: nowrap; font-weight: 700;
     }
-
-    td {
-      padding: 11px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 13px;
-    }
-
-    tr:hover td {
-      background: #f9fafb;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 15px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .badge-active {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .badge-inactive {
-      background: #f3f4f6;
-      color: #4b5563;
-    }
-
-    .badge-blocked {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .badge-pending {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    .badge-deleted {
-      background: #e5e7eb;
-      color: #6b7280;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 35px;
-      color: #6b7280;
-    }
-
-    .message {
-      display: none;
-      padding: 12px 15px;
-      margin-bottom: 18px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .message.success {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .message.error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .message.info {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
+    td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+    tr:hover td { background: #f9fafb; }
+    
+    /* Badges */
+    .badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge-active { background: #dcfce7; color: #166534; }
+    .badge-inactive { background: #f3f4f6; color: #4b5563; }
+    .badge-blocked { background: #fef3c7; color: #92400e; }
+    .badge-pending { background: #fee2e2; color: #ea580c; border: 1.5px solid #f97316; }
+    .badge-session { background: #dbeafe; color: #1d4ed8; }
+    
+    /* State placeholders */
+    .empty-state { text-align: center; padding: 45px 20px; color: #6b7280; }
+    .empty-icon { font-size: 42px; margin-bottom: 10px; }
+    
+    /* Modales */
     .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,.4);
-      overflow: auto;
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
     }
-
     .modal-content {
-      background: #ffffff;
-      width: 500px;
-      max-width: 95%;
-      margin: 7% auto;
-      padding: 25px;
-      border-radius: 12px;
+      background-color: #fcfcfc; margin: 8% auto; padding: 25px;
+      border: 1px solid #e5e7eb; width: 480px; border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-    }
-
-    .modal-title {
-      margin: 0;
-    }
-
-    .close-btn {
-      font-size: 25px;
-      cursor: pointer;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 15px;
-    }
-
-    .field label {
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      border-top: 1px solid #e5e7eb;
-      padding-top: 15px;
-      margin-top: 20px;
-    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 17px; font-weight: 700; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
+    .close-btn:hover { color: black; }
+    
+    .modal-body .field { display: flex; flex-direction: column; margin-bottom: 15px; gap: 6px; }
+    .modal-body label { font-size: 12px; font-weight: 700; color: #374151; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 20px; }
+    
+    .message { display: none; padding: 12px 15px; border-radius: 6px; margin-bottom: 18px; font-size: 13px; font-weight: 600; }
+    .message.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .message.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .message.info { display: block; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
   </style>
 </head>
-
 <body>
 
 <div class="app">
-
   <header class="header">
     <div class="header-title">
       <div class="header-icon">🔐</div>
       <div>
         <h1>Gestión de Seguridad</h1>
-        <p>Administración de usuarios, roles, permisos y sesiones del ERP</p>
+        <p>Administración de usuarios, roles, permisos, sesiones y logo corporativo del ERP</p>
       </div>
     </div>
   </header>
 
-  <!-- ========================================================
-       NAVEGACIÓN
-  ======================================================== -->
-
   <nav class="tabs">
-    <button class="tab-button active"
-            data-tab="usuarios"
-            onclick="USR_CAMBIAR_PESTANA('usuarios', this)">
-      👤 Usuarios
-    </button>
-
-    <button class="tab-button"
-            data-tab="roles"
-            onclick="USR_CAMBIAR_PESTANA('roles', this)">
-      🛡️ Roles
-    </button>
-
-    <button class="tab-button"
-            data-tab="permisos"
-            onclick="USR_CAMBIAR_PESTANA('permisos', this)">
-      🔑 Permisos
-    </button>
-
-    <button class="tab-button"
-            data-tab="sesiones"
-            onclick="USR_CAMBIAR_PESTANA('sesiones', this)">
-      🟢 Sesiones
-    </button>
-
-    <button class="tab-button"
-            data-tab="logo"
-            onclick="USR_CAMBIAR_PESTANA('logo', this)">
-      🖼️ Logo
-    </button>
+    <button class="tab-button active" onclick="USR_CAMBIAR_PESTANA('usuarios')">👤 Usuarios</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('logo')">🖼️ Logo Empresa</button>
   </nav>
 
   <main class="content">
-
     <div id="USR_MENSAJE_ALERT" class="message"></div>
 
-    <!-- ======================================================
-         USUARIOS
-    ======================================================= -->
-
+    <!-- Pestaña: Usuarios -->
     <section id="tab-usuarios" class="tab-content active">
-
       <div class="card">
-
         <div class="card-header">
           <h2 class="card-title">👤 Usuarios del ERP</h2>
-
-          <div class="toolbar">
-            <button class="button button-primary"
-                    onclick="USR_ABRIR_MODAL_NUEVO_USUARIO()">
-              + Nuevo Usuario
-            </button>
-
-            <button class="button button-secondary"
-                    onclick="USR_RECARGAR_USUARIOS()">
-              ↻ Actualizar
-            </button>
-          </div>
+          <button class="button button-primary" onclick="USR_ABRIR_MODAL_USUARIO()">+ Nuevo Usuario</button>
         </div>
-
         <div class="search-container">
-
-          <input type="text"
-                 id="USR_BUSCADOR_USUARIOS"
-                 class="input"
-                 placeholder="Buscar por ID, usuario, nombre o correo..."
-                 onkeydown="if(event.key === 'Enter') USR_BUSCAR_USUARIOS()">
-
-          <button class="button button-info"
-                  onclick="USR_BUSCAR_USUARIOS()">
-            🔍 Buscar
-          </button>
-
-          <button class="button button-secondary"
-                  onclick="USR_LIMPIAR_BUSQUEDA_USUARIOS()">
-            ↻ Mostrar Todos
-          </button>
-
+          <input type="text" id="USR_BUSCADOR_USUARIOS" class="input" placeholder="Buscar por usuario, nombre, correo o ID..." oninput="USR_BUSCAR_USUARIOS()">
         </div>
-
         <div class="table-container">
-
           <table>
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Usuario</th>
-                <th>Nombre</th>
+                <th>Nombre Completo</th>
                 <th>Correo</th>
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
-
             <tbody id="USR_TABLA_USUARIOS">
               <tr>
-                <td colspan="7" class="empty-state">
-                  👤 Cargando usuarios...
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">👤</div>
+                    <strong>Cargando usuarios registrados...</strong>
+                  </div>
                 </td>
               </tr>
             </tbody>
-
           </table>
-
         </div>
       </div>
     </section>
 
-    <!-- ======================================================
-         ROLES
-    ======================================================= -->
-
+    <!-- Pestaña: Roles -->
     <section id="tab-roles" class="tab-content">
-
       <div class="card">
-
         <div class="card-header">
-          <h2 class="card-title">🛡️ Roles del Sistema</h2>
-
-          <button class="button button-secondary"
-                  onclick="USR_CARGAR_ROLES()">
-            ↻ Actualizar
-          </button>
+          <h2 class="card-title">🛡️ Roles y Niveles de Jerarquía</h2>
         </div>
-
-        <div class="search-container">
-
-          <input type="text"
-                 id="USR_BUSCADOR_ROLES"
-                 class="input"
-                 placeholder="Buscar rol..."
-                 oninput="USR_FILTRAR_ROLES()">
-
-          <button class="button button-info"
-                  onclick="USR_FILTRAR_ROLES()">
-            🔍 Buscar
-          </button>
-
-        </div>
-
         <div class="table-container">
-
           <table>
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Nombre</th>
+                <th>Nombre del Rol</th>
                 <th>Descripción</th>
                 <th>Nivel</th>
-                <th>Sistema</th>
+                <th>Rol Sistema</th>
                 <th>Estado</th>
-                <th>Acciones</th>
               </tr>
             </thead>
-
-            <tbody id="USR_TABLA_ROLES"></tbody>
-
+            <tbody id="USR_TABLA_ROLES">
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-icon">🛡️</div>
+                    <strong>Cargando roles predefinidos...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
           </table>
-
         </div>
       </div>
     </section>
 
-    <!-- ======================================================
-         PERMISOS
-    ======================================================= -->
-
+    <!-- Pestaña: Permisos -->
     <section id="tab-permisos" class="tab-content">
-
       <div class="card">
-
         <div class="card-header">
-          <h2 class="card-title">🔑 Matriz de Permisos</h2>
-
-          <button class="button button-secondary"
-                  onclick="USR_CARGAR_PERMISOS()">
-            ↻ Actualizar
-          </button>
+          <h2 class="card-title">🔑 Control de Permisos por Rol</h2>
         </div>
-
-        <div class="filters">
-
-          <input type="text"
-                 id="USR_BUSCADOR_PERMISOS"
-                 class="input"
-                 placeholder="Buscar permiso..."
-                 oninput="USR_FILTRAR_PERMISOS()">
-
-          <select id="USR_FILTRO_ROL"
-                  onchange="USR_FILTRAR_PERMISOS()">
-            <option value="">Todos los roles</option>
-          </select>
-
-          <select id="USR_FILTRO_MODULO"
-                  onchange="USR_FILTRAR_PERMISOS()">
-            <option value="">Todos los módulos</option>
-          </select>
-
-          <select id="USR_FILTRO_ESTADO"
-                  onchange="USR_FILTRAR_PERMISOS()">
-            <option value="">Todos los estados</option>
-            <option value="ACTIVO">ACTIVO</option>
-            <option value="INACTIVO">INACTIVO</option>
-          </select>
-
-        </div>
-
         <div class="table-container">
-
           <table>
             <thead>
               <tr>
@@ -615,52 +240,29 @@ BACKEND:
                 <th>Estado</th>
               </tr>
             </thead>
-
-            <tbody id="USR_TABLA_PERMISOS"></tbody>
-
+            <tbody id="USR_TABLA_PERMISOS">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">🔑</div>
+                    <strong>Cargando matriz de permisos...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
           </table>
-
         </div>
       </div>
     </section>
 
-    <!-- ======================================================
-         SESIONES
-    ======================================================= -->
-
+    <!-- Pestaña: Sesiones -->
     <section id="tab-sesiones" class="tab-content">
-
       <div class="card">
-
         <div class="card-header">
-          <h2 class="card-title">🟢 Sesiones del Sistema</h2>
-
-          <button class="button button-secondary"
-                  onclick="USR_CARGAR_SESIONES()">
-            ↻ Actualizar
-          </button>
+          <h2 class="card-title">🟢 Control de Sesiones Activas</h2>
+          <button class="button button-secondary" onclick="USR_CARGAR_SESIONES()">↻ Actualizar</button>
         </div>
-
-        <div class="filters">
-
-          <input type="text"
-                 id="USR_BUSCADOR_SESIONES"
-                 class="input"
-                 placeholder="Buscar usuario, ID o sesión..."
-                 oninput="USR_FILTRAR_SESIONES()">
-
-          <select id="USR_FILTRO_SESION"
-                  onchange="USR_FILTRAR_SESIONES()">
-            <option value="">Todos los estados</option>
-            <option value="ACTIVA">ACTIVA</option>
-            <option value="CERRADA">CERRADA</option>
-            <option value="EXPIRADA">EXPIRADA</option>
-          </select>
-
-        </div>
-
         <div class="table-container">
-
           <table>
             <thead>
               <tr>
@@ -673,2092 +275,537 @@ BACKEND:
                 <th>Acciones</th>
               </tr>
             </thead>
-
-            <tbody id="USR_TABLA_SESIONES"></tbody>
-
+            <tbody id="USR_TABLA_SESIONES">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">🟢</div>
+                    <strong>Cargando registros de sesión...</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
           </table>
-
         </div>
       </div>
     </section>
 
-    <!-- ======================================================
-         LOGO
-    ======================================================= -->
-
+    <!-- Pestaña: Logo Empresa (Exclusivo administradores en Sheets) -->
     <section id="tab-logo" class="tab-content">
-
       <div class="card">
-
-        <h2 class="card-title">🖼️ Logotipo Corporativo</h2>
-
-        <br>
-
-        <div class="field">
-          <label>Seleccionar imagen</label>
-
-          <input type="file"
-                 id="form_logo_file"
-                 accept="image/png,image/jpeg,image/jpg"
-                 onchange="usrPrevisualizarLogo(this)">
+        <div class="card-header">
+          <h2 class="card-title">🖼️ Logotipo Corporativo de MEGUDAN</h2>
         </div>
-
-        <div id="logo_preview_container"
-             style="display:none; padding:15px; border:1px dashed #ccc;">
-
-          <img id="logo_preview"
-               alt="Previsualización"
-               style="max-width:300px; max-height:150px;">
+        <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px;">
+          <p style="font-size: 13px; color: #4b5563;">
+            Cargue la imagen oficial de su logotipo para que se dibuje de forma dinámica en las plantillas del ERP (como facturas, compras y PDFs en Google Drive).
+          </p>
+          
+          <div class="field" style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="form_logo_file" style="font-size: 12px; font-weight: bold; color: #374151;">Seleccionar archivo de imagen (PNG, JPG o JPEG)</label>
+            <input type="file" id="form_logo_file" accept="image/*" class="input" onchange="usrPrevisualizarLogo(this)">
+          </div>
+          
+          <div id="logo_preview_container" style="display: none; text-align: center; padding: 15px; border: 1.5px dashed #d1d5db; border-radius: 8px; background: #f9fafb;">
+            <p style="font-size: 11px; color: #6b7280; margin-bottom: 8px;">Previsualización del archivo seleccionado:</p>
+            <img id="logo_preview" src="" style="max-height: 120px; max-width: 100%; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          </div>
+          
+          <button class="button button-primary" id="btn_guardar_logo" onclick="usrGuardarLogo()" disabled>Subir e Indexar Logotipo</button>
         </div>
-
-        <br>
-
-        <button id="btn_guardar_logo"
-                class="button button-primary"
-                disabled
-                onclick="usrGuardarLogo()">
-          💾 Subir Logo
-        </button>
-
       </div>
     </section>
-
   </main>
 </div>
 
-<!-- ============================================================
-     MODAL USUARIO
-============================================================ -->
-
+<!-- Modal: Registro de Usuario por Admin -->
 <div id="modal_usuario" class="modal">
-
   <div class="modal-content">
-
     <div class="modal-header">
-      <h3 id="USR_TITULO_MODAL" class="modal-title">
-        👤 Nuevo Usuario
-      </h3>
-
-      <span class="close-btn"
-            onclick="USR_CERRAR_MODAL_USUARIO()">
-        &times;
-      </span>
+      <h3 class="modal-title">👤 Registro de Nuevo Usuario</h3>
+      <span class="close-btn" onclick="USR_CERRAR_MODAL_USUARIO()">&times;</span>
     </div>
-
     <div class="modal-body">
-
-      <input type="hidden" id="form_id_usuario">
-
       <div class="field">
-        <label>Usuario *</label>
-        <input type="text"
-               id="form_usuario"
-               class="input">
+        <label for="form_usuario">Nombre de Usuario (Login) *</label>
+        <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
       </div>
-
       <div class="field">
-        <label>Nombre Completo *</label>
-        <input type="text"
-               id="form_nombre"
-               class="input">
+        <label for="form_nombre">Nombre Completo *</label>
+        <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
       </div>
-
       <div class="field">
-        <label>Correo *</label>
-        <input type="email"
-               id="form_correo"
-               class="input">
+        <label for="form_correo">Correo Electrónico *</label>
+        <input type="email" id="form_correo" class="input" placeholder="Ej: jperez@megudan.com">
       </div>
-
-      <div class="field" id="USR_CONTENEDOR_PASSWORD">
-        <label id="USR_LABEL_PASSWORD">Contraseña *</label>
-
-        <input type="password"
-               id="form_contrasena"
-               class="input"
-               placeholder="Mínimo 8 caracteres">
-      </div>
-
       <div class="field">
-        <label>Rol *</label>
-
-        <select id="form_id_rol"
-                class="input">
-        </select>
+        <label for="form_contrasena">Contraseña Temporal *</label>
+        <input type="password" id="form_contrasena" class="input" placeholder="Min. 8 caracteres (1 mayúscula, 1 número, 1 especial)">
       </div>
-
       <div class="field">
-        <label>Estado</label>
-
-        <select id="form_estado_usuario"
-                class="input">
-          <option value="ACTIVO">ACTIVO</option>
-          <option value="INACTIVO">INACTIVO</option>
-          <option value="BLOQUEADO">BLOQUEADO</option>
-          <option value="PENDIENTE">PENDIENTE</option>
-        </select>
+        <label for="form_id_rol">Rol Asignado *</label>
+        <select id="form_id_rol"></select>
       </div>
-
     </div>
-
     <div class="modal-footer">
-
-      <button class="button button-secondary"
-              onclick="USR_CERRAR_MODAL_USUARIO()">
-        Cancelar
-      </button>
-
-      <button id="USR_BOTON_GUARDAR"
-              class="button button-primary"
-              onclick="USR_GUARDAR_USUARIO()">
-        💾 Guardar Usuario
-      </button>
-
+      <button class="button button-secondary" onclick="USR_CERRAR_MODAL_USUARIO()">Cancelar</button>
+      <button class="button button-primary" onclick="USR_GUARDAR_USUARIO()">Guardar Usuario</button>
     </div>
-
   </div>
 </div>
 
-<!-- ============================================================
-     MODAL APROBACIÓN
-============================================================ -->
-
+<!-- Modal: Aprobación de Auto-registro -->
 <div id="modal_aprobacion" class="modal">
-
-  <div class="modal-content">
-
+  <div class="modal-content" style="width: 440px;">
     <div class="modal-header">
-      <h3 class="modal-title">✓ Aprobar Usuario</h3>
-
-      <span class="close-btn"
-            onclick="USR_CERRAR_MODAL_APROBACION()">
-        &times;
-      </span>
+      <h3 class="modal-title">✓ Aprobar Registro de Usuario</h3>
+      <span class="close-btn" onclick="USR_CERRAR_MODAL_APROBACION()">&times;</span>
     </div>
-
-    <input type="hidden" id="aprob_id_usuario">
-
-    <div class="field">
-      <label>Usuario</label>
-      <strong id="aprob_username"></strong>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: #4b5563; margin-bottom: 15px;">
+        Vas a aprobar el acceso para el usuario <strong id="aprob_username"></strong>. Por favor, asígnale su Rol definitivo:
+      </p>
+      <input type="hidden" id="aprob_id_usuario">
+      <div class="field">
+        <label for="aprob_id_role">Rol Definitivo *</label>
+        <select id="aprob_id_role"></select>
+      </div>
     </div>
-
-    <div class="field">
-      <label>Rol definitivo *</label>
-
-      <select id="aprob_id_role"
-              class="input">
-      </select>
-    </div>
-
     <div class="modal-footer">
-
-      <button class="button button-secondary"
-              onclick="USR_CERRAR_MODAL_APROBACION()">
-        Cancelar
-      </button>
-
-      <button class="button button-success"
-              onclick="USR_EJECUTAR_APROBACION()">
-        ✓ Aprobar y Activar
-      </button>
-
+      <button class="button button-secondary" onclick="USR_CERRAR_MODAL_APROBACION()">Cancelar</button>
+      <button class="button button-success" onclick="USR_EJECUTAR_APROBACION()">Aprobar y Activar</button>
     </div>
-
   </div>
 </div>
 
+<!-- JavaScript modular de Seguridad -->
 <script>
-
-  // ============================================================
-  // VARIABLES GLOBALES
-  // ============================================================
-
+  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
   let USR_USUARIOS = [];
   let USR_ROLES = [];
   let USR_PERMISOS = [];
   let USR_SESIONES = [];
-
   let PROCESANDO_GUARDADO = false;
-  let USR_MODO_USUARIO = "NUEVO";
-
   let LOGO_BASE64 = null;
   let LOGO_NOMBRE = null;
 
-
-  // ============================================================
-  // INICIO
-  // ============================================================
-
   document.addEventListener("DOMContentLoaded", function() {
-
     USR_CARGAR_USUARIOS();
     USR_CARGAR_ROLES();
     USR_CARGAR_PERMISOS();
     USR_CARGAR_SESIONES();
-
   });
 
+  function USR_CAMBIAR_PESTANA(pestana) {
+    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
 
-  // ============================================================
-  // UTILIDADES
-  // ============================================================
+    const target = document.getElementById("tab-" + pestana);
+    if (target) target.classList.add("active");
 
-  function USR_ESCAPAR_HTML(valor) {
-
-    if (valor === null || valor === undefined) return "";
-
-    const div = document.createElement("div");
-    div.textContent = String(valor);
-
-    return div.innerHTML;
-  }
-
-
-  function USR_VALIDAR_RESPUESTA(res) {
-
-    if (res === null || res === undefined) {
-
-      return {
-        EXITO: false,
-        MENSAJE: "El servidor no devolvió una respuesta válida.",
-        DATOS: null
-      };
-
-    }
-
-    if (typeof res !== "object") {
-
-      return {
-        EXITO: false,
-        MENSAJE: "Respuesta inválida del servidor.",
-        DATOS: res
-      };
-
-    }
-
-    if (!Object.prototype.hasOwnProperty.call(res, "EXITO")) {
-
-      return {
-        EXITO: true,
-        MENSAJE: "",
-        DATOS: res
-      };
-
-    }
-
-    return {
-      EXITO: res.EXITO === true,
-      MENSAJE: res.MENSAJE || res.ERROR || "Operación procesada.",
-      DATOS: res.DATOS !== undefined ? res.DATOS : null
-    };
-  }
-
-
-  function USR_MOSTRAR_ALERTA(mensaje, tipo) {
-
-    const el = document.getElementById("USR_MENSAJE_ALERT");
-
-    el.textContent = mensaje;
-    el.className = "message " + tipo;
-    el.style.display = "block";
-
-    setTimeout(function() {
-
-      if (el.textContent === mensaje) {
-        el.style.display = "none";
+    const botones = document.querySelectorAll(".tab-button");
+    botones.forEach(btn => {
+      if (btn.textContent.toLowerCase().includes(pestana)) {
+        btn.classList.add("active");
       }
-
-    }, 6000);
-  }
-
-
-  function USR_MOSTRAR_ERROR(mensaje) {
-
-    USR_MOSTRAR_ALERTA(
-      "❌ " + (mensaje || "Ocurrió un error inesperado."),
-      "error"
-    );
-
-    console.error(mensaje);
-  }
-
-
-  // ============================================================
-  // PESTAÑAS
-  // ============================================================
-
-  function USR_CAMBIAR_PESTANA(pestana, boton) {
-
-    document.querySelectorAll(".tab-content")
-      .forEach(function(el) {
-        el.classList.remove("active");
-      });
-
-    document.querySelectorAll(".tab-button")
-      .forEach(function(el) {
-        el.classList.remove("active");
-      });
-
-    const contenido = document.getElementById("tab-" + pestana);
-
-    if (contenido) {
-      contenido.classList.add("active");
-    }
-
-    if (boton) {
-      boton.classList.add("active");
-    }
-  }
-
-
-  // ============================================================
-  // CARGA DE USUARIOS
-  // ============================================================
-
-  function USR_CARGAR_USUARIOS() {
-
-    google.script.run
-
-      .withSuccessHandler(function(usuarios) {
-
-        if (!Array.isArray(usuarios)) {
-          USR_USUARIOS = [];
-          USR_MOSTRAR_USUARIOS([]);
-          return;
-        }
-
-        USR_USUARIOS = usuarios;
-        USR_MOSTRAR_USUARIOS(usuarios);
-
-      })
-
-      .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          "No se pudieron cargar usuarios: " +
-          (err && err.message ? err.message : String(err))
-        );
-
-      })
-
-      .SEG_LISTAR_USUARIOS();
-  }
-
-
-  function USR_RECARGAR_USUARIOS() {
-
-    USR_MOSTRAR_ALERTA(
-      "Actualizando usuarios...",
-      "info"
-    );
-
-    USR_CARGAR_USUARIOS();
-  }
-
-
-  // ============================================================
-  // MOSTRAR USUARIOS
-  // ============================================================
-
-  function USR_MOSTRAR_USUARIOS(usuarios) {
-
-    const tbody =
-      document.getElementById("USR_TABLA_USUARIOS");
-
-    tbody.innerHTML = "";
-
-    if (!Array.isArray(usuarios) || usuarios.length === 0) {
-
-      tbody.innerHTML =
-        '<tr><td colspan="7" class="empty-state">' +
-        'No se encontraron usuarios.' +
-        '</td></tr>';
-
-      return;
-    }
-
-    usuarios.forEach(function(u) {
-
-      const tr = document.createElement("tr");
-
-      const id =
-        USR_ESCAPAR_HTML(u.ID_USUARIO);
-
-      const estado =
-        String(u.ESTADO_USUARIO || "");
-
-      let badgeClass = "badge-inactive";
-
-      if (estado === "ACTIVO") {
-        badgeClass = "badge-active";
-      }
-      else if (estado === "BLOQUEADO") {
-        badgeClass = "badge-blocked";
-      }
-      else if (estado === "PENDIENTE") {
-        badgeClass = "badge-pending";
-      }
-      else if (estado === "ELIMINADO") {
-        badgeClass = "badge-deleted";
-      }
-
-
-      let acciones = "";
-
-      acciones +=
-        '<button class="button button-info button-small" ' +
-        'onclick="USR_VER_USUARIO(\'' + id + '\')">' +
-        '👁️ Ver</button>';
-
-      if (estado !== "ELIMINADO") {
-
-        acciones +=
-          '<button class="button button-warning button-small" ' +
-          'onclick="USR_EDITAR_USUARIO(\'' + id + '\')">' +
-          '✏️ Editar</button>';
-      }
-
-
-      if (estado === "ACTIVO") {
-
-        acciones +=
-          '<button class="button button-secondary button-small" ' +
-          'onclick="USR_CAMBIAR_ESTADO(\'' + id + '\', \'INACTIVO\')">' +
-          '🚫 Inactivar</button>';
-      }
-
-      else if (
-        estado === "INACTIVO" ||
-        estado === "BLOQUEADO"
-      ) {
-
-        acciones +=
-          '<button class="button button-success button-small" ' +
-          'onclick="USR_CAMBIAR_ESTADO(\'' + id + '\', \'ACTIVO\')">' +
-          '✓ Activar</button>';
-      }
-
-      else if (estado === "PENDIENTE") {
-
-        acciones +=
-          '<button class="button button-success button-small" ' +
-          'onclick="USR_ABRIR_APROBACION(\'' +
-          id + '\', \'' +
-          USR_ESCAPAR_HTML(u.USUARIO) +
-          '\')">' +
-          '✓ Aprobar</button>';
-      }
-
-
-      if (estado !== "ELIMINADO") {
-
-        acciones +=
-          '<button class="button button-danger button-small" ' +
-          'onclick="USR_CONFIRMAR_ELIMINACION_USUARIO(\'' + id + '\')">' +
-          '🗑️ Eliminar</button>';
-      }
-
-
-      tr.innerHTML =
-        '<td><strong>' + id + '</strong></td>' +
-        '<td>' + USR_ESCAPAR_HTML(u.USUARIO) + '</td>' +
-        '<td>' + USR_ESCAPAR_HTML(
-          u.NOMBRE || u.NOMBRE_COMPLETO
-        ) + '</td>' +
-        '<td>' + USR_ESCAPAR_HTML(u.CORREO) + '</td>' +
-        '<td>' + USR_ESCAPAR_HTML(u.ID_ROL) + '</td>' +
-        '<td><span class="badge ' +
-        badgeClass + '">' +
-        USR_ESCAPAR_HTML(estado) +
-        '</span></td>' +
-        '<td>' + acciones + '</td>';
-
-      tbody.appendChild(tr);
-
     });
   }
 
+  function USR_MOSTRAR_ALERTA(mensaje, tipo) {
+    const el = document.getElementById("USR_MENSAJE_ALERT");
+    el.textContent = mensaje;
+    el.className = "message " + tipo;
+    el.style.display = "block";
+    setTimeout(() => {
+      if (el.textContent === mensaje) {
+        el.style.display = "none";
+      }
+    }, 6000);
+  }
 
-  // ============================================================
-  // BUSCAR USUARIOS
-  // ============================================================
+  function USR_MOSTRAR_ERROR(mensaje) {
+    const el = document.getElementById("USR_MENSAJE_ALERT");
+    el.textContent = "❌ Error: " + mensaje;
+    el.className = "message error";
+    el.style.display = "block";
+    console.error(mensaje);
+  }
+
+  // Previsualizador local de logotipo
+  function usrPrevisualizarLogo(input) {
+    const file = input.files[0];
+    const btn = document.getElementById("btn_guardar_logo");
+    if (!file) {
+      LOGO_BASE64 = null;
+      LOGO_NOMBRE = null;
+      document.getElementById("logo_preview_container").style.display = "none";
+      btn.disabled = true;
+      return;
+    }
+    
+    LOGO_NOMBRE = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      LOGO_BASE64 = e.target.result;
+      document.getElementById("logo_preview").src = LOGO_BASE64;
+      document.getElementById("logo_preview_container").style.display = "block";
+      btn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Guardar logotipo en Drive (Afecta CFG_EMPRESA)
+  function usrGuardarLogo() {
+    if (!LOGO_BASE64) return;
+    const btn = document.getElementById("btn_guardar_logo");
+    btn.disabled = true;
+    btn.textContent = "Guardando e indexando...";
+    USR_MOSTRAR_ALERTA("Subiendo imagen de logotipo a Google Drive...", "info");
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.textContent = "Subir e Indexar Logotipo";
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          document.getElementById("form_logo_file").value = "";
+          document.getElementById("logo_preview_container").style.display = "none";
+          LOGO_BASE64 = null;
+          LOGO_NOMBRE = null;
+        } else {
+          USR_MOSTRAR_ERROR("No se pudo guardar el logo.");
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = "Subir e Indexar Logotipo";
+        USR_MOSTRAR_ERROR(err.message);
+      })
+      .SEG_GUARDAR_LOGO(LOGO_BASE64, LOGO_NOMBRE);
+  }
+
+  // Modales
+  function USR_ABRIR_MODAL_USUARIO() {
+    document.getElementById("form_usuario").value = "";
+    document.getElementById("form_nombre").value = "";
+    document.getElementById("form_correo").value = "";
+    document.getElementById("form_contrasena").value = "";
+    
+    const select = document.getElementById("form_id_rol");
+    select.innerHTML = "";
+    
+    if (!(USR_ROLES.length > 0)) {
+      const opt = document.createElement("option");
+      opt.value = ""; opt.text = "Cargando roles...";
+      select.add(opt);
+    } else {
+      USR_ROLES.forEach(r => {
+        if (r.ESTADO_ROL === "ACTIVO") {
+          const opt = document.createElement("option");
+          opt.value = r.ID_ROL;
+          opt.text = r.NOMBRE_ROL + " (Nivel " + r.NIVEL_JERARQUIA + ")";
+          select.add(opt);
+        }
+      });
+    }
+    document.getElementById("modal_usuario").style.display = "block";
+  }
+
+  function USR_CERRAR_MODAL_USUARIO() {
+    document.getElementById("modal_usuario").style.display = "none";
+  }
+
+  function USR_GUARDAR_USUARIO() {
+    if (PROCESANDO_GUARDADO) return;
+
+    const usuario = document.getElementById("form_usuario").value.trim();
+    const nombre = document.getElementById("form_nombre").value.trim();
+    const correo = document.getElementById("form_correo").value.trim();
+    const contrasena = document.getElementById("form_contrasena").value;
+    const idRol = document.getElementById("form_id_rol").value;
+
+    if (!usuario || !nombre || !correo || !contrasena || !idRol) {
+      alert("Todos los campos marcados con (*) son obligatorios.");
+      return;
+    }
+
+    if (!(contrasena.length >= 8)) {
+      alert("La contraseña debe tener mínimo 8 caracteres.");
+      return;
+    }
+
+    PROCESANDO_GUARDADO = true;
+    USR_MOSTRAR_ALERTA("Registrando usuario en Sheets...", "info");
+    USR_CERRAR_MODAL_USUARIO();
+
+    const datos = {
+      USUARIO: usuario,
+      NOMBRE: nombre,
+      CORREO: correo,
+      ID_ROL: idRol,
+      CONTRASENA_PLANA: contrasena,
+      USUARIO_CREACION: "ADMINISTRADOR_SISTEMA"
+    };
+
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        PROCESANDO_GUARDADO = false;
+        USR_MOSTRAR_ALERTA("Usuario '" + usuario + "' registrado con éxito.", "success");
+        USR_CARGAR_USUARIOS();
+      })
+      .withFailureHandler(function(err) {
+        PROCESANDO_GUARDADO = false;
+        USR_MOSTRAR_ERROR("No se pudo crear el usuario: " + err.message);
+      })
+      .SEG_CREAR_USUARIO(datos);
+  }
+
+  // Aprobaciones
+  function USR_ABRIR_APROBACION(idUsuario, username) {
+    document.getElementById("aprob_id_usuario").value = idUsuario;
+    document.getElementById("aprob_username").textContent = username;
+    
+    const select = document.getElementById("aprob_id_role");
+    select.innerHTML = "";
+    
+    if (!(USR_ROLES.length > 0)) {
+      const opt = document.createElement("option");
+      opt.value = ""; opt.text = "Cargando roles...";
+      select.add(opt);
+    } else {
+      USR_ROLES.forEach(r => {
+        if (r.ESTADO_ROL === "ACTIVO") {
+          const opt = document.createElement("option");
+          opt.value = r.ID_ROL;
+          opt.text = r.NOMBRE_ROL + " (Nivel " + r.NIVEL_JERARQUIA + ")";
+          select.add(opt);
+        }
+      });
+    }
+    document.getElementById("modal_aprobacion").style.display = "block";
+  }
+
+  function USR_CERRAR_MODAL_APROBACION() {
+    document.getElementById("modal_aprobacion").style.display = "none";
+  }
+
+  function USR_EJECUTAR_APROBACION() {
+    const idUsuario = document.getElementById("aprob_id_usuario").value;
+    const idRol = document.getElementById("aprob_id_role").value;
+    
+    if (!idRol) {
+      alert("Por favor seleccione un rol definitivo.");
+      return;
+    }
+    
+    USR_CERRAR_MODAL_APROBACION();
+    USR_MOSTRAR_ALERTA("Aprobando acceso y activando cuenta...", "info");
+    
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        USR_MOSTRAR_ALERTA(resultado.MENSAJE, "success");
+        USR_CARGAR_USUARIOS();
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudo aprobar el usuario: " + err.message);
+      })
+      .SEG_APROBAR_USUARIO(idUsuario, idRol, TOKEN_SESION);
+  }
+
+  // Carga asíncrona de datos desde el backend .gs
+  function USR_CARGAR_USUARIOS() {
+    google.script.run
+      .withSuccessHandler(function(usuarios) {
+        USR_USUARIOS = usuarios;
+        USR_MOSTRAR_USUARIOS(usuarios);
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("No se pudieron cargar los usuarios: " + err.message);
+      })
+      .SEG_LISTAR_USUARIOS(TOKEN_SESION);
+  }
+
+  function USR_MOSTRAR_USUARIOS(usuarios) {
+    const tbody = document.getElementById("USR_TABLA_USUARIOS");
+    tbody.innerHTML = "";
+
+    if (!(usuarios.length > 0)) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay usuarios registrados.</td></tr>`;
+      return;
+    }
+
+    usuarios.forEach(u => {
+      const tr = document.createElement("tr");
+      let badgeClass = "badge-inactive";
+      let accionesHtml = "";
+      
+      if (u.ESTADO_USUARIO === "ACTIVO") {
+        badgeClass = "badge-active";
+        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'INACTIVO')">Inactivar</button>`;
+      } else if (u.ESTADO_USUARIO === "INACTIVO") {
+        badgeClass = "badge-inactive";
+        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Activar</button>`;
+      } else if (u.ESTADO_USUARIO === "BLOQUEADO") {
+        badgeClass = "badge-blocked";
+        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Desbloquear</button>`;
+      } else if (u.ESTADO_USUARIO === "PENDIENTE") {
+        badgeClass = "badge-pending";
+        accionesHtml = `<button class="button button-success" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="USR_ABRIR_APROBACION('${u.ID_USUARIO}', '${u.USUARIO}')">Aprobar Acceso</button>`;
+      }
+      
+      tr.innerHTML = `
+        <td><strong>${u.ID_USUARIO}</strong></td>
+        <td>${u.USUARIO}</td>
+        <td>${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
+        <td>${u.CORREO}</td>
+        <td><span class="badge badge-session">${u.ID_ROL}</span></td>
+        <td><span class="badge ${badgeClass}">${u.ESTADO_USUARIO}</span></td>
+        <td>${accionesHtml}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
   function USR_BUSCAR_USUARIOS() {
-
-    const criterio =
-      document.getElementById("USR_BUSCADOR_USUARIOS")
-        .value
-        .trim()
-        .toUpperCase();
-
+    const criterio = document.getElementById("USR_BUSCADOR_USUARIOS").value.trim().toUpperCase();
     if (!criterio) {
-
       USR_MOSTRAR_USUARIOS(USR_USUARIOS);
       return;
     }
 
-    const filtrados =
-      USR_USUARIOS.filter(function(u) {
-
-        return (
-          String(u.ID_USUARIO || "")
-            .toUpperCase()
-            .includes(criterio) ||
-
-          String(u.USUARIO || "")
-            .toUpperCase()
-            .includes(criterio) ||
-
-          String(u.NOMBRE || u.NOMBRE_COMPLETO || "")
-            .toUpperCase()
-            .includes(criterio) ||
-
-          String(u.CORREO || "")
-            .toUpperCase()
-            .includes(criterio)
-        );
-
-      });
-
+    const filtrados = USR_USUARIOS.filter(u => {
+      return (
+        String(u.ID_USUARIO).toUpperCase().includes(criterio) ||
+        String(u.USUARIO).toUpperCase().includes(criterio) ||
+        String(u.NOMBRE || u.NOMBRE_COMPLETO || "").toUpperCase().includes(criterio) ||
+        String(u.CORREO).toUpperCase().includes(criterio)
+      );
+    });
     USR_MOSTRAR_USUARIOS(filtrados);
   }
 
-
-  function USR_LIMPIAR_BUSQUEDA_USUARIOS() {
-
-    document.getElementById(
-      "USR_BUSCADOR_USUARIOS"
-    ).value = "";
-
-    USR_MOSTRAR_USUARIOS(USR_USUARIOS);
-  }
-
-
-  // ============================================================
-  // NUEVO USUARIO
-  // ============================================================
-
-  function USR_ABRIR_MODAL_NUEVO_USUARIO() {
-
-    USR_MODO_USUARIO = "NUEVO";
-
-    document.getElementById(
-      "USR_TITULO_MODAL"
-    ).textContent = "👤 Nuevo Usuario";
-
-    document.getElementById(
-      "USR_BOTON_GUARDAR"
-    ).textContent = "💾 Guardar Usuario";
-
-    document.getElementById(
-      "form_id_usuario"
-    ).value = "";
-
-    document.getElementById(
-      "form_usuario"
-    ).value = "";
-
-    document.getElementById(
-      "form_nombre"
-    ).value = "";
-
-    document.getElementById(
-      "form_correo"
-    ).value = "";
-
-    document.getElementById(
-      "form_contrasena"
-    ).value = "";
-
-    document.getElementById(
-      "form_estado_usuario"
-    ).value = "ACTIVO";
-
-    document.getElementById(
-      "form_usuario"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_nombre"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_correo"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_contrasena"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_id_rol"
-    ).disabled = false;
-
-    document.getElementById(
-      "form_estado_usuario"
-    ).disabled = false;
-
-    USR_CARGAR_SELECT_ROLES();
-
-    document.getElementById(
-      "modal_usuario"
-    ).style.display = "block";
-  }
-
-
-  // ============================================================
-  // CARGAR ROLES EN SELECT
-  // ============================================================
-
-  function USR_CARGAR_SELECT_ROLES(idSeleccionado) {
-
-    const select =
-      document.getElementById("form_id_rol");
-
-    select.innerHTML = "";
-
-    USR_ROLES.forEach(function(r) {
-
-      if (r.ESTADO_ROL === "ACTIVO") {
-
-        const option =
-          document.createElement("option");
-
-        option.value = r.ID_ROL;
-
-        option.textContent =
-          r.NOMBRE_ROL +
-          " (Nivel " +
-          r.NIVEL_JERARQUIA +
-          ")";
-
-        if (
-          String(r.ID_ROL) ===
-          String(idSeleccionado)
-        ) {
-          option.selected = true;
-        }
-
-        select.appendChild(option);
-      }
-
-    });
-  }
-
-
-  // ============================================================
-  // VER USUARIO
-  // ============================================================
-
-  function USR_VER_USUARIO(idUsuario) {
-
-    const usuario =
-      USR_USUARIOS.find(function(u) {
-        return String(u.ID_USUARIO) === String(idUsuario);
-      });
-
-    if (!usuario) {
-
-      USR_MOSTRAR_ERROR(
-        "No se encontró el usuario seleccionado."
-      );
-
-      return;
-    }
-
-    USR_MODO_USUARIO = "VER";
-
-    document.getElementById(
-      "USR_TITULO_MODAL"
-    ).textContent = "👁️ Consultar Usuario";
-
-    document.getElementById(
-      "USR_BOTON_GUARDAR"
-    ).style.display = "none";
-
-    document.getElementById(
-      "form_id_usuario"
-    ).value = usuario.ID_USUARIO || "";
-
-    document.getElementById(
-      "form_usuario"
-    ).value = usuario.USUARIO || "";
-
-    document.getElementById(
-      "form_nombre"
-    ).value =
-      usuario.NOMBRE ||
-      usuario.NOMBRE_COMPLETO ||
-      "";
-
-    document.getElementById(
-      "form_correo"
-    ).value = usuario.CORREO || "";
-
-    document.getElementById(
-      "form_contrasena"
-    ).value = "";
-
-    document.getElementById(
-      "form_contrasena"
-    ).parentElement.style.display = "none";
-
-    USR_CARGAR_SELECT_ROLES(usuario.ID_ROL);
-
-    document.getElementById(
-      "form_estado_usuario"
-    ).value =
-      usuario.ESTADO_USUARIO ||
-      "INACTIVO";
-
-    document.getElementById(
-      "form_usuario"
-    ).readOnly = true;
-
-    document.getElementById(
-      "form_nombre"
-    ).readOnly = true;
-
-    document.getElementById(
-      "form_correo"
-    ).readOnly = true;
-
-    document.getElementById(
-      "form_id_rol"
-    ).disabled = true;
-
-    document.getElementById(
-      "form_estado_usuario"
-    ).disabled = true;
-
-    document.getElementById(
-      "modal_usuario"
-    ).style.display = "block";
-  }
-
-
-  // ============================================================
-  // EDITAR USUARIO
-  // ============================================================
-
-  function USR_EDITAR_USUARIO(idUsuario) {
-
-    const usuario =
-      USR_USUARIOS.find(function(u) {
-        return String(u.ID_USUARIO) === String(idUsuario);
-      });
-
-    if (!usuario) {
-
-      USR_MOSTRAR_ERROR(
-        "No se encontró el usuario."
-      );
-
-      return;
-    }
-
-    USR_MODO_USUARIO = "EDITAR";
-
-    document.getElementById(
-      "USR_TITULO_MODAL"
-    ).textContent = "✏️ Editar Usuario";
-
-    const boton =
-      document.getElementById(
-        "USR_BOTON_GUARDAR"
-      );
-
-    boton.style.display = "inline-block";
-    boton.textContent = "💾 Actualizar Usuario";
-
-    document.getElementById(
-      "form_contrasena"
-    ).parentElement.style.display = "flex";
-
-    document.getElementById(
-      "USR_LABEL_PASSWORD"
-    ).textContent =
-      "Nueva contraseña (dejar vacía para no cambiar)";
-
-    document.getElementById(
-      "form_id_usuario"
-    ).value = usuario.ID_USUARIO || "";
-
-    document.getElementById(
-      "form_usuario"
-    ).value = usuario.USUARIO || "";
-
-    document.getElementById(
-      "form_nombre"
-    ).value =
-      usuario.NOMBRE ||
-      usuario.NOMBRE_COMPLETO ||
-      "";
-
-    document.getElementById(
-      "form_correo"
-    ).value = usuario.CORREO || "";
-
-    document.getElementById(
-      "form_contrasena"
-    ).value = "";
-
-    USR_CARGAR_SELECT_ROLES(usuario.ID_ROL);
-
-    document.getElementById(
-      "form_estado_usuario"
-    ).value =
-      usuario.ESTADO_USUARIO ||
-      "ACTIVO";
-
-    document.getElementById(
-      "form_usuario"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_nombre"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_correo"
-    ).readOnly = false;
-
-    document.getElementById(
-      "form_id_rol"
-    ).disabled = false;
-
-    document.getElementById(
-      "form_estado_usuario"
-    ).disabled = false;
-
-    document.getElementById(
-      "modal_usuario"
-    ).style.display = "block";
-  }
-
-
-  function USR_CERRAR_MODAL_USUARIO() {
-
-    document.getElementById(
-      "modal_usuario"
-    ).style.display = "none";
-  }
-
-
-  // ============================================================
-  // GUARDAR / ACTUALIZAR
-  // ============================================================
-
-  function USR_GUARDAR_USUARIO() {
-
-    if (USR_MODO_USUARIO === "VER") return;
-
-    if (PROCESANDO_GUARDADO) return;
-
-    const datos = {
-
-      ID_USUARIO:
-        document.getElementById(
-          "form_id_usuario"
-        ).value.trim(),
-
-      USUARIO:
-        document.getElementById(
-          "form_usuario"
-        ).value.trim(),
-
-      NOMBRE:
-        document.getElementById(
-          "form_nombre"
-        ).value.trim(),
-
-      CORREO:
-        document.getElementById(
-          "form_correo"
-        ).value.trim(),
-
-      CONTRASENA_PLANA:
-        document.getElementById(
-          "form_contrasena"
-        ).value,
-
-      ID_ROL:
-        document.getElementById(
-          "form_id_rol"
-        ).value,
-
-      ESTADO_USUARIO:
-        document.getElementById(
-          "form_estado_usuario"
-        ).value,
-
-      USUARIO_ACCION:
-        "ADMINISTRADOR_SISTEMA"
-    };
-
-
-    if (
-      !datos.USUARIO ||
-      !datos.NOMBRE ||
-      !datos.CORREO ||
-      !datos.ID_ROL
-    ) {
-
-      alert(
-        "Complete todos los campos obligatorios."
-      );
-
-      return;
-    }
-
-
-    if (
-      USR_MODO_USUARIO === "NUEVO" &&
-      !datos.CONTRASENA_PLANA
-    ) {
-
-      alert(
-        "La contraseña es obligatoria."
-      );
-
-      return;
-    }
-
-
-    if (
-      datos.CONTRASENA_PLANA &&
-      datos.CONTRASENA_PLANA.length < 8
-    ) {
-
-      alert(
-        "La contraseña debe tener mínimo 8 caracteres."
-      );
-
-      return;
-    }
-
-
-    PROCESANDO_GUARDADO = true;
-
-    const esNuevo =
-      USR_MODO_USUARIO === "NUEVO";
-
-
-    const runner =
-      google.script.run
-
-        .withSuccessHandler(function(res) {
-
-          PROCESANDO_GUARDADO = false;
-
-          const respuesta =
-            USR_VALIDAR_RESPUESTA(res);
-
-          if (!respuesta.EXITO) {
-
-            USR_MOSTRAR_ERROR(
-              respuesta.MENSAJE
-            );
-
-            return;
-          }
-
-          USR_MOSTRAR_ALERTA(
-            respuesta.MENSAJE ||
-            "Operación realizada correctamente.",
-            "success"
-          );
-
-          USR_CERRAR_MODAL_USUARIO();
-          USR_CARGAR_USUARIOS();
-
-        })
-
-        .withFailureHandler(function(err) {
-
-          PROCESANDO_GUARDADO = false;
-
-          USR_MOSTRAR_ERROR(
-            err && err.message
-              ? err.message
-              : String(err)
-          );
-
-        });
-
-
-    if (esNuevo) {
-
-      runner.SEG_CREAR_USUARIO(datos);
-
-    } else {
-
-      runner.SEG_ACTUALIZAR_USUARIO(datos);
-    }
-  }
-
-
-  // ============================================================
-  // CAMBIAR ESTADO
-  // ============================================================
-
-  function USR_CAMBIAR_ESTADO(
-    idUsuario,
-    nuevoEstado
-  ) {
-
-    if (
-      !confirm(
-        "¿Desea cambiar el estado del usuario a " +
-        nuevoEstado +
-        "?"
-      )
-    ) return;
-
-
+  function USR_CAMBIAR_ESTADO(idUsuario, nuevoEstado) {
+    if(!confirm("¿Está seguro de cambiar el estado de este usuario a " + nuevoEstado + "?")) return;
+    
     google.script.run
-
-      .withSuccessHandler(function(res) {
-
-        const respuesta =
-          USR_VALIDAR_RESPUESTA(res);
-
-        if (!respuesta.EXITO) {
-
-          USR_MOSTRAR_ERROR(
-            respuesta.MENSAJE
-          );
-
-          return;
-        }
-
-        USR_MOSTRAR_ALERTA(
-          respuesta.MENSAJE ||
-          "Estado actualizado correctamente.",
-          "success"
-        );
-
+      .withSuccessHandler(function() {
+        USR_MOSTRAR_ALERTA("Estado de usuario actualizado correctamente.", "success");
         USR_CARGAR_USUARIOS();
-
       })
-
       .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          err && err.message
-            ? err.message
-            : String(err)
-        );
-
+        alert("Error al actualizar estado: " + err.message);
       })
-
-      .SEG_CAMBIAR_ESTADO_USUARIO(
-        idUsuario,
-        nuevoEstado,
-        "ADMINISTRADOR_SISTEMA"
-      );
+      .SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, TOKEN_SESION);
   }
-
-
-  // ============================================================
-  // ELIMINACIÓN LÓGICA
-  // ============================================================
-
-  function USR_CONFIRMAR_ELIMINACION_USUARIO(
-    idUsuario
-  ) {
-
-    const usuario =
-      USR_USUARIOS.find(function(u) {
-        return String(u.ID_USUARIO) === String(idUsuario);
-      });
-
-    if (!usuario) {
-
-      USR_MOSTRAR_ERROR(
-        "Usuario no encontrado."
-      );
-
-      return;
-    }
-
-
-    const primeraConfirmacion =
-      confirm(
-        "⚠️ Va a eliminar lógicamente al usuario:\n\n" +
-        usuario.USUARIO +
-        "\n\nEl registro se conservará para auditoría."
-      );
-
-    if (!primeraConfirmacion) return;
-
-
-    const segundaConfirmacion =
-      confirm(
-        "CONFIRMACIÓN FINAL:\n\n" +
-        "¿Está completamente seguro?"
-      );
-
-    if (!segundaConfirmacion) return;
-
-
-    USR_ELIMINAR_USUARIO(idUsuario);
-  }
-
-
-  function USR_ELIMINAR_USUARIO(idUsuario) {
-
-    USR_MOSTRAR_ALERTA(
-      "Procesando eliminación lógica...",
-      "info"
-    );
-
-
-    google.script.run
-
-      .withSuccessHandler(function(res) {
-
-        const respuesta =
-          USR_VALIDAR_RESPUESTA(res);
-
-        if (!respuesta.EXITO) {
-
-          USR_MOSTRAR_ERROR(
-            respuesta.MENSAJE
-          );
-
-          return;
-        }
-
-        USR_MOSTRAR_ALERTA(
-          respuesta.MENSAJE ||
-          "Usuario eliminado correctamente.",
-          "success"
-        );
-
-        USR_CARGAR_USUARIOS();
-
-      })
-
-      .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          err && err.message
-            ? err.message
-            : String(err)
-        );
-
-      })
-
-      .SEG_ELIMINAR_USUARIO(
-        idUsuario,
-        "ADMINISTRADOR_SISTEMA"
-      );
-  }
-
-
-  // ============================================================
-  // APROBACIONES
-  // ============================================================
-
-  function USR_ABRIR_APROBACION(
-    idUsuario,
-    username
-  ) {
-
-    document.getElementById(
-      "aprob_id_usuario"
-    ).value = idUsuario;
-
-    document.getElementById(
-      "aprob_username"
-    ).textContent = username;
-
-
-    const select =
-      document.getElementById(
-        "aprob_id_role"
-      );
-
-    select.innerHTML = "";
-
-
-    USR_ROLES.forEach(function(r) {
-
-      if (r.ESTADO_ROL === "ACTIVO") {
-
-        const option =
-          document.createElement("option");
-
-        option.value = r.ID_ROL;
-
-        option.textContent =
-          r.NOMBRE_ROL;
-
-        select.appendChild(option);
-      }
-
-    });
-
-
-    document.getElementById(
-      "modal_aprobacion"
-    ).style.display = "block";
-  }
-
-
-  function USR_CERRAR_MODAL_APROBACION() {
-
-    document.getElementById(
-      "modal_aprobacion"
-    ).style.display = "none";
-  }
-
-
-  function USR_EJECUTAR_APROBACION() {
-
-    const idUsuario =
-      document.getElementById(
-        "aprob_id_usuario"
-      ).value;
-
-    const idRol =
-      document.getElementById(
-        "aprob_id_role"
-      ).value;
-
-
-    if (!idUsuario || !idRol) {
-
-      USR_MOSTRAR_ERROR(
-        "Seleccione un rol."
-      );
-
-      return;
-    }
-
-
-    google.script.run
-
-      .withSuccessHandler(function(res) {
-
-        const respuesta =
-          USR_VALIDAR_RESPUESTA(res);
-
-        if (!respuesta.EXITO) {
-
-          USR_MOSTRAR_ERROR(
-            respuesta.MENSAJE
-          );
-
-          return;
-        }
-
-        USR_MOSTRAR_ALERTA(
-          respuesta.MENSAJE ||
-          "Usuario aprobado.",
-          "success"
-        );
-
-        USR_CERRAR_MODAL_APROBACION();
-        USR_CARGAR_USUARIOS();
-
-      })
-
-      .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          err && err.message
-            ? err.message
-            : String(err)
-        );
-
-      })
-
-      .SEG_APROBAR_USUARIO(
-        idUsuario,
-        idRol,
-        "ADMINISTRADOR_SISTEMA"
-      );
-  }
-
-
-  // ============================================================
-  // ROLES
-  // ============================================================
 
   function USR_CARGAR_ROLES() {
-
     google.script.run
-
       .withSuccessHandler(function(roles) {
-
-        USR_ROLES =
-          Array.isArray(roles) ? roles : [];
-
-        USR_MOSTRAR_ROLES(USR_ROLES);
-        USR_CARGAR_FILTRO_ROLES();
-
+        USR_ROLES = roles;
+        const tbody = document.getElementById("USR_TABLA_ROLES");
+        tbody.innerHTML = "";
+        
+        const rolesValidos = roles.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
+        rolesValidos.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${r.ID_ROL}</strong></td>
+            <td>${r.NOMBRE_ROL}</td>
+            <td>${r.DESCRIPCION}</td>
+            <td>Nivel ${r.NIVEL_JERARQUIA}</td>
+            <td>${r.ROL_SISTEMA}</td>
+            <td><span class="badge badge-active">${r.ESTADO_ROL}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
       })
-
       .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          "No se pudieron cargar roles: " +
-          (
-            err && err.message
-              ? err.message
-              : String(err)
-          )
-        );
-
+        USR_MOSTRAR_ERROR("No se pudieron cargar los roles: " + err.message);
       })
-
-      .SEG_OBTENER_ROLES();
+      .SEG_OBTENER_ROLES(TOKEN_SESION);
   }
-
-
-  function USR_MOSTRAR_ROLES(roles) {
-
-    const tbody =
-      document.getElementById(
-        "USR_TABLA_ROLES"
-      );
-
-    tbody.innerHTML = "";
-
-
-    if (!roles.length) {
-
-      tbody.innerHTML =
-        '<tr><td colspan="7" class="empty-state">' +
-        'No hay roles registrados.' +
-        '</td></tr>';
-
-      return;
-    }
-
-
-    roles.forEach(function(r) {
-
-      if (!r.ID_ROL) return;
-
-      const tr =
-        document.createElement("tr");
-
-      tr.innerHTML =
-        '<td>' +
-        USR_ESCAPAR_HTML(r.ID_ROL) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(r.NOMBRE_ROL) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(r.DESCRIPCION) +
-        '</td>' +
-
-        '<td>Nivel ' +
-        USR_ESCAPAR_HTML(r.NIVEL_JERARQUIA) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(r.ROL_SISTEMA) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(r.ESTADO_ROL) +
-        '</td>' +
-
-        '<td>' +
-        '<button class="button button-info button-small" ' +
-        'onclick="USR_VER_PERMISOS_ROL(\'' +
-        USR_ESCAPAR_HTML(r.ID_ROL) +
-        '\')">' +
-        '🔑 Ver permisos</button>' +
-        '</td>';
-
-      tbody.appendChild(tr);
-
-    });
-  }
-
-
-  function USR_FILTRAR_ROLES() {
-
-    const criterio =
-      document.getElementById(
-        "USR_BUSCADOR_ROLES"
-      )
-      .value
-      .trim()
-      .toUpperCase();
-
-
-    const filtrados =
-      USR_ROLES.filter(function(r) {
-
-        return (
-          String(r.ID_ROL || "")
-            .toUpperCase()
-            .includes(criterio) ||
-
-          String(r.NOMBRE_ROL || "")
-            .toUpperCase()
-            .includes(criterio) ||
-
-          String(r.DESCRIPCION || "")
-            .toUpperCase()
-            .includes(criterio)
-        );
-
-      });
-
-
-    USR_MOSTRAR_ROLES(filtrados);
-  }
-
-
-  function USR_VER_PERMISOS_ROL(idRol) {
-
-    document.getElementById(
-      "USR_FILTRO_ROL"
-    ).value = idRol;
-
-    USR_FILTRAR_PERMISOS();
-
-    const boton =
-      document.querySelector(
-        '[data-tab="permisos"]'
-      );
-
-    USR_CAMBIAR_PESTANA(
-      "permisos",
-      boton
-    );
-  }
-
-
-  // ============================================================
-  // PERMISOS
-  // ============================================================
 
   function USR_CARGAR_PERMISOS() {
-
     google.script.run
-
       .withSuccessHandler(function(permisos) {
+        USR_PERMISOS = permisos;
+        const tbody = document.getElementById("USR_TABLA_PERMISOS");
+        tbody.innerHTML = "";
 
-        USR_PERMISOS =
-          Array.isArray(permisos)
-            ? permisos
-            : [];
+        if (!(permisos.length > 0)) {
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
+          return;
+        }
 
-        USR_MOSTRAR_PERMISOS(
-          USR_PERMISOS
-        );
-
-        USR_CARGAR_FILTROS_PERMISOS();
-
+        const permisosValidos = permisos.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
+        permisosValidos.forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${p.ID_PERMISO}</strong></td>
+            <td>${p.ID_ROL}</td>
+            <td>${p.MODULO}</td>
+            <td>${p.SUBMODULO || "-"}</td>
+            <td>${p.ACCION}</td>
+            <td><span class="badge ${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">${p.PERMITIDO}</span></td>
+            <td>${p.ESTADO_PERMISO}</td>
+          `;
+          tbody.appendChild(tr);
+        });
       })
-
       .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          "No se pudieron cargar permisos: " +
-          (
-            err && err.message
-              ? err.message
-              : String(err)
-          )
-        );
-
+        USR_MOSTRAR_ERROR("No se pudieron cargar los permisos: " + err.message);
       })
-
-      .SEG_OBTENER_PERMISOS();
+      .SEG_OBTENER_PERMISOS(TOKEN_SESION);
   }
-
-
-  function USR_MOSTRAR_PERMISOS(permisos) {
-
-    const tbody =
-      document.getElementById(
-        "USR_TABLA_PERMISOS"
-      );
-
-    tbody.innerHTML = "";
-
-
-    if (!permisos.length) {
-
-      tbody.innerHTML =
-        '<tr><td colspan="7" class="empty-state">' +
-        'No se encontraron permisos.' +
-        '</td></tr>';
-
-      return;
-    }
-
-
-    permisos.forEach(function(p) {
-
-      if (!p.ID_PERMISO) return;
-
-      const tr =
-        document.createElement("tr");
-
-      tr.innerHTML =
-        '<td>' +
-        USR_ESCAPAR_HTML(p.ID_PERMISO) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(p.ID_ROL) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(p.MODULO) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(
-          p.SUBMODULO || "-"
-        ) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(p.ACCION) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(p.PERMITIDO) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(
-          p.ESTADO_PERMISO
-        ) +
-        '</td>';
-
-      tbody.appendChild(tr);
-
-    });
-  }
-
-
-  function USR_CARGAR_FILTRO_ROLES() {
-
-    const select =
-      document.getElementById(
-        "USR_FILTRO_ROL"
-      );
-
-    const valorActual =
-      select.value;
-
-    select.innerHTML =
-      '<option value="">Todos los roles</option>';
-
-
-    USR_ROLES.forEach(function(r) {
-
-      if (!r.ID_ROL) return;
-
-      const option =
-        document.createElement("option");
-
-      option.value = r.ID_ROL;
-      option.textContent =
-        r.NOMBRE_ROL || r.ID_ROL;
-
-      select.appendChild(option);
-
-    });
-
-
-    select.value = valorActual;
-  }
-
-
-  function USR_CARGAR_FILTROS_PERMISOS() {
-
-    const selectModulo =
-      document.getElementById(
-        "USR_FILTRO_MODULO"
-      );
-
-    const valorActual =
-      selectModulo.value;
-
-    selectModulo.innerHTML =
-      '<option value="">Todos los módulos</option>';
-
-
-    const modulos = [
-      ...new Set(
-        USR_PERMISOS
-          .map(function(p) {
-            return p.MODULO;
-          })
-          .filter(Boolean)
-      )
-    ];
-
-
-    modulos.forEach(function(modulo) {
-
-      const option =
-        document.createElement("option");
-
-      option.value = modulo;
-      option.textContent = modulo;
-
-      selectModulo.appendChild(option);
-
-    });
-
-
-    selectModulo.value = valorActual;
-  }
-
-
-  function USR_FILTRAR_PERMISOS() {
-
-    const texto =
-      document.getElementById(
-        "USR_BUSCADOR_PERMISOS"
-      )
-      .value
-      .trim()
-      .toUpperCase();
-
-    const rol =
-      document.getElementById(
-        "USR_FILTRO_ROL"
-      ).value;
-
-    const modulo =
-      document.getElementById(
-        "USR_FILTRO_MODULO"
-      ).value;
-
-    const estado =
-      document.getElementById(
-        "USR_FILTRO_ESTADO"
-      ).value;
-
-
-    const filtrados =
-      USR_PERMISOS.filter(function(p) {
-
-        const coincideTexto =
-          !texto ||
-          String(p.ID_PERMISO || "")
-            .toUpperCase()
-            .includes(texto) ||
-
-          String(p.MODULO || "")
-            .toUpperCase()
-            .includes(texto) ||
-
-          String(p.ACCION || "")
-            .toUpperCase()
-            .includes(texto);
-
-
-        return (
-          coincideTexto &&
-          (!rol || String(p.ID_ROL) === rol) &&
-          (!modulo || String(p.MODULO) === modulo) &&
-          (!estado ||
-           String(p.ESTADO_PERMISO) === estado)
-        );
-
-      });
-
-
-    USR_MOSTRAR_PERMISOS(filtrados);
-  }
-
-
-  // ============================================================
-  // SESIONES
-  // ============================================================
 
   function USR_CARGAR_SESIONES() {
-
     google.script.run
-
       .withSuccessHandler(function(sesiones) {
+        USR_SESIONES = sesiones;
+        const tbody = document.getElementById("USR_TABLA_SESIONES");
+        tbody.innerHTML = "";
 
-        USR_SESIONES =
-          Array.isArray(sesiones)
-            ? sesiones
-            : [];
+        if (!(sesiones.length > 0)) {
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay sesiones registradas en USR_SESIONES.</td></tr>`;
+          return;
+        }
 
-        USR_MOSTRAR_SESIONES(
-          USR_SESIONES
-        );
-
+        const sesionesValidas = sesiones.filter(s => s.ID_SESION && String(s.ID_SESION).trim() !== "");
+        sesionesValidas.forEach(s => {
+          const tr = document.createElement("tr");
+          const estadoClass = s.ESTADO_SESION === "ACTIVA" ? "badge-active" : "badge-inactive";
+          tr.innerHTML = `
+            <td><strong>${s.ID_SESION}</strong></td>
+            <td>${s.USUARIO} (${s.ID_USUARIO})</td>
+            <td>${s.FECHA_INICIO}</td>
+            <td>${s.ULTIMA_ACTIVIDAD}</td>
+            <td>${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
+            <td><span class="badge ${estadoClass}">${s.ESTADO_SESION}</span></td>
+            <td>
+              ${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('${s.TOKEN_SESION}')">Revocar</button>` : '-'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
       })
-
       .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          "No se pudieron cargar sesiones: " +
-          (
-            err && err.message
-              ? err.message
-              : String(err)
-          )
-        );
-
+        USR_MOSTRAR_ERROR("No se pudieron cargar los registros de sesión: " + err.message);
       })
-
-      .SEG_OBTENER_SESIONES();
+      .SEG_OBTENER_SESIONES(TOKEN_SESION);
   }
-
-
-  function USR_MOSTRAR_SESIONES(sesiones) {
-
-    const tbody =
-      document.getElementById(
-        "USR_TABLA_SESIONES"
-      );
-
-    tbody.innerHTML = "";
-
-
-    if (!sesiones.length) {
-
-      tbody.innerHTML =
-        '<tr><td colspan="7" class="empty-state">' +
-        'No hay sesiones registradas.' +
-        '</td></tr>';
-
-      return;
-    }
-
-
-    sesiones.forEach(function(s) {
-
-      if (!s.ID_SESION) return;
-
-      const tr =
-        document.createElement("tr");
-
-      let acciones = "-";
-
-      if (s.ESTADO_SESION === "ACTIVA") {
-
-        acciones =
-          '<button class="button button-danger button-small" ' +
-          'onclick="USR_REVOCAR_SESION(\'' +
-          USR_ESCAPAR_HTML(
-            s.TOKEN_SESION
-          ) +
-          '\')">' +
-          '🚫 Revocar</button>';
-      }
-
-
-      tr.innerHTML =
-        '<td>' +
-        USR_ESCAPAR_HTML(s.ID_SESION) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(s.USUARIO) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(s.FECHA_INICIO) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(
-          s.ULTIMA_ACTIVIDAD
-        ) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(
-          s.EXPIRA_SESION ||
-          s.FECHA_EXPIRACION
-        ) +
-        '</td>' +
-
-        '<td>' +
-        USR_ESCAPAR_HTML(
-          s.ESTADO_SESION
-        ) +
-        '</td>' +
-
-        '<td>' +
-        acciones +
-        '</td>';
-
-      tbody.appendChild(tr);
-
-    });
-  }
-
-
-  function USR_FILTRAR_SESIONES() {
-
-    const texto =
-      document.getElementById(
-        "USR_BUSCADOR_SESIONES"
-      )
-      .value
-      .trim()
-      .toUpperCase();
-
-    const estado =
-      document.getElementById(
-        "USR_FILTRO_SESION"
-      ).value;
-
-
-    const filtradas =
-      USR_SESIONES.filter(function(s) {
-
-        const coincideTexto =
-          !texto ||
-
-          String(s.ID_SESION || "")
-            .toUpperCase()
-            .includes(texto) ||
-
-          String(s.USUARIO || "")
-            .toUpperCase()
-            .includes(texto) ||
-
-          String(s.ID_USUARIO || "")
-            .toUpperCase()
-            .includes(texto);
-
-
-        return (
-          coincideTexto &&
-          (
-            !estado ||
-            String(s.ESTADO_SESION) === estado
-          )
-        );
-
-      });
-
-
-    USR_MOSTRAR_SESIONES(filtradas);
-  }
-
 
   function USR_REVOCAR_SESION(token) {
-
-    if (
-      !confirm(
-        "¿Desea revocar esta sesión activa?"
-      )
-    ) return;
-
-
+    if(!confirm("¿Desea forzar de forma remota el cierre de esta sesión activa?")) return;
     google.script.run
-
-      .withSuccessHandler(function(res) {
-
-        const respuesta =
-          USR_VALIDAR_RESPUESTA(res);
-
-        if (!respuesta.EXITO) {
-
-          USR_MOSTRAR_ERROR(
-            respuesta.MENSAJE
-          );
-
-          return;
-        }
-
-        USR_MOSTRAR_ALERTA(
-          respuesta.MENSAJE ||
-          "Sesión revocada correctamente.",
-          "success"
-        );
-
+      .withSuccessHandler(function() {
+        USR_MOSTRAR_ALERTA("Sesión revocada exitosamente.", "success");
         USR_CARGAR_SESIONES();
-
       })
-
       .withFailureHandler(function(err) {
-
-        USR_MOSTRAR_ERROR(
-          err && err.message
-            ? err.message
-            : String(err)
-        );
-
+        alert("Error al cerrar sesión: " + err.message);
       })
-
       .SEG_CERRAR_SESION(token);
   }
-
-
-  // ============================================================
-  // LOGO
-  // ============================================================
-
-  function usrPrevisualizarLogo(input) {
-
-    const file = input.files[0];
-
-    const btn =
-      document.getElementById(
-        "btn_guardar_logo"
-      );
-
-
-    if (!file) {
-
-      LOGO_BASE64 = null;
-      LOGO_NOMBRE = null;
-
-      btn.disabled = true;
-
-      document.getElementById(
-        "logo_preview_container"
-      ).style.display = "none";
-
-      return;
-    }
-
-
-    LOGO_NOMBRE = file.name;
-
-    const reader =
-      new FileReader();
-
-
-    reader.onload = function(e) {
-
-      LOGO_BASE64 = e.target.result;
-
-      document.getElementById(
-        "logo_preview"
-      ).src = LOGO_BASE64;
-
-      document.getElementById(
-        "logo_preview_container"
-      ).style.display = "block";
-
-      btn.disabled = false;
-    };
-
-
-    reader.readAsDataURL(file);
-  }
-
-
-  function usrGuardarLogo() {
-
-    if (!LOGO_BASE64) {
-
-      USR_MOSTRAR_ERROR(
-        "Seleccione una imagen."
-      );
-
-      return;
-    }
-
-
-    const btn =
-      document.getElementById(
-        "btn_guardar_logo"
-      );
-
-    btn.disabled = true;
-    btn.textContent = "Guardando...";
-
-
-    google.script.run
-
-      .withSuccessHandler(function(res) {
-
-        btn.disabled = false;
-        btn.textContent = "💾 Subir Logo";
-
-
-        const respuesta =
-          USR_VALIDAR_RESPUESTA(res);
-
-
-        if (!respuesta.EXITO) {
-
-          USR_MOSTRAR_ERROR(
-            respuesta.MENSAJE
-          );
-
-          return;
-        }
-
-
-        USR_MOSTRAR_ALERTA(
-          respuesta.MENSAJE ||
-          "Logo guardado correctamente.",
-          "success"
-        );
-
-      })
-
-      .withFailureHandler(function(err) {
-
-        btn.disabled = false;
-        btn.textContent = "💾 Subir Logo";
-
-        USR_MOSTRAR_ERROR(
-          err && err.message
-            ? err.message
-            : String(err)
-        );
-
-      })
-
-      .SEG_GUARDAR_LOGO(
-        LOGO_BASE64,
-        LOGO_NOMBRE
-      );
-  }
-
-
-  // ============================================================
-  // CERRAR MODALES AL HACER CLICK AFUERA
-  // ============================================================
-
-  window.onclick = function(event) {
-
-    const modalUsuario =
-      document.getElementById(
-        "modal_usuario"
-      );
-
-    const modalAprobacion =
-      document.getElementById(
-        "modal_aprobacion"
-      );
-
-
-    if (event.target === modalUsuario) {
-      USR_CERRAR_MODAL_USUARIO();
-    }
-
-
-    if (event.target === modalAprobacion) {
-      USR_CERRAR_MODAL_APROBACION();
-    }
-  };
-
 </script>
-
 </body>
 </html>
