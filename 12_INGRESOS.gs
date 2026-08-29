@@ -12,7 +12,8 @@ const ING_CONFIG = {
   DIGITOS_ID: 6
 };
 
-function ING_REGISTRAR_INGRESO(datos) {
+function ING_REGISTRAR_INGRESO(datos, tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "INGRESOS", "CREAR");
   if (!datos) throw new Error("Datos de ingreso no válidos.");
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -28,10 +29,8 @@ function ING_REGISTRAR_INGRESO(datos) {
 
   const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
   const fila = encabezados.map(col => datos[col] !== undefined ? datos[col] : "");
-  
   hoja.appendRow(fila);
 
-  // Afectar Tesorería (Entrada de dinero)
   try {
     TES_REGISTRAR_MOVIMIENTO({
       TIPO_MOVIMIENTO: "INGRESO",
@@ -54,9 +53,7 @@ function ING_OBTENER_SIGUIENTE_ID() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(ING_CONFIG.HOJA_MOVIMIENTOS);
   const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) {
-    return ING_CONFIG.PREFIJO_ID + "-000001";
-  }
+  if (ultimaFila < 2) return ING_CONFIG.PREFIJO_ID + "-000001";
   const ultimoID = hoja.getRange(ultimaFila, 1).getValue().toString();
   const numero = parseInt(ultimoID.replace(ING_CONFIG.PREFIJO_ID + "-", ""), 10);
   return ING_CONFIG.PREFIJO_ID + "-" + String(numero + 1).padStart(ING_CONFIG.DIGITOS_ID, "0");

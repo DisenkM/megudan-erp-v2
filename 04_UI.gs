@@ -1,13 +1,9 @@
 /**************************************************************
 * 04_UI.gs
 * RESPONSABILIDAD:
-* - Administrar la identidad visual de Google Sheets.
-* - Colorear las pestañas físicas del libro ERP de forma automática según módulo.
+* - Coloreado e identidad visual de las pestañas de Sheets de forma segura.
 **************************************************************/
 
-// ============================================================
-// 01. PALETA DE COLORES POR GRUPO MODULAR (ÚNICA FUENTE)
-// ============================================================
 const COLORES_ERP = {
   CONFIGURACION: "#6B7280",
   CLIENTES: "#2563EB",
@@ -27,13 +23,9 @@ const COLORES_ERP = {
   MENU: "#111827"
 };
 
-// ============================================================
-// 02. ASOCIACIÓN DE HOJAS FÍSICAS A CADA GRUPO
-// ============================================================
 const HOJAS_ERP = {
   CONFIGURACION: [
-    "CFG_EMPRESA", "CFG_SISTEMA", "CFG_DOCUMENTOS", "CFG_IMPUESTOS", 
-    "CFG_CONTABILIDAD", "CFG_INVENTARIO", "CFG_COSTOS"
+    "CFG_EMPRESA", "CFG_SISTEMA", "CFG_DOCUMENTOS", "CFG_IMPUESTOS", "CFG_CONTABILIDAD", "CFG_INVENTARIO", "CFG_COSTOS"
   ],
   CLIENTES: [
     "CLI_MAESTRO", "CLI_HISTORIAL"
@@ -79,36 +71,53 @@ const HOJAS_ERP = {
   ]
 };
 
-// ============================================================
-// 03. APLICAR COLORES DE PESTAÑAS AUTOMÁTICAMENTE
-// ============================================================
 function COLOREAR_TODAS_LAS_PESTANAS() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let coloreadas = 0;
-  let noEncontradas = [];
+  const noEncontradas = [];
 
-  Object.entries(HOJAS_ERP).forEach(function([modulo, hojas]) {
+  Object.keys(HOJAS_ERP).forEach(function(modulo) {
     const color = COLORES_ERP[modulo];
+    const hojas = HOJAS_ERP[modulo];
     hojas.forEach(function(nombreHoja) {
-      const hoja = ss.getSheetByName(nombreHoja);
-      if (hoja) {
-        hoja.setTabColor(color);
-        coloreadas++;
-      } else {
-        noEncontradas.push(nombreHoja);
+      try {
+        const hoja = ss.getSheetByName(nombreHoja);
+        if (hoja) {
+          hoja.setTabColor(color);
+          coloreadas++;
+        } else {
+          noEncontradas.push(nombreHoja);
+        }
+      } catch (e) {
+        console.error("No se pudo colorear la pestaña '" + nombreHoja + "': " + e.toString());
       }
     });
   });
 
-  const menu = ss.getSheetByName("🏠MENU");
-  if (menu) {
-    menu.setTabColor(COLORES_ERP.MENU);
-    coloreadas++;
+  try {
+    const menu = ss.getSheetByName("🏠MENU");
+    if (menu) {
+      menu.setTabColor(COLORES_ERP.MENU);
+      coloreadas++;
+    } else {
+      noEncontradas.push("🏠MENU");
+    }
+  } catch (e) {
+    console.error("No se pudo colorear la pestaña '🏠MENU': " + e.toString());
   }
 
   SpreadsheetApp.flush();
-  console.log("Pestañas coloreadas de manera exitosa: " + coloreadas);
+  REGISTRAR_RESULTADO_COLORES(coloreadas, noEncontradas);
+}
+
+function REGISTRAR_RESULTADO_COLORES(coloreadas, noEncontradas) {
+  console.log("=================================");
+  console.log("🎨 COLORES DEL ERP APLICADOS");
+  console.log("=================================");
+  console.log("Pestañas coloreadas: " + coloreadas);
+  console.log("Hojas no encontradas: " + noEncontradas.length);
   if (noEncontradas.length > 0) {
-    console.info("Hojas que no se han creado en el libro: " + noEncontradas.join(", "));
+    console.warn("Hojas parametrizadas no existentes físicamente: " + noEncontradas.join(", "));
   }
+  console.log("=================================");
 }

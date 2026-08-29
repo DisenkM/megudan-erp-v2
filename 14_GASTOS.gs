@@ -11,7 +11,8 @@ const GAS_CONFIG = {
   DIGITOS_ID: 6
 };
 
-function GAS_REGISTRAR_GASTO(datos) {
+function GAS_REGISTRAR_GASTO(datos, tokenSesion) {
+  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "GASTOS", "CREAR");
   if (!datos) throw new Error("Datos de gasto vacíos.");
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -20,17 +21,14 @@ function GAS_REGISTRAR_GASTO(datos) {
 
   const idGasto = GAS_OBTENER_SIGUIENTE_ID();
   const ahora = new Date();
-
   datos.ID_GASTO = idGasto;
   datos.FECHA = ahora;
   datos.ESTADO = "PROCESADO";
 
   const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
   const fila = encabezados.map(col => datos[col] !== undefined ? datos[col] : "");
-  
   hoja.appendRow(fila);
 
-  // Afectar Tesorería (Egreso de dinero)
   try {
     TES_REGISTRAR_MOVIMIENTO({
       TIPO_MOVIMIENTO: "EGRESO",
@@ -53,9 +51,7 @@ function GAS_OBTENER_SIGUIENTE_ID() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(GAS_CONFIG.HOJA_MOVIMIENTOS);
   const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) {
-    return GAS_CONFIG.PREFIJO_ID + "-000001";
-  }
+  if (ultimaFila < 2) return GAS_CONFIG.PREFIJO_ID + "-000001";
   const ultimoID = hoja.getRange(ultimaFila, 1).getValue().toString();
   const numero = parseInt(ultimoID.replace(GAS_CONFIG.PREFIJO_ID + "-", ""), 10);
   return GAS_CONFIG.PREFIJO_ID + "-" + String(numero + 1).padStart(GAS_CONFIG.DIGITOS_ID, "0");

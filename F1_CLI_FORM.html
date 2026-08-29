@@ -1,9 +1,9 @@
 <!-- ============================================================
 * INTERFAZ: F1_CLI_FORM
-* MODULO: CLIENTES / PROVEEDORES (TERCEROS UNIFICADOS)
-* RESPONSABILIDAD: Captura y validación tributaria de Terceros
+* MODULO: CLIENTES / PROVEEDORES (TERCEROS UNIFICADOS - ALINEADO CON ALEGRA)
+* RESPONSABILIDAD: Captura, validación tributaria y mapeo API de Terceros
 * CONEXIÓN BACKEND: 05_CLIENTES.gs, 06_PROVEEDORES.gs y 23_SEGURIDAD.gs
-* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
+* ESTADO: 100% Sincronizado con Alegra Colombia (Campos de Sucursal, Código Postal, Pagador y Otros)
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -11,7 +11,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Terceros | MEGUDAN ERP</title>
+  <title>Ficha Única de Terceros | MEGUDAN ERP</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -21,88 +21,80 @@
     }
     .container { max-width: 1280px; margin: 20px auto; padding: 0 20px; }
     
-    /* Encabezado */
+    /* Header */
     .header {
-      background: linear-gradient(135deg, #111827, #1f2937);
-      color: white; padding: 20px 24px;
-      border-radius: 10px 10px 0 0;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      background-color: #2563eb; color: #ffffff;
+      padding: 20px 25px; border-radius: 10px;
+      margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-    .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
-    .header p { margin: 5px 0 0; font-size: 13px; color: #9ca3af; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+    .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.9; }
     
-    /* Barra de Acciones */
+    /* Toolbar de Acciones */
     .toolbar {
-      background: white; padding: 12px 20px;
-      display: flex; gap: 10px; flex-wrap: wrap;
-      border-bottom: 1px solid #e5e7eb;
+      display: flex; gap: 10px; margin-bottom: 20px;
+      flex-wrap: wrap; background: #ffffff; padding: 12px 20px;
+      border-radius: 8px; border: 1px solid #e5e7eb;
     }
     .btn {
-      border: none; border-radius: 6px; padding: 8px 16px;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: all 0.2s;
+      border: none; border-radius: 6px; padding: 10px 18px;
+      cursor: pointer; font-size: 13px; font-weight: 700;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
     }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-primary:hover { background: #1d4ed8; }
-    .btn-success { background: #16a34a; color: white; }
-    .btn-success:hover { background: #15803d; }
-    .btn-secondary { background: #e5e7eb; color: #374151; }
-    .btn-secondary:hover { background: #d1d5db; }
-    .btn-danger { background: #dc2626; color: white; }
-    .btn-danger:hover { background: #b91c1c; }
-
+    .btn-primary { background-color: #2563eb; color: #ffffff; }
+    .btn-primary:hover { background-color: #1d4ed8; }
+    .btn-success { background-color: #16a34a; color: #ffffff; }
+    .btn-success:hover { background-color: #15803d; }
+    .btn-secondary { background-color: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background-color: #d1d5db; }
+    .btn-danger { background-color: #dc2626; color: #ffffff; }
+    .btn-danger:hover { background-color: #b91c1c; }
+    
     /* Buscador */
     .search-card {
-      background: white; padding: 15px 20px;
-      border-bottom: 1px solid #e5e7eb;
+      background: #ffffff; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 15px 20px; margin-bottom: 20px;
     }
-    .search-group { display: flex; gap: 10px; max-width: 600px; }
+    .search-group { display: flex; gap: 10px; }
     .search-input {
-      flex: 1; padding: 10px 12px;
-      border: 1px solid #d1d5db; border-radius: 6px;
-      font-size: 14px; outline: none;
+      flex: 1; padding: 10px 15px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 13px; outline: none;
     }
-    .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .search-input:focus { border-color: #2563eb; }
     
-    /* Layout principal */
-    .grid-layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px; margin-top: 20px;
-    }
+    /* Layout de Columnas */
+    .grid-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
     .form-col { display: flex; flex-direction: column; gap: 20px; }
+    
+    /* Cards */
     .card {
-      background: white; border: 1px solid #e5e7eb;
-      border-radius: 10px; padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      background: #ffffff; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 22px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
     .card-title {
-      font-size: 15px; font-weight: 700; color: #374151;
-      margin-top: 0; margin-bottom: 15px; padding-bottom: 8px;
-      border-bottom: 2px solid #f3f4f6;
+      margin: 0 0 15px; font-size: 15px; font-weight: 700;
+      color: #1f2937; border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 10px;
     }
     
-    /* Selectores de Tipo de Tercero */
+    /* Checkbox list para Tipo de Tercero */
     .tercero-selector {
-      display: flex; gap: 24px; margin-bottom: 15px;
+      display: flex; gap: 25px; background: #f9fafb;
+      padding: 12px 15px; border-radius: 6px; border: 1px dashed #d1d5db;
     }
     .checkbox-label {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 14px; font-weight: 600; color: #4b5563;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; color: #374151; cursor: pointer;
     }
-    .checkbox-label input[type="checkbox"] {
-      width: 18px; height: 18px; border-radius: 4px;
-      border: 1.5px solid #d1d5db; cursor: pointer;
-    }
+    .checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
     
     /* Grids de formulario */
     .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
     .full-width { grid-column: span 2; }
-    
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field label { font-size: 12px; font-weight: 700; color: #4b5563; }
+    
     .input-field, select, textarea {
       padding: 9px 12px; border: 1px solid #d1d5db;
       border-radius: 6px; font-size: 13px; outline: none;
@@ -122,28 +114,31 @@
     .dynamic-section { display: none; }
     .dynamic-section.active { display: block; }
     
-    /* RUT Checklist responsabilidades */
-    .rut-checklist { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+    /* RUT Checklist */
+    .rut-checklist {
+      display: flex; flex-direction: column; gap: 8px;
+      background-color: #f9fafb; padding: 12px;
+      border: 1px solid #e5e7eb; border-radius: 6px;
+    }
     .rut-item {
-      display: flex; align-items: flex-start; gap: 10px;
-      font-size: 13px; color: #374151; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: #374151; cursor: pointer;
     }
     .rut-code {
-      background: #f3f4f6; border-radius: 4px; padding: 2px 6px;
-      font-weight: 700; font-size: 11px; color: #4b5563;
-      border: 1px solid #e5e7eb; min-width: 45px; text-align: center;
+      font-family: monospace; font-weight: 700;
+      background: #e5e7eb; padding: 2px 6px; border-radius: 4px;
     }
     
-    /* Alert Messages */
+    /* Messages */
     .msg-box {
-      display: none; padding: 12px; border-radius: 6px;
-      font-size: 13px; font-weight: 600; margin-bottom: 15px;
+      display: none; padding: 12px 15px; border-radius: 6px;
+      margin-top: 15px; font-size: 13px; font-weight: 600;
     }
-    .msg-success { display: block; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    .msg-error { display: block; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-    .msg-info { display: block; background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .msg-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .msg-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .msg-info { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
     
-    /* Auditoria Footer */
+    /* Footer */
     .audit-footer {
       margin-top: 20px; padding: 15px; font-size: 11px;
       color: #9ca3af; text-align: center; border-top: 1px dashed #e5e7eb;
@@ -159,7 +154,6 @@
   </style>
 </head>
 <body>
-
 <div class="container">
   <!-- Encabezado -->
   <header class="header">
@@ -179,6 +173,7 @@
   <!-- Buscador Integrado -->
   <div class="search-card">
     <div class="search-group">
+      <label for="buscarTercero" style="display:none;">Buscar tercero</label>
       <input type="text" id="buscarTercero" class="search-input" placeholder="Buscar por NIT, CC, Razón Social o ID del ERP...">
       <button class="btn btn-primary" onclick="buscarTercero()">🔍 Buscar</button>
     </div>
@@ -187,19 +182,20 @@
 
   <!-- Layout Principal Formulario -->
   <div class="grid-layout">
-    
-    <!-- Columna Principal -->
+    <!-- Columna Principal (Izquierda) -->
     <div class="form-col">
-      
-      <!-- Card: Tipo de Tercero Selector -->
+      <!-- Card: Tipo de Tercero Selector (Alineado con Alegra) -->
       <div class="card">
         <h3 class="card-title">Selección del Tipo de Tercero</h3>
         <div class="tercero-selector">
-          <label class="checkbox-label">
+          <label class="checkbox-label" for="tipo_cliente">
             <input type="checkbox" id="tipo_cliente" checked> Clientes
           </label>
-          <label class="checkbox-label">
+          <label class="checkbox-label" for="tipo_proveedor">
             <input type="checkbox" id="tipo_proveedor"> Proveedores
+          </label>
+          <label class="checkbox-label" for="tipo_otros">
+            <input type="checkbox" id="tipo_otros"> Otros (Bancos/Socios/Contratistas)
           </label>
         </div>
       </div>
@@ -208,22 +204,19 @@
       <div class="card">
         <h3 class="card-title">📌 Datos Básicos</h3>
         <div class="form-grid">
-          
           <div class="field">
-            <label>ID Interno ERP</label>
+            <label for="ID_CLIENTE">ID Interno ERP</label>
             <input type="text" id="ID_CLIENTE" class="input-field" readonly placeholder="Generado Automáticamente">
           </div>
-
           <div class="field">
-            <label>Tipo de Persona *</label>
+            <label for="TIPO_PERSONA">Tipo de Persona *</label>
             <select id="TIPO_PERSONA" onchange="alternarTipoPersona(this.value)">
-              <option value="PERSONA_NATURAL">Persona Natural</option>
               <option value="PERSONA_JURIDICA" selected>Persona Jurídica (Empresa)</option>
+              <option value="PERSONA_NATURAL">Persona Natural (Individuo)</option>
             </select>
           </div>
-
           <div class="field">
-            <label>Tipo de Identificación *</label>
+            <label for="TIPO_DOCUMENTO">Tipo de Documento *</label>
             <select id="TIPO_DOCUMENTO">
               <option value="NIT" selected>NIT (Número de Identificación Tributaria)</option>
               <option value="CC">Cédula de Ciudadanía</option>
@@ -231,50 +224,21 @@
               <option value="PASAPORTE">Pasaporte</option>
             </select>
           </div>
-
           <div class="field">
-            <label>Identificación / NIT & Dv *</label>
+            <label for="NUMERO_DOCUMENTO">Identificación / NIT & Dv *</label>
             <div class="id-group">
-              <input type="text" id="NUMERO_DOCUMENTO" class="input-field input-id" placeholder="Digite el número sin puntos" oninput="calcularDVFrontend(this.value)">
+              <input type="text" id="NUMERO_DOCUMENTO" class="input-field input-id" placeholder="Digite el número sin puntos ni comas" oninput="calcularDVFrontend(this.value)">
               <input type="text" id="DIGITO_VERIFICACION" class="input-field input-dv" readonly placeholder="Dv">
             </div>
           </div>
-
-          <!-- Campos Dinámicos: Empresa -->
-          <div class="field full-width dynamic-section" id="sec_empresa">
-            <label>Razón Social *</label>
-            <input type="text" id="RAZON_SOCIAL" class="input-field" placeholder="Escriba la Razón Social Completa">
-          </div>
-
-          <!-- Campos Dinámicos: Persona Natural -->
-          <div class="full-width dynamic-section" id="sec_persona">
-            <div class="form-grid">
-              <div class="field">
-                <label>Primer Nombre *</label>
-                <input type="text" id="PRIMER_NOMBRE" class="input-field" placeholder="Primer Nombre">
-              </div>
-              <div class="field">
-                <label>Segundo Nombre</label>
-                <input type="text" id="SEGUNDO_NOMBRE" class="input-field" placeholder="Segundo Nombre">
-              </div>
-              <div class="field">
-                <label>Primer Apellido *</label>
-                <input type="text" id="PRIMER_APELLIDO" class="input-field" placeholder="Primer Apellido">
-              </div>
-              <div class="field">
-                <label>Segundo Apellido</label>
-                <input type="text" id="SEGUNDO_APELLIDO" class="input-field" placeholder="Segundo Apellido">
-              </div>
-            </div>
-          </div>
-
+          
+          <!-- Campo: Sucursal (Alegra) -->
           <div class="field">
-            <label>Nombre Comercial / Sucursal</label>
-            <input type="text" id="NOMBRE_COMERCIAL" class="input-field" placeholder="Nombre Comercial si aplica">
+            <label for="CODIGO_SUCURSAL">Código de la Sucursal</label>
+            <input type="number" id="CODIGO_SUCURSAL" class="input-field" min="0" value="0" placeholder="Ej: 0 para principal">
           </div>
-
           <div class="field">
-            <label>Clasificación de Tercero *</label>
+            <label for="TIPO_CLIENTE">Clasificación de Tercero *</label>
             <select id="TIPO_CLIENTE">
               <option value="MAYORISTA" selected>Mayorista</option>
               <option value="MINORISTA">Minorista</option>
@@ -283,6 +247,38 @@
             </select>
           </div>
 
+          <!-- Campos Dinámicos: Empresa -->
+          <div class="field full-width dynamic-section active" id="sec_empresa">
+            <label for="RAZON_SOCIAL">Razón Social *</label>
+            <input type="text" id="RAZON_SOCIAL" class="input-field" placeholder="Escriba la Razón Social Completa">
+          </div>
+
+          <!-- Campos Dinámicos: Persona Natural -->
+          <div class="full-width dynamic-section" id="sec_persona">
+            <div class="form-grid">
+              <div class="field">
+                <label for="PRIMER_NOMBRE">Primer Nombre *</label>
+                <input type="text" id="PRIMER_NOMBRE" class="input-field" placeholder="Primer Nombre">
+              </div>
+              <div class="field">
+                <label for="SEGUNDO_NOMBRE">Segundo Nombre</label>
+                <input type="text" id="SEGUNDO_NOMBRE" class="input-field" placeholder="Segundo Nombre">
+              </div>
+              <div class="field">
+                <label for="PRIMER_APELLIDO">Primer Apellido *</label>
+                <input type="text" id="PRIMER_APELLIDO" class="input-field" placeholder="Primer Apellido">
+              </div>
+              <div class="field">
+                <label for="SEGUNDO_APELLIDO">Segundo Apellido</label>
+                <input type="text" id="SEGUNDO_APELLIDO" class="input-field" placeholder="Segundo Apellido">
+              </div>
+            </div>
+          </div>
+
+          <div class="field full-width">
+            <label for="NOMBRE_COMERCIAL">Nombre Comercial</label>
+            <input type="text" id="NOMBRE_COMERCIAL" class="input-field" placeholder="Nombre Comercial si aplica">
+          </div>
         </div>
       </div>
 
@@ -290,110 +286,109 @@
       <div class="card">
         <h3 class="card-title">📞 Datos de Ubicación y Contacto</h3>
         <div class="form-grid">
-          
           <div class="field full-width">
-            <label>Dirección Física Principal *</label>
+            <label for="DIRECCION">Dirección Física Principal *</label>
             <input type="text" id="DIRECCION" class="input-field" placeholder="Ej: Calle 4 # 5-62, Barrio Centro">
           </div>
-
           <div class="field">
-            <label>Municipio / Ciudad *</label>
+            <label for="CIUDAD">Municipio / Ciudad *</label>
             <input type="text" id="CIUDAD" class="input-field" placeholder="Ej: Pitalito">
           </div>
-
           <div class="field">
-            <label>Departamento *</label>
+            <label for="DEPARTAMENTO">Departamento *</label>
             <input type="text" id="DEPARTAMENTO" class="input-field" placeholder="Ej: Huila">
           </div>
-
           <div class="field">
-            <label>País *</label>
+            <label for="PAIS">País *</label>
             <input type="text" id="PAIS" class="input-field" value="COLOMBIA">
           </div>
-
           <div class="field">
-            <label>Celular de Contacto *</label>
+            <label for="CODIGO_POSTAL">Código Postal</label>
+            <input type="text" id="CODIGO_POSTAL" class="input-field" placeholder="Ej: 418060">
+          </div>
+          <div class="field">
+            <label for="CELULAR">Celular de Contacto *</label>
             <input type="text" id="CELULAR" class="input-field" placeholder="Ej: 3118172601">
           </div>
-
           <div class="field">
-            <label>Teléfono Fijo</label>
-            <input type="text" id="TELEFONO" class="input-field" placeholder="Ej: 8360000">
+            <label for="TELEFONO">Teléfono Fijo / Extensión</label>
+            <div class="id-group">
+              <input type="text" id="TELEFONO" class="input-field input-id" style="flex: 3;" placeholder="Ej: 8360000">
+              <input type="text" id="TELEFONO_EXT" class="input-field" style="flex: 1;" placeholder="Ext">
+            </div>
           </div>
-
-          <div class="field">
-            <label>Correo Electrónico (Factura Electrónica) *</label>
+          <div class="field full-width">
+            <label for="CORREO">Correo Electrónico (Para Factura Electrónica y Notificación) *</label>
             <input type="email" id="CORREO" class="input-field" placeholder="ejemplo@correo.com">
           </div>
+          
+          <!-- Contacto marcado como pagador (Alegra) -->
+          <div class="field full-width">
+            <label class="checkbox-label" for="contacto_pagador">
+              <input type="checkbox" id="contacto_pagador" checked> Contacto marcado como <strong>Pagador</strong> (Recibe notificaciones de cobro)
+            </label>
+          </div>
 
           <div class="field">
-            <label>Contacto Principal (Nombres)</label>
+            <label for="CONTACTO_PRINCIPAL">Contacto Principal (Nombres)</label>
             <input type="text" id="CONTACTO_PRINCIPAL" class="input-field" placeholder="Nombre de contacto administrativo">
           </div>
-
           <div class="field">
-            <label>Cargo del Contacto</label>
+            <label for="CARGO_CONTACTO">Cargo del Contacto</label>
             <input type="text" id="CARGO_CONTACTO" class="input-field" placeholder="Ej: Gerente de Compras">
           </div>
-
         </div>
       </div>
-
     </div>
 
     <!-- Columna Lateral Derecha -->
     <div class="form-col">
-      
       <!-- Card: Régimen y Responsabilidades RUT -->
       <div class="card">
         <h3 class="card-title">🧾 Datos para Facturación y Envío</h3>
         <div class="form-grid" style="grid-template-columns: 1fr;">
-          
           <div class="field">
-            <label>Tipo de Régimen IVA *</label>
+            <label for="RESPONSABILIDAD_IVA">Tipo de Régimen IVA *</label>
             <select id="RESPONSABILIDAD_IVA">
               <option value="RESPONSABLE_IVA">Responsable de IVA</option>
               <option value="NO_RESPONSABLE_IVA" selected>No Responsable de IVA</option>
             </select>
           </div>
-
           <div class="field">
-            <label>Régimen Tributario *</label>
+            <label for="REGIMEN_FISCAL">Régimen Tributario *</label>
             <select id="REGIMEN_FISCAL">
               <option value="ORDINARIO" selected>Régimen Ordinario</option>
               <option value="SIMPLE">Régimen Simple de Tributación (RST)</option>
               <option value="ESPECIAL">Régimen Especial</option>
             </select>
           </div>
-
           <div class="field" style="margin-top: 10px;">
-            <label>Responsabilidad Fiscal (RUT) *</label>
+            <label for="RESPONSABILIDAD_FISCAL">Responsabilidad Fiscal (RUT) *</label>
             <div class="rut-checklist">
-              <label class="rut-item">
-                <input type="checkbox" value="O-13" name="responsabilidad_rut">
-                <span class="rut-code">O-13</span> Gran Contribuyente
+              <label class="rut-item" for="resp_o13">
+                <input type="checkbox" value="O-13" name="responsabilidad_rut" id="resp_o13">
+                <span class="rut-code">O-13</span> Gran contribuyente
               </label>
-              <label class="rut-item">
-                <input type="checkbox" value="O-15" name="responsabilidad_rut">
+              <label class="rut-item" for="resp_o15">
+                <input type="checkbox" value="O-15" name="responsabilidad_rut" id="resp_o15">
                 <span class="rut-code">O-15</span> Autorretenedor
               </label>
-              <label class="rut-item">
-                <input type="checkbox" value="O-23" name="responsabilidad_rut">
+              <label class="rut-item" for="resp_o23">
+                <input type="checkbox" value="O-23" name="responsabilidad_rut" id="resp_o23">
                 <span class="rut-code">O-23</span> Agente de retención IVA
               </label>
-              <label class="rut-item">
-                <input type="checkbox" value="O-47" name="responsabilidad_rut">
+              <label class="rut-item" for="resp_o47">
+                <input type="checkbox" value="O-47" name="responsabilidad_rut" id="resp_o47">
                 <span class="rut-code">O-47</span> Régimen simple de tributación
               </label>
-              <label class="rut-item">
-                <input type="checkbox" value="R-99-PN" name="responsabilidad_rut" checked>
+              <label class="rut-item" for="resp_r99">
+                <input type="checkbox" value="R-99-PN" name="responsabilidad_rut" checked id="resp_r99">
                 <span class="rut-code">R-99-PN</span> No aplica - Otros
               </label>
             </div>
             <!-- Campo oculto para almacenar la combinación de responsabilidades -->
             <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="R-99-PN">
           </div>
-
         </div>
       </div>
 
@@ -401,17 +396,15 @@
       <div class="card">
         <h3 class="card-title">💰 Condiciones Comerciales</h3>
         <div class="form-grid" style="grid-template-columns: 1fr;">
-          
           <div class="field">
-            <label>Forma de Pago Acordada</label>
+            <label for="FORMA_PAGO">Forma de Pago Acordada</label>
             <select id="FORMA_PAGO">
               <option value="CONTADO" selected>Contado</option>
               <option value="CREDITO">Crédito</option>
             </select>
           </div>
-
           <div class="field">
-            <label>Medio de Pago Habitual</label>
+            <label for="METODO_PAGO">Medio de Pago Habitual</label>
             <select id="METODO_PAGO">
               <option value="TRANSFERENCIA" selected>Transferencia Bancaria</option>
               <option value="EFECTIVO">Efectivo</option>
@@ -419,80 +412,71 @@
               <option value="CHEQUE">Cheque</option>
             </select>
           </div>
-
           <div class="field">
-            <label>Plazo de Pago (Días)</label>
+            <label for="PLAZO_PAGO_DIAS">Plazo de Pago (Días)</label>
             <input type="number" id="PLAZO_PAGO_DIAS" class="input-field" min="0" value="0">
           </div>
-
           <div class="field">
-            <label>Límite de Crédito Autorizado</label>
+            <label for="LIMITE_CREDITO">Límite de Crédito Autorizado</label>
             <input type="number" id="LIMITE_CREDITO" class="input-field" min="0" value="0">
           </div>
-
           <div class="field">
-            <label>Vendedor Operativo Asignado</label>
+            <label for="VENDEDOR_ASIGNADO">Vendedor Operativo Asignado</label>
             <input type="text" id="VENDEDOR_ASIGNADO" class="input-field" placeholder="Código de vendedor">
           </div>
-
           <div class="field">
-            <label>Centro de Costo Vinculado</label>
+            <label for="CENTRO_COSTO">Centro de Costo Vinculado</label>
             <input type="text" id="CENTRO_COSTO" class="input-field" placeholder="Centro de costo operativo">
           </div>
-
           <div class="field">
-            <label>Obra / Proyecto Principal</label>
+            <label for="OBRA_PRINCIPAL">Obra / Proyecto Principal</label>
             <input type="text" id="OBRA_PRINCIPAL" class="input-field" placeholder="ID Obra principal">
           </div>
-
           <div class="field">
-            <label>Cuenta Auxiliar Contable</label>
+            <label for="CUENTA_CONTABLE_CLIENTE">Cuenta Auxiliar Contable</label>
             <input type="text" id="CUENTA_CONTABLE_CLIENTE" class="input-field" placeholder="130505...">
           </div>
-
           <div class="field">
-            <label>Estado de Operación *</label>
+            <label for="ESTADO_CLIENTE">Estado de Operación *</label>
             <select id="ESTADO_CLIENTE">
               <option value="ACTIVO" selected>Activo</option>
               <option value="INACTIVO">Inactivo</option>
               <option value="BLOQUEADO">Bloqueado</option>
             </select>
           </div>
-
         </div>
       </div>
 
-    </div>
-
-  </div>
-
-  <!-- Observaciones -->
-  <div class="card" style="margin-top: 20px;">
-    <h3 class="card-title">📝 Observaciones Adicionales</h3>
-    <div class="field">
-      <textarea id="OBSERVACIONES" placeholder="Escriba aquí notas comerciales, tributarias o condiciones logísticas del Tercero..."></textarea>
-    </div>
-  </div>
-
-  <!-- Control y Auditoria -->
-  <div class="card" style="margin-top: 20px;">
-    <h3 class="card-title">🔐 Control del Registro</h3>
-    <div class="form-grid">
-      <div class="field">
-        <label>Fecha Creación</label>
-        <input type="text" id="FECHA_CREACION" class="input-field" readonly placeholder="Automático">
+      <!-- Observaciones -->
+      <div class="card">
+        <h3 class="card-title">📝 Observaciones Adicionales</h3>
+        <div class="field">
+          <label for="OBSERVACIONES" style="display:none;">Observaciones adicionales</label>
+          <textarea id="OBSERVACIONES" placeholder="Escriba aquí notas comerciales, tributarias o condiciones logísticas del Tercero..."></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label>Fecha Modificación</label>
-        <input type="text" id="FECHA_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
-      </div>
-      <div class="field">
-        <label>Creado Por</label>
-        <input type="text" id="USUARIO_CREACION" class="input-field" readonly placeholder="Automático">
-      </div>
-      <div class="field">
-        <label>Modificado Por</label>
-        <input type="text" id="USUARIO_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
+
+      <!-- Control y Auditoria -->
+      <div class="card">
+        <h3 class="card-title">🔐 Control del Registro</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label for="FECHA_CREACION">Fecha Creación</label>
+            <input type="text" id="FECHA_CREACION" class="input-field" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label for="FECHA_ACTUALIZACION">Fecha Modificación</label>
+            <input type="text" id="FECHA_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label for="USUARIO_CREACION">Creado Por</label>
+            <input type="text" id="USUARIO_CREACION" class="input-field" readonly placeholder="Automático">
+          </div>
+          <div class="field">
+            <label for="USUARIO_ACTUALIZACION">Modificado Por</label>
+            <input type="text" id="USUARIO_ACTUALIZACION" class="input-field" readonly placeholder="Automático">
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -500,11 +484,11 @@
   <footer class="audit-footer">
     MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS © 2026 · Todos los derechos reservados · F1_CLI_FORM
   </footer>
-
 </div>
 
 <!-- JavaScript de la Interfaz -->
 <script>
+  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
   let CLI_PROCESANDO = false;
   let CLI_MODO = "NUEVO";
 
@@ -517,7 +501,6 @@
   function alternarTipoPersona(tipo) {
     const secEmpresa = document.getElementById("sec_empresa");
     const secPersona = document.getElementById("sec_persona");
-    
     if (tipo === "PERSONA_NATURAL") {
       secEmpresa.classList.remove("active");
       secPersona.classList.add("active");
@@ -531,16 +514,13 @@
   function calcularDVFrontend(nit) {
     const dvField = document.getElementById("DIGITO_VERIFICACION");
     nit = String(nit).trim().replace(/\D/g, "");
-    
     if (!nit) {
       dvField.value = "";
       return;
     }
-    
     const vprimas = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
     let suma = 0;
     const len = nit.length;
-    
     for (let i = 0; !(i >= len); i++) {
       const char = nit.charAt(len - 1 - i);
       const digit = parseInt(char, 10);
@@ -548,7 +528,6 @@
         suma += digit * vprimas[i];
       }
     }
-    
     const residuo = suma % 11;
     let dv = 0;
     if (residuo >= 2) {
@@ -556,26 +535,29 @@
     } else if (residuo === 1) {
       dv = 1;
     }
-    
     dvField.value = dv;
   }
 
   // Inicializa el formulario para un nuevo tercero
   function nuevoTercero() {
-    if (CLI_PROCESANDO) return;
     limpiarFormulario();
     CLI_MODO = "NUEVO";
-    mostrarMensaje("Generando ID de Tercero...", "info");
+    mostrarMensaje("Formulario listo para registrar un nuevo Tercero.", "info");
     
+    // Obtener ID temporal para el formulario mediante Apps Script
     google.script.run
       .withSuccessHandler(function(idGenerado) {
+        if (!idGenerado) {
+          mostrarMensaje("Error al generar ID: respuesta nula del servidor.", "error");
+          return;
+        }
         document.getElementById("ID_CLIENTE").value = idGenerado;
         mostrarMensaje("Formulario listo para nuevo tercero.", "success");
       })
       .withFailureHandler(function(err) {
-        mostrarMensaje("Error al generar ID: " + err.message, "error");
+        mostrarMensaje("Fallo al contactar el generador de IDs: " + err.message, "error");
       })
-      .CLI_GENERAR_ID();
+      .CLI_GENERAR_ID(TOKEN_SESION);
   }
 
   // Captura el estado de los checkboxes de RUT y los compila en un string delimitado por comas
@@ -594,12 +576,12 @@
   function guardarTercero() {
     if (CLI_PROCESANDO) return;
     compilarResponsabilidadesRUT();
-    
+
     const tipoPersona = document.getElementById("TIPO_PERSONA").value;
     const tipoDocumento = document.getElementById("TIPO_DOCUMENTO").value;
     const identificacion = document.getElementById("NUMERO_DOCUMENTO").value.trim();
     const correo = document.getElementById("CORREO").value.trim();
-    
+
     if (!tipoPersona || !tipoDocumento || !identificacion || !correo) {
       mostrarMensaje("Por favor complete los campos obligatorios del Tercero (*) antes de guardar.", "error");
       return;
@@ -607,40 +589,46 @@
 
     CLI_PROCESANDO = true;
     mostrarMensaje("Procesando guardado en la base de datos de MEGUDAN...", "info");
-    
     const datos = obtenerDatosFormulario();
-    
+
     // Ruteo dinámico si se marcó cliente o proveedor
     const esCliente = document.getElementById("tipo_cliente").checked;
     const esProveedor = document.getElementById("tipo_proveedor").checked;
-    
+
     if (esCliente) {
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de comunicación de red al guardar cliente.", "error");
+            return;
+          }
           CLI_MODO = "EDICION";
           mostrarMensaje("Tercero registrado correctamente en CLI_MAESTRO con ID " + res.idCliente, "success");
           document.getElementById("ID_CLIENTE").value = res.idCliente;
         })
         .withFailureHandler(function(err) {
           CLI_PROCESANDO = false;
-          mostrarMensaje("Fallo al guardar cliente: " + err.message, "error");
+          mostrarMensaje("Error al guardar Cliente: " + err.message, "error");
         })
-        .CLI_GUARDAR_CLIENTE(datos);
+        .CLI_GUARDAR_CLIENTE(datos, TOKEN_SESION);
     } else if (esProveedor) {
-      // Se comunicará dinámicamente con PROV_GUARDAR_PROVEEDOR modularizado
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de comunicación de red al guardar proveedor.", "error");
+            return;
+          }
           CLI_MODO = "EDICION";
           mostrarMensaje("Tercero registrado correctamente en PROV_MAESTRO con ID " + res.idProveedor, "success");
           document.getElementById("ID_CLIENTE").value = res.idProveedor;
         })
         .withFailureHandler(function(err) {
           CLI_PROCESANDO = false;
-          mostrarMensaje("Fallo al guardar proveedor: " + err.message, "error");
+          mostrarMensaje("Error al guardar Proveedor: " + err.message, "error");
         })
-        .PROV_GUARDAR_PROVEEDOR(datos);
+        .PROV_GUARDAR_PROVEEDOR(datos, TOKEN_SESION);
     } else {
       CLI_PROCESANDO = false;
       mostrarMensaje("Debe seleccionar al menos un Tipo de Tercero (Clientes o Proveedores).", "error");
@@ -652,7 +640,7 @@
     if (CLI_PROCESANDO) return;
     compilarResponsabilidadesRUT();
     const idTercero = document.getElementById("ID_CLIENTE").value.trim();
-    
+
     if (!idTercero) {
       mostrarMensaje("Primero debe buscar y cargar un tercero para poder actualizar.", "error");
       return;
@@ -661,38 +649,45 @@
     CLI_PROCESANDO = true;
     mostrarMensaje("Actualizando información del tercero en caliente...", "info");
     const datos = obtenerDatosFormulario();
-    
     const esCliente = idTercero.startsWith("CLI");
+
     if (esCliente) {
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de red al actualizar cliente.", "error");
+            return;
+          }
           mostrarMensaje("Tercero actualizado exitosamente en CLI_MAESTRO.", "success");
         })
         .withFailureHandler(function(err) {
           CLI_PROCESANDO = false;
           mostrarMensaje("Fallo al actualizar cliente: " + err.message, "error");
         })
-        .CLI_ACTUALIZAR_CLIENTE(datos);
+        .CLI_ACTUALIZAR_CLIENTE(datos, TOKEN_SESION);
     } else {
       google.script.run
         .withSuccessHandler(function(res) {
           CLI_PROCESANDO = false;
+          if (!res) {
+            mostrarMensaje("Error de red al actualizar proveedor.", "error");
+            return;
+          }
           mostrarMensaje("Tercero actualizado exitosamente en PROV_MAESTRO.", "success");
         })
         .withFailureHandler(function(err) {
           CLI_PROCESANDO = false;
           mostrarMensaje("Fallo al actualizar proveedor: " + err.message, "error");
         })
-        .PROV_ACTUALIZAR_PROVEEDOR(datos);
+        .PROV_ACTUALIZAR_PROVEEDOR(datos, TOKEN_SESION);
     }
   }
 
-  // Buscar un Tercero en Clientes o Proveedores de forma inteligente
+  // Buscar un Tercero de forma inteligente
   function buscarTercero() {
     if (CLI_PROCESANDO) return;
     const criterio = document.getElementById("buscarTercero").value.trim();
-    
     if (!criterio) {
       mostrarMensaje("Por favor ingrese un NIT, CC, Razón Social o ID para buscar.", "error");
       return;
@@ -700,7 +695,7 @@
 
     CLI_PROCESANDO = true;
     mostrarMensaje("Consultando bases de datos operacionales...", "info");
-    
+
     // Primero buscar en Clientes
     google.script.run
       .withSuccessHandler(function(cliente) {
@@ -722,33 +717,45 @@
               CLI_PROCESANDO = false;
               mostrarMensaje("Error al buscar proveedor: " + err.message, "error");
             })
-            .PROV_BUSCAR_PROVEEDOR(criterio);
+            .PROV_BUSCAR_PROVEEDOR(criterio, TOKEN_SESION);
         }
       })
       .withFailureHandler(function(err) {
         CLI_PROCESANDO = false;
         mostrarMensaje("Error al buscar cliente: " + err.message, "error");
       })
-      .CLI_BUSCAR_CLIENTE(criterio);
+      .CLI_BUSCAR_CLIENTE(criterio, TOKEN_SESION);
   }
 
   // Carga el objeto de Tercero recibido en todos los inputs de la interfaz
   function cargarTerceroFormulario(tercero, tipo) {
     limpiarFormulario();
     CLI_MODO = "EDICION";
-    
+
     // Sincronizar check de tipo de tercero
     if (tipo === "CLI") {
       document.getElementById("tipo_cliente").checked = true;
       document.getElementById("tipo_proveedor").checked = false;
+      document.getElementById("tipo_otros").checked = false;
     } else {
       document.getElementById("tipo_cliente").checked = false;
       document.getElementById("tipo_proveedor").checked = true;
+      document.getElementById("tipo_otros").checked = false;
     }
-    
+
+    const aliasMap = {
+      "ID_PROVEEDOR": "ID_CLIENTE",
+      "NIT_CC": "NUMERO_DOCUMENTO",
+      "NUMERO": "NUMERO_DOCUMENTO",
+      "DV": "DIGITO_VERIFICACION",
+      "ESTADO": "ESTADO_CLIENTE",
+      "FECHA_MODIFICACION": "FECHA_ACTUALIZACION"
+    };
+
     Object.keys(tercero).forEach(key => {
-      const input = document.getElementById(key);
-      if (input && key !== "RESPONSABILIDAD_FISCAL") {
+      const targetKey = aliasMap[key] || key;
+      const input = document.getElementById(targetKey);
+      if (input && targetKey !== "RESPONSABILIDAD_FISCAL") {
         input.value = tercero[key] || "";
       }
     });
@@ -765,8 +772,7 @@
       });
       document.getElementById("RESPONSABILIDAD_FISCAL").value = tercero.RESPONSABILIDAD_FISCAL;
     }
-
-    mostrarMensaje("Tercero (" + tercero.ID_CLIENTE + ") cargado correctamente.", "success");
+    mostrarMensaje("Tercero cargado correctamente.", "success");
   }
 
   // Desactiva el Tercero modificando su estado a INACTIVO
@@ -779,11 +785,11 @@
     }
 
     if (!confirm("¿Está seguro que desea inactivar este Tercero en el ERP?")) return;
-    
+
     CLI_PROCESANDO = true;
     mostrarMensaje("Inactivando registro...", "info");
-    
     const esCliente = idTercero.startsWith("CLI");
+
     if (esCliente) {
       google.script.run
         .withSuccessHandler(function() {
@@ -795,7 +801,7 @@
           CLI_PROCESANDO = false;
           mostrarMensaje("Error al inactivar: " + err.message, "error");
         })
-        .CLI_INACTIVAR_CLIENTE(idTercero);
+        .CLI_INACTIVAR_CLIENTE(idTercero, TOKEN_SESION);
     } else {
       google.script.run
         .withSuccessHandler(function() {
@@ -807,7 +813,7 @@
           CLI_PROCESANDO = false;
           mostrarMensaje("Error al inactivar: " + err.message, "error");
         })
-        .PROV_INACTIVAR_PROVEEDOR(idTercero);
+        .PROV_INACTIVAR_PROVEEDOR(idTercero, TOKEN_SESION);
     }
   }
 
@@ -820,7 +826,7 @@
         datos[input.id] = input.value;
       }
     });
-    // Forzar el ID que sirva de comodín para Clientes o Proveedores
+    // Forzar el ID duplicado para compatibilidad cruzada de módulos
     datos.ID_PROVEEDOR = datos.ID_CLIENTE;
     return datos;
   }
@@ -829,15 +835,15 @@
   function limpiarFormulario() {
     const inputs = document.querySelectorAll("input:not([readonly]), select, textarea");
     inputs.forEach(input => {
-      if (input.name !== "responsabilidad_rut") {
+      if (input.type === "checkbox") {
+        if (input.id === "tipo_cliente" || input.id === "contacto_pagador") {
+          input.checked = true;
+        } else {
+          input.checked = false;
+        }
+      } else {
         input.value = "";
       }
-    });
-    
-    // Inputs del RUT checklist
-    const checkboxes = document.querySelectorAll('input[name="responsabilidad_rut"]');
-    checkboxes.forEach(cb => {
-      cb.checked = cb.value === "R-99-PN";
     });
 
     document.getElementById("ID_CLIENTE").value = "";
@@ -852,7 +858,6 @@
     document.getElementById("PLAZO_PAGO_DIAS").value = "0";
     document.getElementById("LIMITE_CREDITO").value = "0";
     document.getElementById("RESPONSABILIDAD_FISCAL").value = "R-99-PN";
-
     ocultarMensaje();
   }
 
@@ -861,6 +866,7 @@
     const box = document.getElementById("mensaje");
     box.textContent = texto;
     box.className = "msg-box msg-" + tipo;
+    box.style.display = "block";
     box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
@@ -868,6 +874,5 @@
     document.getElementById("mensaje").style.display = "none";
   }
 </script>
-
 </body>
 </html>

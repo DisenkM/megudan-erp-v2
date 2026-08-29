@@ -2,7 +2,7 @@
 * 18_INTEGRACIONES.gs
 * RESPONSABILIDAD:
 * - Despachar peticiones HTTP REST API hacia Siigo o Alegra mediante UrlFetchApp.
-* - Controlar la cola de envíos y registrar logs de respuestas o excepciones.
+* - Controlar la cola de envíos y almacenar logs de respuestas API.
 **************************************************************/
 
 const INT_CONFIG = {
@@ -11,16 +11,10 @@ const INT_CONFIG = {
   TIMEOUT_MS: 15000
 };
 
-/**
- * Envia un documento o tercero JSON de forma asíncrona hacia Siigo o Alegra.
- * @param {string} endpoint Endpoint destino (ej: "/customers").
- * @param {object} payload Cuerpo de la petición en formato objeto.
- * @returns {object} Respuesta estructurada del servidor externo.
- */
 function INT_ENVIAR_PETICION_API(servicio, endpoint, payload) {
   const urlBase = (servicio === "SIIGO") ? INT_CONFIG.ENDPOINT_SIIGO : INT_CONFIG.ENDPOINT_ALEGRA;
   const token = PropertiesService.getScriptProperties().getProperty(servicio + "_API_KEY");
-  
+
   if (!token) {
     return { ok: false, mensaje: "API Key de integración no configurada." };
   }
@@ -37,13 +31,10 @@ function INT_ENVIAR_PETICION_API(servicio, endpoint, payload) {
     const respuesta = UrlFetchApp.fetch(urlBase + endpoint, opciones);
     const codigo = respuesta.getResponseCode();
     const contenido = respuesta.getContentText();
-
-    if (codigo >= 200 && codigo < 300) {
-      return { ok: true, codigo: codigo, datos: JSON.parse(contenido) };
-    } else {
-      return { ok: false, codigo: codigo, mensaje: "Error del servidor externo: " + contenido };
-    }
+    return { ok: (codigo >= 200 && codigo < 300), codigo: codigo, respuesta: contenido };
   } catch (error) {
-    return { ok: false, mensaje: "Fallo de conexión por timeout o error de red: " + error.toString() };
+    console.error("Fallo de API: " + error.toString());
+    return { ok: false, mensaje: error.message };
   }
 }
+

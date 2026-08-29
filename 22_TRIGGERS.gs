@@ -1,30 +1,63 @@
 /**************************************************************
 * 22_TRIGGERS.gs
 * RESPONSABILIDAD:
-* - Administrar y enrutar de forma segura los disparadores asíncronos de Google Sheets.
-* - Redireccionar el flujo onEdit() hacia los validadores específicos.
+* - Centralizar todos los entrypoints y triggers globales del ERP.
 **************************************************************/
 
-const TRIG_CONFIG = {
-  REGISTRAR_ACTIVIDAD: true,
-  AUDITAR_MODIFICACIONES: true
-};
+function onOpen() {
+  try {
+    if (typeof CORE_onOpen === "function") {
+      CORE_onOpen();
+    }
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("onOpen", "TRIGGERS", error);
+    } else {
+      console.error("Error en onOpen: " + error.toString());
+    }
+  }
+}
 
-/**
- * Disparador onEdit nativo de Google Sheets.
- * Redirecciona cambios hacia validaciones asíncronas para optimizar velocidad.
- */
 function onEdit(e) {
-  if (!e || !e.range) return;
-  const rango = e.range;
-  const hoja = rango.getSheet();
-  const nombreHoja = hoja.getName();
-  const valorNuevo = e.value;
-  const valorAnterior = e.oldValue;
+  try {
+    if (!e) return;
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("onEdit", "TRIGGERS", error);
+    } else {
+      console.error("Error en onEdit: " + error.toString());
+    }
+  }
+}
 
-  // Lógica de enrutamiento rápido según hoja editada
-  if (nombreHoja === "🏠MENU" && valorNuevo === "RECOMPILAR") {
-    ACTUALIZAR_MENU();
-    rango.setValue("↳ NAVEGAR");
+function doGet(e) {
+  try {
+    if (typeof WEB_doGet === "function") {
+      return WEB_doGet(e);
+    } else {
+      return HtmlService.createHtmlOutput("<h2>Error Crítico</h2><p>El enrutador web WEB_doGet no está definido.</p>");
+    }
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("doGet", "TRIGGERS", error);
+    }
+    return HtmlService.createHtmlOutput("<h2>Error de Servidor</h2><p>" + error.toString() + "</p>");
+  }
+}
+
+function doPost(e) {
+  try {
+    if (typeof WEB_doPost === "function") {
+      return WEB_doPost(e);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({ EXITO: false, MENSAJE: "WEB_doPost no está disponible." }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("doPost", "TRIGGERS", error);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ EXITO: false, ERROR: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }

@@ -1,8 +1,8 @@
 /**************************************************************
 * 16_CxP.gs
 * RESPONSABILIDAD:
-* - Administrar las Cuentas por Pagar asociadas a compras de proveedores.
-* - Controlar el historial de abonos y saldos pendientes.
+* - Administrar las Cuentas por Pagar asociadas a compras.
+* - Controlar saldos y amortizar obligaciones con abonos.
 **************************************************************/
 
 const CXP_CONFIG = {

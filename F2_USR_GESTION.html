@@ -1,9 +1,9 @@
 <!-- ============================================================
 * INTERFAZ: F2_USR_GESTION
 * MODULO: SEGURIDAD (ADMINISTRACIÓN CENTRAL)
-* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos y Sesiones del ERP
-* CONEXIÓN BACKEND: 23_SEGURIDAD.gs y 24_LOGS.gs
-* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
+* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos, Sesiones, Logo y Mantenimiento del ERP
+* CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 26_MANTENIMIENTO.gs
+* ESTADO: 100% Sincronizado, Modular y Seguro, con pestaña Mantenimiento y re-inicialización de Base de Datos
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -134,7 +134,7 @@
       <div class="header-icon">🔐</div>
       <div>
         <h1>Gestión de Seguridad</h1>
-        <p>Administración de usuarios, roles, permisos y sesiones del ERP</p>
+        <p>Administración de usuarios, roles, permisos, sesiones, logo corporativo y mantenimiento del ERP</p>
       </div>
     </div>
   </header>
@@ -144,6 +144,8 @@
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
     <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('logo')">🖼️ Logo Empresa</button>
+    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('mantenimiento')">⚙️ Mantenimiento</button>
   </nav>
 
   <main class="content">
@@ -288,6 +290,99 @@
         </div>
       </div>
     </section>
+
+    <!-- Pestaña: Logo Empresa (Exclusivo administradores en Sheets) -->
+    <section id="tab-logo" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🖼️ Logotipo Corporativo de MEGUDAN</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px;">
+          <p style="font-size: 13px; color: #4b5563;">
+            Cargue la imagen oficial de su logotipo para que se deba dibujar de forma dinámica en las plantillas del ERP (como facturas, compras y PDFs en Google Drive).
+          </p>
+          
+          <div class="field" style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="form_logo_file" style="font-size: 12px; font-weight: bold; color: #374151;">Seleccionar archivo de imagen (PNG, JPG o JPEG)</label>
+            <input type="file" id="form_logo_file" accept="image/*" class="input" onchange="usrPrevisualizarLogo(this)">
+          </div>
+          
+          <div id="logo_preview_container" style="display: none; text-align: center; padding: 15px; border: 1.5px dashed #d1d5db; border-radius: 8px; background: #f9fafb;">
+            <p style="font-size: 11px; color: #6b7280; margin-bottom: 8px;">Previsualización del archivo seleccionado:</p>
+            <img id="logo_preview" src="" style="max-height: 120px; max-width: 100%; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          </div>
+          
+          <button class="button button-primary" id="btn_guardar_logo" onclick="usrGuardarLogo()" disabled>Subir e Indexar Logotipo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pestaña: Mantenimiento -->
+    <section id="tab-mantenimiento" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">⚙️ Mantenimiento de Datos y Caché</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 20px; max-width: 600px;">
+          <p style="font-size: 13px; color: #4b5563; margin-bottom: 10px;">
+            Ejecute tareas operacionales de depuración, purga de historiales y liberación de la caché global de Apps Script.
+          </p>
+          
+          <!-- Fila: Caché -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #111827;">Purgar Caché de Sesión</strong>
+              <span style="font-size: 11px; color: #6b7280;">Libera la caché en memoria de Apps Script del ERP de forma asíncrona.</span>
+            </div>
+            <button class="button button-secondary" onclick="mntEjecutarPurgarCache()">Purgar Caché</button>
+          </div>
+          
+          <!-- Fila: Auditorías -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #111827;">Depurar USR_AUDITORIA</strong>
+              <span style="font-size: 11px; color: #6b7280;">Elimina bitácoras de auditoría conservando el período de retención seleccionado.</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="mnt_retencion_aud" class="input" style="width: 110px; padding: 6px;">
+                <option value="30" selected>30 días</option>
+                <option value="60">60 días</option>
+                <option value="90">90 días</option>
+                <option value="0">Vaciar (Todo)</option>
+              </select>
+              <button class="button button-danger" onclick="mntEjecutarPurgaAuditoria()">Depurar</button>
+            </div>
+          </div>
+          
+          <!-- Fila: Sesiones -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #111827;">Depurar USR_SESIONES</strong>
+              <span style="font-size: 11px; color: #6b7280;">Depura registros de accesos antiguos del ERP en Sheets.</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="mnt_retencion_ses" class="input" style="width: 110px; padding: 6px;">
+                <option value="15" selected>15 días</option>
+                <option value="30">30 días</option>
+                <option value="0">Vaciar (Todo)</option>
+              </select>
+              <button class="button button-danger" onclick="mntEjecutarPurgaSesiones()">Depurar</button>
+            </div>
+          </div>
+          
+          <!-- Fila: Resetear Usuarios -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px;">
+            <div>
+              <strong style="font-size: 14px; display: block; color: #b91c1c;">Reiniciar Tabla de Usuarios</strong>
+              <span style="font-size: 11px; color: #6b7280; display: block; margin-top: 3px; max-width: 380px;">
+                Vacía la base de datos de usuarios (`USR_USUARIOS`), re-inicializando únicamente el administrador de fábrica (`ADMIN` / `Admin123!`).
+              </span>
+            </div>
+            <button class="button button-danger" style="background: #dc2626;" onclick="mntEjecutarResetUsuarios()">Reiniciar BD</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -300,23 +395,23 @@
     </div>
     <div class="modal-body">
       <div class="field">
-        <label>Nombre de Usuario (Login) *</label>
+        <label for="form_usuario">Nombre de Usuario (Login) *</label>
         <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
       </div>
       <div class="field">
-        <label>Nombre Completo *</label>
+        <label for="form_nombre">Nombre Completo *</label>
         <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
       </div>
       <div class="field">
-        <label>Correo Electrónico *</label>
+        <label for="form_correo">Correo Electrónico *</label>
         <input type="email" id="form_correo" class="input" placeholder="Ej: jperez@megudan.com">
       </div>
       <div class="field">
-        <label>Contraseña Temporal *</label>
+        <label for="form_contrasena">Contraseña Temporal *</label>
         <input type="password" id="form_contrasena" class="input" placeholder="Min. 8 caracteres (1 mayúscula, 1 número, 1 especial)">
       </div>
       <div class="field">
-        <label>Rol Asignado *</label>
+        <label for="form_id_rol">Rol Asignado *</label>
         <select id="form_id_rol"></select>
       </div>
     </div>
@@ -340,7 +435,7 @@
       </p>
       <input type="hidden" id="aprob_id_usuario">
       <div class="field">
-        <label>Rol Definitivo *</label>
+        <label for="aprob_id_role">Rol Definitivo *</label>
         <select id="aprob_id_role"></select>
       </div>
     </div>
@@ -353,11 +448,14 @@
 
 <!-- JavaScript modular de Seguridad -->
 <script>
+  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
   let USR_USUARIOS = [];
   let USR_ROLES = [];
   let USR_PERMISOS = [];
   let USR_SESIONES = [];
   let PROCESANDO_GUARDADO = false;
+  let LOGO_BASE64 = null;
+  let LOGO_NOMBRE = null;
 
   document.addEventListener("DOMContentLoaded", function() {
     USR_CARGAR_USUARIOS();
@@ -386,553 +484,72 @@
     el.textContent = mensaje;
     el.className = "message " + tipo;
     el.style.display = "block";
-    setTimeout(() => { el.style.display = "none"; }, 5000);
-  }
-
-  // Modales
-  function USR_ABRIR_MODAL_USUARIO() {
-    document.getElementById("form_usuario").value = "";
-    document.getElementById("form_nombre").value = "";
-    document.getElementById("form_correo").value = "";
-    document.getElementById("form_contrasena").value = "";
-    
-    const select = document.getElementById("form_id_rol");
-    select.innerHTML = "";
-    
-    if (!(USR_ROLES.length > 0)) {
-      const opt = document.createElement("option");
-      opt.value = ""; opt.text = "Cargando roles...";
-      select.add(opt);
-    } else {
-      USR_ROLES.forEach(r => {
-        if (r.ESTADO_ROL === "ACTIVO") {
-          const opt = document.createElement("option");
-          opt.value = r.ID_ROL;
-          opt.text = r.NOMBRE_ROL + " (Nivel " + r.NIVEL_JERARQUIA + ")";
-          select.add(opt);
-        }
-      });
-    }
-    document.getElementById("modal_usuario").style.display = "block";
-  }
-
-  function USR_CERRAR_MODAL_USUARIO() {
-    document.getElementById("modal_usuario").style.display = "none";
-  }
-
-  function USR_GUARDAR_USUARIO() {
-    if (PROCESANDO_GUARDADO) return;
-
-    const usuario = document.getElementById("form_usuario").value.trim();
-    const nombre = document.getElementById("form_nombre").value.trim();
-    const correo = document.getElementById("form_correo").value.trim();
-    const contrasena = document.getElementById("form_contrasena").value;
-    const idRol = document.getElementById("form_id_rol").value;
-
-    if (!usuario || !nombre || !correo || !contrasena || !idRol) {
-      alert("Todos los campos marcados con (*) son obligatorios.");
-      return;
-    }
-
-    if (!(contrasena.length >= 8)) {
-      alert("La contraseña debe tener mínimo 8 caracteres.");
-      return;
-    }
-
-    PROCESANDO_GUARDADO = true;
-    USR_MOSTRAR_ALERTA("Registrando usuario en Sheets...", "info");
-    USR_CERRAR_MODAL_USUARIO();
-
-    const datos = {
-      USUARIO: usuario,
-      NOMBRE: nombre,
-      CORREO: correo,
-      ID_ROL: idRol,
-      USUARIO_CREACION: "ADMINISTRADOR_SISTEMA"
-    };
-
-    google.script.run
-      .withSuccessHandler(function(resultado) {
-        google.script.run
-          .withSuccessHandler(function() {
-            PROCESANDO_GUARDADO = false;
-            USR_MOSTRAR_ALERTA("Usuario '" + usuario + "' creado con éxito en Sheets.", "success");
-            USR_CARGAR_USUARIOS();
-          })
-          .withFailureHandler(function(err) {
-            PROCESANDO_GUARDADO = false;
-            alert("Error al establecer contraseña: " + err.message);
-          })
-          .SEG_ESTABLECER_CONTRASENA(resultado.ID_USUARIO, contrasena, "ADMINISTRADOR_SISTEMA");
-      })
-      .withFailureHandler(function(err) {
-        PROCESANDO_GUARDADO = false;
-        alert("Error al crear usuario: " + err.message);
-      })
-      .SEG_CREAR_USUARIO(datos);
-  }
-
-  // Aprobaciones
-  function USR_ABRIR_APROBACION(idUsuario, username) {
-    document.getElementById("aprob_id_usuario").value = idUsuario;
-    document.getElementById("aprob_username").textContent = username;
-    
-    const select = document.getElementById("aprob_id_role");
-    select.innerHTML = "";
-    
-    if (!(USR_ROLES.length > 0)) {
-      const opt = document.createElement("option");
-      opt.value = ""; opt.text = "Cargando roles...";
-      select.add(opt);
-    } else {
-      USR_ROLES.forEach(r => {
-        if (r.ESTADO_ROL === "ACTIVO") {
-          const opt = document.createElement("option");
-          opt.value = r.ID_ROL;
-          opt.text = r.NOMBRE_ROL + " (Nivel " + r.NIVEL_JERARQUIA + ")";
-          select.add(opt);
-        }
-      });
-    }
-    document.getElementById("modal_aprobacion").style.display = "block";
-  }
-
-  function USR_CERRAR_MODAL_APROBACION() {
-    document.getElementById("modal_aprobacion").style.display = "none";
-  }
-
-  function USR_EJECUTAR_APROBACION() {
-    const idUsuario = document.getElementById("aprob_id_usuario").value;
-    const idRol = document.getElementById("aprob_id_role").value;
-    
-    if (!idRol) {
-      alert("Por favor seleccione un rol definitivo.");
-      return;
-    }
-    
-    USR_CERRAR_MODAL_APROBACION();
-    USR_MOSTRAR_ALERTA("Aprobando acceso contable...", "info");
-    
-    google.script.run
-      .withSuccessHandler(function() {
-        google.script.run
-          .withSuccessHandler(function() {
-            USR_MOSTRAR_ALERTA("Usuario aprobado y activado con éxito.", "success");
-            USR_CARGAR_USUARIOS();
-          })
-          .withFailureHandler(function(err) {
-            alert("Error al activar usuario: " + err.message);
-          })
-          .SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, "ACTIVO", "ADMINISTRADOR_SISTEMA");
-      })
-      .withFailureHandler(function(err) {
-        alert("Error al asignar rol definitivo: " + err.message);
-      })
-      .SEG_ACTUALIZAR_USUARIO(idUsuario, { ID_ROL: idRol });
-  }
-
-  <!-- ============================================================
-* INTERFAZ: F2_USR_GESTION
-* MODULO: SEGURIDAD (ADMINISTRACIÓN CENTRAL)
-* RESPONSABILIDAD: Gestión de Usuarios, Roles, Permisos y Sesiones del ERP
-* CONEXIÓN BACKEND: 23_SEGURIDAD.gs y 24_LOGS.gs
-* ESTADO: 100% Modular y Seguro (Libre de caracteres '<' en JS)
-============================================================ -->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Seguridad | MEGUDAN ERP</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background-color: #f4f6f8; color: #1f2937;
-    }
-    .app { min-height: 100vh; display: flex; flex-direction: column; }
-    
-    /* Header */
-    .header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 25px; background-color: #374151; color: #ffffff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .header-title { display: flex; align-items: center; gap: 12px; }
-    .header-icon { font-size: 28px; }
-    .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
-    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.8; }
-    
-    /* Tabs Navigation */
-    .tabs {
-      display: flex; gap: 0; background-color: #ffffff;
-      border-bottom: 1px solid #d1d5db; overflow-x: auto;
-    }
-    .tab-button {
-      border: none; background: transparent; padding: 16px 24px;
-      cursor: pointer; font-size: 14px; font-weight: 700; color: #6b7280;
-      border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s;
-    }
-    .tab-button:hover { background-color: #f9fafb; color: #111827; }
-    .tab-button.active { color: #374151; border-bottom-color: #374151; background-color: #f9fafb; }
-    
-    /* Content wrapper */
-    .content { flex: 1; padding: 25px; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
-    /* Cards and Elements */
-    .card {
-      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px;
-      padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
-    .card-title { margin: 0; font-size: 18px; font-weight: 700; }
-    
-    .button {
-      border: none; border-radius: 6px; padding: 10px 16px;
-      cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;
-    }
-    .button-primary { background: #374151; color: #ffffff; }
-    .button-primary:hover { background: #1f2937; }
-    .button-secondary { background: #e5e7eb; color: #374151; }
-    .button-secondary:hover { background: #d1d5db; }
-    .button-danger { background: #b91c1c; color: #ffffff; }
-    .button-danger:hover { background: #991b1b; }
-    .button-success { background: #16a34a; color: #ffffff; }
-    .button-success:hover { background: #15803d; }
-    
-    /* Search and inputs */
-    .search-container { display: flex; gap: 10px; margin-bottom: 20px; }
-    .input, select {
-      width: 100%; padding: 11px 12px; border: 1px solid #d1d5db;
-      border-radius: 6px; font-size: 14px; outline: none; background: white;
-    }
-    .input:focus, select:focus { border-color: #374151; box-shadow: 0 0 0 3px rgba(55,65,81,0.10); }
-    
-    /* Tables design */
-    .table-container { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 750px; }
-    th {
-      background: #f3f4f6; padding: 12px; text-align: left; font-size: 12px;
-      color: #374151; border-bottom: 1px solid #d1d5db; white-space: nowrap; font-weight: 700;
-    }
-    td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
-    tr:hover td { background: #f9fafb; }
-    
-    /* Badges */
-    .badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .badge-active { background: #dcfce7; color: #166534; }
-    .badge-inactive { background: #f3f4f6; color: #4b5563; }
-    .badge-blocked { background: #fef3c7; color: #92400e; }
-    .badge-pending { background: #fee2e2; color: #ea580c; border: 1.5px solid #f97316; }
-    .badge-session { background: #dbeafe; color: #1d4ed8; }
-    
-    /* State placeholders */
-    .empty-state { text-align: center; padding: 45px 20px; color: #6b7280; }
-    .empty-icon { font-size: 42px; margin-bottom: 10px; }
-    
-    /* Modales */
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
-    }
-    .modal-content {
-      background-color: #fcfcfc; margin: 8% auto; padding: 25px;
-      border: 1px solid #e5e7eb; width: 480px; border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px; }
-    .modal-title { margin: 0; font-size: 17px; font-weight: 700; }
-    .close-btn { font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
-    .close-btn:hover { color: black; }
-    
-    .modal-body .field { display: flex; flex-direction: column; margin-bottom: 15px; gap: 6px; }
-    .modal-body label { font-size: 12px; font-weight: 700; color: #374151; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 20px; }
-    
-    .message { display: none; padding: 12px 15px; border-radius: 6px; margin-bottom: 18px; font-size: 13px; font-weight: 600; }
-    .message.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .message.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    .message.info { display: block; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
-  </style>
-</head>
-<body>
-
-<div class="app">
-  <header class="header">
-    <div class="header-title">
-      <div class="header-icon">🔐</div>
-      <div>
-        <h1>Gestión de Seguridad</h1>
-        <p>Administración de usuarios, roles, permisos y sesiones del ERP</p>
-      </div>
-    </div>
-  </header>
-
-  <nav class="tabs">
-    <button class="tab-button active" onclick="USR_CAMBIAR_PESTANA('usuarios')">👤 Usuarios</button>
-    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('roles')">🛡️ Roles</button>
-    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('permisos')">🔑 Permisos</button>
-    <button class="tab-button" onclick="USR_CAMBIAR_PESTANA('sesiones')">🟢 Sesiones</button>
-  </nav>
-
-  <main class="content">
-    <div id="USR_MENSAJE_ALERT" class="message"></div>
-
-    <!-- Pestaña: Usuarios -->
-    <section id="tab-usuarios" class="tab-content active">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">👤 Usuarios del ERP</h2>
-          <button class="button button-primary" onclick="USR_ABRIR_MODAL_USUARIO()">+ Nuevo Usuario</button>
-        </div>
-        <div class="search-container">
-          <input type="text" id="USR_BUSCADOR_USUARIOS" class="input" placeholder="Buscar por usuario, nombre, correo o ID..." oninput="USR_BUSCAR_USUARIOS()">
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>Nombre Completo</th>
-                <th>Correo</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="USR_TABLA_USUARIOS">
-              <tr>
-                <td colspan="7">
-                  <div class="empty-state">
-                    <div class="empty-icon">👤</div>
-                    <strong>Cargando usuarios registrados...</strong>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pestaña: Roles -->
-    <section id="tab-roles" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🛡️ Roles y Niveles de Jerarquía</h2>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre del Rol</th>
-                <th>Descripción</th>
-                <th>Nivel</th>
-                <th>Rol Sistema</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="USR_TABLA_ROLES">
-              <tr>
-                <td colspan="6">
-                  <div class="empty-state">
-                    <div class="empty-icon">🛡️</div>
-                    <strong>Cargando roles predefinidos...</strong>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pestaña: Permisos -->
-    <section id="tab-permisos" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🔑 Control de Permisos por Rol</h2>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Rol</th>
-                <th>Módulo</th>
-                <th>Submódulo</th>
-                <th>Acción</th>
-                <th>Permitido</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="USR_TABLA_PERMISOS">
-              <tr>
-                <td colspan="7">
-                  <div class="empty-state">
-                    <div class="empty-icon">🔑</div>
-                    <strong>Cargando matriz de permisos...</strong>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pestaña: Sesiones -->
-    <section id="tab-sesiones" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🟢 Control de Sesiones Activas</h2>
-          <button class="button button-secondary" onclick="USR_CARGAR_SESIONES()">↻ Actualizar</button>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID Sesión</th>
-                <th>Usuario</th>
-                <th>Inicio</th>
-                <th>Última Actividad</th>
-                <th>Expiración</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="USR_TABLA_SESIONES">
-              <tr>
-                <td colspan="7">
-                  <div class="empty-state">
-                    <div class="empty-icon">🟢</div>
-                    <strong>Cargando registros de sesión...</strong>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<!-- Modal: Registro de Usuario por Admin -->
-<div id="modal_usuario" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title">👤 Registro de Nuevo Usuario</h3>
-      <span class="close-btn" onclick="USR_CERRAR_MODAL_USUARIO()">&times;</span>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Nombre de Usuario (Login) *</label>
-        <input type="text" id="form_usuario" class="input" placeholder="Ej: j_perez">
-      </div>
-      <div class="field">
-        <label>Nombre Completo *</label>
-        <input type="text" id="form_nombre" class="input" placeholder="Ej: Juan Pérez">
-      </div>
-      <div class="field">
-        <label>Correo Electrónico *</label>
-        <input type="email" id="form_correo" class="input" placeholder="Ej: jperez@megudan.com">
-      </div>
-      <div class="field">
-        <label>Contraseña Temporal *</label>
-        <input type="password" id="form_contrasena" class="input" placeholder="Min. 8 caracteres (1 mayúscula, 1 número, 1 especial)">
-      </div>
-      <div class="field">
-        <label>Rol Asignado *</label>
-        <select id="form_id_rol"></select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="USR_CERRAR_MODAL_USUARIO()">Cancelar</button>
-      <button class="button button-primary" onclick="USR_GUARDAR_USUARIO()">Guardar Usuario</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Aprobación de Auto-registro -->
-<div id="modal_aprobacion" class="modal">
-  <div class="modal-content" style="width: 440px;">
-    <div class="modal-header">
-      <h3 class="modal-title">✓ Aprobar Registro de Usuario</h3>
-      <span class="close-btn" onclick="USR_CERRAR_MODAL_APROBACION()">&times;</span>
-    </div>
-    <div class="modal-body">
-      <p style="font-size: 13px; color: #4b5563; margin-bottom: 15px;">
-        Vas a aprobar el acceso para el usuario <strong id="aprob_username"></strong>. Por favor, asígnale su Rol definitivo:
-      </p>
-      <input type="hidden" id="aprob_id_usuario">
-      <div class="field">
-        <label>Rol Definitivo *</label>
-        <select id="aprob_id_role"></select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="USR_CERRAR_MODAL_APROBACION()">Cancelar</button>
-      <button class="button button-success" onclick="USR_EJECUTAR_APROBACION()">Aprobar y Activar</button>
-    </div>
-  </div>
-</div>
-
-<!-- JavaScript modular de Seguridad -->
-<script>
-  let USR_USUARIOS = [];
-  let USR_ROLES = [];
-  let USR_PERMISOS = [];
-  let USR_SESIONES = [];
-  let PROCESANDO_GUARDADO = false;
-
-  document.addEventListener("DOMContentLoaded", function() {
-    USR_CARGAR_USUARIOS();
-    USR_CARGAR_ROLES();
-    USR_CARGAR_PERMISOS();
-    USR_CARGAR_SESIONES();
-  });
-
-  function USR_CAMBIAR_PESTANA(pestana) {
-    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
-
-    const target = document.getElementById("tab-" + pestana);
-    if (target) target.classList.add("active");
-
-    const botones = document.querySelectorAll(".tab-button");
-    botones.forEach(btn => {
-      if (btn.textContent.toLowerCase().includes(pestana)) {
-        btn.classList.add("active");
-      }
-    });
-  }
-
-  function USR_MOSTRAR_ALERTA(mensaje, tipo) {
-    const el = document.getElementById("USR_MENSAJE_ALERT");
-    el.textContent = mensaje;
-    el.className = "message " + tipo;
-    el.style.display = "block";
-    // Mantenemos los mensajes de éxito o información legibles; los ocultamos después de un tiempo
-    setTimeout(() => { 
+    setTimeout(() => {
       if (el.textContent === mensaje) {
-        el.style.display = "none"; 
+        el.style.display = "none";
       }
     }, 6000);
   }
 
   function USR_MOSTRAR_ERROR(mensaje) {
-    const el = document.getElementById("USR_MENSAJE_ALERT");
-    el.textContent = "❌ Error: " + mensaje;
-    el.className = "message error";
-    el.style.display = "block";
-    console.error(mensaje);
+    USR_MOSTRAR_ALERTA(mensaje, "error");
+  }
+
+  // Previsualizador local de logotipo
+  function usrPrevisualizarLogo(input) {
+    const file = input.files[0];
+    const btn = document.getElementById("btn_guardar_logo");
+    if (!file) {
+      LOGO_BASE64 = null;
+      LOGO_NOMBRE = null;
+      document.getElementById("logo_preview_container").style.display = "none";
+      btn.disabled = true;
+      return;
+    }
+    
+    LOGO_NOMBRE = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      LOGO_BASE64 = e.target.result;
+      document.getElementById("logo_preview").src = LOGO_BASE64;
+      document.getElementById("logo_preview_container").style.display = "block";
+      btn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Guardar logotipo en Drive (Afecta CFG_EMPRESA)
+  function usrGuardarLogo() {
+    if (!LOGO_BASE64) return;
+    const btn = document.getElementById("btn_guardar_logo");
+    btn.disabled = true;
+    btn.textContent = "Guardando e indexando...";
+    USR_MOSTRAR_ALERTA("Subiendo imagen de logotipo a Google Drive...", "info");
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.textContent = "Subir e Indexar Logotipo";
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor.");
+          return;
+        }
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          document.getElementById("form_logo_file").value = "";
+          document.getElementById("logo_preview_container").style.display = "none";
+          LOGO_BASE64 = null;
+          LOGO_NOMBRE = null;
+        } else {
+          USR_MOSTRAR_ERROR("No se pudo guardar el logo.");
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = "Subir e Indexar Logotipo";
+        USR_MOSTRAR_ERROR(err.message);
+      })
+      .SEG_GUARDAR_LOGO(LOGO_BASE64, LOGO_NOMBRE);
   }
 
   // Modales
@@ -980,7 +597,7 @@
       return;
     }
 
-    if (!(contrasena.length >= 8)) {
+    if (contrasena.length < 8) {
       alert("La contraseña debe tener mínimo 8 caracteres.");
       return;
     }
@@ -989,7 +606,6 @@
     USR_MOSTRAR_ALERTA("Registrando usuario en Sheets...", "info");
     USR_CERRAR_MODAL_USUARIO();
 
-    // Enviamos la contraseña plana directamente en el objeto datos para crear el usuario en una sola transacción atómica
     const datos = {
       USUARIO: usuario,
       NOMBRE: nombre,
@@ -1002,14 +618,14 @@
     google.script.run
       .withSuccessHandler(function(resultado) {
         PROCESANDO_GUARDADO = false;
-        USR_MOSTRAR_ALERTA("Usuario '" + usuario + "' registrado con éxito.", "success");
+        USR_MOSTRAR_ALERTA("Usuario registrado con éxito.", "success");
         USR_CARGAR_USUARIOS();
       })
       .withFailureHandler(function(err) {
         PROCESANDO_GUARDADO = false;
         USR_MOSTRAR_ERROR("No se pudo crear el usuario: " + err.message);
       })
-      .SEG_CREAR_USUARIO(datos);
+      .SEG_CREAR_USUARIO(datos, TOKEN_SESION);
   }
 
   // Aprobaciones
@@ -1053,7 +669,6 @@
     USR_CERRAR_MODAL_APROBACION();
     USR_MOSTRAR_ALERTA("Aprobando acceso y activando cuenta...", "info");
     
-    // Llamada atómica al backend para asignar rol y activar estado en un solo paso
     google.script.run
       .withSuccessHandler(function(resultado) {
         USR_MOSTRAR_ALERTA(resultado.MENSAJE, "success");
@@ -1062,54 +677,74 @@
       .withFailureHandler(function(err) {
         USR_MOSTRAR_ERROR("No se pudo aprobar el usuario: " + err.message);
       })
-      .SEG_APROBAR_USUARIO(idUsuario, idRol, "ADMINISTRADOR_SISTEMA");
+      .SEG_APROBAR_USUARIO(idUsuario, idRol, TOKEN_SESION);
   }
 
   // Carga asíncrona de datos desde el backend .gs
   function USR_CARGAR_USUARIOS() {
+    // Patrón defensivo: mostrar loader en la tabla antes de la llamada
+    const tbody = document.getElementById("USR_TABLA_USUARIOS");
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👤</div><strong>Cargando usuarios registrados...</strong></div></td></tr>`;
+    
     google.script.run
-      .withSuccessHandler(function(usuarios) {
-        USR_USUARIOS = usuarios;
-        USR_MOSTRAR_USUARIOS(usuarios);
+      .withSuccessHandler(function(res) {
+        // Garantizamos ocultar o limpiar loaders primero
+        if (!res) {
+          USR_MOSTRAR_ERROR("Respuesta nula del servidor de seguridad.");
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error de red: Respuesta vacía del servidor.</td></tr>`;
+          return;
+        }
+        if (res.EXITO) {
+          USR_USUARIOS = res.DATOS || [];
+          USR_MOSTRAR_USUARIOS(USR_USUARIOS);
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE || "No se pudo obtener la lista de usuarios.");
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Error:</strong> ` + (res.MENSAJE || "Acceso denegado") + `</td></tr>`;
+        }
       })
       .withFailureHandler(function(err) {
-        USR_MOSTRAR_ERROR("No se pudieron cargar los usuarios: " + err.message);
+        USR_MOSTRAR_ERROR("Error de sistema: " + err.message);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
       })
-      .SEG_LISTAR_USUARIOS();
+      .SEG_LISTAR_USUARIOS(TOKEN_SESION);
   }
 
   function USR_MOSTRAR_USUARIOS(usuarios) {
     const tbody = document.getElementById("USR_TABLA_USUARIOS");
     tbody.innerHTML = "";
 
-    
+    if (!usuarios || usuarios.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay usuarios registrados.</td></tr>`;
+      return;
+    }
+
+    usuarios.forEach(u => {
       const tr = document.createElement("tr");
       let badgeClass = "badge-inactive";
       let accionesHtml = "";
       
       if (u.ESTADO_USUARIO === "ACTIVO") {
         badgeClass = "badge-active";
-        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'INACTIVO')">Inactivar</button>`;
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick=\"USR_CAMBIAR_ESTADO('" + u.ID_USUARIO + "', 'INACTIVO')\">Inactivar</button>";
       } else if (u.ESTADO_USUARIO === "INACTIVO") {
         badgeClass = "badge-inactive";
-        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Activar</button>`;
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick=\"USR_CAMBIAR_ESTADO('" + u.ID_USUARIO + "', 'ACTIVO')\">Activar</button>";
       } else if (u.ESTADO_USUARIO === "BLOQUEADO") {
         badgeClass = "badge-blocked";
-        accionesHtml = `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="USR_CAMBIAR_ESTADO('${u.ID_USUARIO}', 'ACTIVO')">Desbloquear</button>`;
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick=\"USR_CAMBIAR_ESTADO('" + u.ID_USUARIO + "', 'ACTIVO')\">Desbloquear</button>";
       } else if (u.ESTADO_USUARIO === "PENDIENTE") {
         badgeClass = "badge-pending";
-        accionesHtml = `<button class="button button-success" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="USR_ABRIR_APROBACION('${u.ID_USUARIO}', '${u.USUARIO}')">Aprobar Acceso</button>`;
+        accionesHtml = "<button class='button button-success' style='padding:4px 8px; font-size:11px; font-weight:700;' onclick=\"USR_ABRIR_APROBACION('" + u.ID_USUARIO + "', '" + u.USUARIO + "')\">Aprobar Acceso</button>";
       }
       
-      tr.innerHTML = `
-        <td><strong>${u.ID_USUARIO}</strong></td>
-        <td>${u.USUARIO}</td>
-        <td>${u.NOMBRE || u.NOMBRE_COMPLETO || ""}</td>
-        <td>${u.CORREO}</td>
-        <td><span class="badge badge-session">${u.ID_ROL}</span></td>
-        <td><span class="badge ${badgeClass}">${u.ESTADO_USUARIO}</span></td>
-        <td>${accionesHtml}</td>
-      `;
+      tr.innerHTML = 
+        "<td><strong>" + u.ID_USUARIO + "</strong></td>" +
+        "<td>" + u.USUARIO + "</td>" +
+        "<td>" + (u.NOMBRE || u.NOMBRE_COMPLETO || "") + "</td>" +
+        "<td>" + u.CORREO + "</td>" +
+        "<td><span class='badge badge-session'>" + u.ID_ROL + "</span></td>" +
+        "<td><span class='badge " + badgeClass + "'>" + u.ESTADO_USUARIO + "</span></td>" +
+        "<td>" + accionesHtml + "</td>";
       tbody.appendChild(tr);
     });
   }
@@ -1143,67 +778,88 @@
       .withFailureHandler(function(err) {
         alert("Error al actualizar estado: " + err.message);
       })
-      .SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, "ADMINISTRADOR_SISTEMA");
+      .SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, TOKEN_SESION);
   }
 
   function USR_CARGAR_ROLES() {
+    const tbody = document.getElementById("USR_TABLA_ROLES");
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🛡️</div><strong>Cargando roles predefinidos...</strong></div></td></tr>`;
+    
     google.script.run
-      .withSuccessHandler(function(roles) {
-        USR_ROLES = roles;
-        const tbody = document.getElementById("USR_TABLA_ROLES");
-        tbody.innerHTML = "";
-        
-        const rolesValidos = roles.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
-        rolesValidos.forEach(r => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><strong>${r.ID_ROL}</strong></td>
-            <td>${r.NOMBRE_ROL}</td>
-            <td>${r.DESCRIPCION}</td>
-            <td>Nivel ${r.NIVEL_JERARQUIA}</td>
-            <td>${r.ROL_SISTEMA}</td>
-            <td><span class="badge badge-active">${r.ESTADO_ROL}</span></td>
-          `;
-          tbody.appendChild(tr);
-        });
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Respuesta nula del servidor al obtener roles.");
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error de comunicación al obtener roles.</td></tr>`;
+          return;
+        }
+        if (res.EXITO) {
+          USR_ROLES = res.DATOS || [];
+          tbody.innerHTML = "";
+          const rolesValidos = USR_ROLES.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
+          rolesValidos.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = 
+              "<td><strong>" + r.ID_ROL + "</strong></td>" +
+              "<td>" + r.NOMBRE_ROL + "</td>" +
+              "<td>" + r.DESCRIPCION + "</td>" +
+              "<td>Nivel " + r.NIVEL_JERARQUIA + "</td>" +
+              "<td>" + r.ROL_SISTEMA + "</td>" +
+              "<td><span class='badge badge-active'>" + r.ESTADO_ROL + "</span></td>";
+            tbody.appendChild(tr);
+          });
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #dc2626;"><strong>Error:</strong> ` + res.MENSAJE + `</td></tr>`;
+        }
       })
       .withFailureHandler(function(err) {
         USR_MOSTRAR_ERROR("No se pudieron cargar los roles: " + err.message);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
       })
-      .SEG_OBTENER_ROLES();
+      .SEG_OBTENER_ROLES(TOKEN_SESION);
   }
 
   function USR_CARGAR_PERMISOS() {
+    const tbody = document.getElementById("USR_TABLA_PERMISOS");
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔑</div><strong>Cargando matriz de permisos...</strong></div></td></tr>`;
+    
     google.script.run
-      .withSuccessHandler(function(permisos) {
-        USR_PERMISOS = permisos;
-        const tbody = document.getElementById("USR_TABLA_PERMISOS");
-        tbody.innerHTML = "";
-
-        if (!(permisos.length > 0)) {
-          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Respuesta nula del servidor al obtener permisos.");
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error de red al cargar permisos.</td></tr>`;
           return;
         }
-
-        const permisosValidos = permisos.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
-        permisosValidos.forEach(p => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><strong>${p.ID_PERMISO}</strong></td>
-            <td>${p.ID_ROL}</td>
-            <td>${p.MODULO}</td>
-            <td>${p.SUBMODULO || "-"}</td>
-            <td>${p.ACCION}</td>
-            <td><span class="badge ${p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive'}">${p.PERMITIDO}</span></td>
-            <td>${p.ESTADO_PERMISO}</td>
-          `;
-          tbody.appendChild(tr);
-        });
+        if (res.EXITO) {
+          USR_PERMISOS = res.DATOS || [];
+          tbody.innerHTML = "";
+          if (USR_PERMISOS.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
+            return;
+          }
+          const permisosValidos = USR_PERMISOS.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
+          permisosValidos.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = 
+              "<td><strong>" + p.ID_PERMISO + "</strong></td>" +
+              "<td>" + p.ID_ROL + "</td>" +
+              "<td>" + p.MODULO + "</td>" +
+              "<td>" + (p.SUBMODULO || "-") + "</td>" +
+              "<td>" + p.ACCION + "</td>" +
+              "<td><span class='badge " + (p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive') + "'>" + p.PERMITIDO + "</span></td>" +
+              "<td>" + p.ESTADO_PERMISO + "</td>";
+            tbody.appendChild(tr);
+          });
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Error:</strong> ` + res.MENSAJE + `</td></tr>`;
+        }
       })
       .withFailureHandler(function(err) {
         USR_MOSTRAR_ERROR("No se pudieron cargar los permisos: " + err.message);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
       })
-      .SEG_OBTENER_PERMISOS();
+      .SEG_OBTENER_PERMISOS(TOKEN_SESION);
   }
 
   function USR_CARGAR_SESIONES() {
@@ -1213,7 +869,7 @@
         const tbody = document.getElementById("USR_TABLA_SESIONES");
         tbody.innerHTML = "";
 
-        if (!(sesiones.length > 0)) {
+        if (!sesiones || sesiones.length === 0) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay sesiones registradas en USR_SESIONES.</td></tr>`;
           return;
         }
@@ -1222,24 +878,23 @@
         sesionesValidas.forEach(s => {
           const tr = document.createElement("tr");
           const estadoClass = s.ESTADO_SESION === "ACTIVA" ? "badge-active" : "badge-inactive";
-          tr.innerHTML = `
-            <td><strong>${s.ID_SESION}</strong></td>
-            <td>${s.USUARIO} (${s.ID_USUARIO})</td>
-            <td>${s.FECHA_INICIO}</td>
-            <td>${s.ULTIMA_ACTIVIDAD}</td>
-            <td>${s.EXPIRA_SESION || s.FECHA_EXPIRACION || ""}</td>
-            <td><span class="badge ${estadoClass}">${s.ESTADO_SESION}</span></td>
-            <td>
-              ${s.ESTADO_SESION === 'ACTIVA' ? `<button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="USR_REVOCAR_SESION('${s.TOKEN_SESION}')">Revocar</button>` : '-'}
-            </td>
-          `;
+          tr.innerHTML = 
+            "<td><strong>" + s.ID_SESION + "</strong></td>" +
+            "<td>" + s.USUARIO + " (" + s.ID_USUARIO + ")" + "</td>" +
+            "<td>" + s.FECHA_INICIO + "</td>" +
+            "<td>" + s.ULTIMA_ACTIVIDAD + "</td>" +
+            "<td>" + (s.EXPIRA_SESION || s.FECHA_EXPIRACION || "") + "</td>" +
+            "<td><span class='badge " + estadoClass + "'>" + s.ESTADO_SESION + "</span></td>" +
+            "<td>" +
+              (s.ESTADO_SESION === 'ACTIVA' ? "<button class='button button-danger' style='padding:4px 8px; font-size:11px;' onclick=\"USR_REVOCAR_SESION('" + s.TOKEN_SESION + "')\">Revocar</button>" : '-') +
+            "</td>";
           tbody.appendChild(tr);
         });
       })
       .withFailureHandler(function(err) {
         USR_MOSTRAR_ERROR("No se pudieron cargar los registros de sesión: " + err.message);
       })
-      .SEG_OBTENER_SESIONES();
+      .SEG_OBTENER_SESIONES(TOKEN_SESION);
   }
 
   function USR_REVOCAR_SESION(token) {
@@ -1253,6 +908,111 @@
         alert("Error al cerrar sesión: " + err.message);
       })
       .SEG_CERRAR_SESION(token);
+  }
+
+  // Ejecutar purga de caché de sesión
+  function mntEjecutarPurgarCache() {
+    if (!confirm("¿Está seguro que desea purgar la caché de sesión global del ERP?")) return;
+    USR_MOSTRAR_ALERTA("Purgando caché del servidor de Google...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error al conectar: " + err.message);
+      })
+      .MNT_PURGAR_CACHE_SISTEMA(TOKEN_SESION);
+  }
+
+  // Depurar auditorías antiguas
+  function mntEjecutarPurgaAuditoria() {
+    const dias = parseInt(document.getElementById("mnt_retencion_aud").value, 10);
+    const mensajeConfirmar = dias === 0
+      ? "¿Está seguro que desea TRUNCAR Y ELIMINAR TODA la auditoría física del ERP? Esta acción es irreversible."
+      : "¿Desea purgar la tabla USR_AUDITORIA conservando solo los últimos " + dias + " días de registros?";
+      
+    if (!confirm(mensajeConfirmar)) return;
+    
+    USR_MOSTRAR_ALERTA("Ejecutando lote de depuración y reajuste en Sheets...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          USR_CARGAR_USUARIOS();
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
+      })
+      .MNT_PURGAR_AUDITORIA_SISTEMA(dias, TOKEN_SESION);
+  }
+
+  // Depurar sesiones antiguas
+  function mntEjecutarPurgaSesiones() {
+    const dias = parseInt(document.getElementById("mnt_retencion_ses").value, 10);
+    const mensajeConfirmar = dias === 0
+      ? "¿Está seguro que desea VACIAR la base de datos de USR_SESIONES?"
+      : "¿Desea purgar USR_SESIONES conservando solo los últimos " + dias + " días de inicio de sesión?";
+      
+    if (!confirm(mensajeConfirmar)) return;
+    
+    USR_MOSTRAR_ALERTA("Ejecutando mantenimiento atómico en USR_SESIONES...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          USR_CARGAR_SESIONES();
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
+      })
+      .MNT_PURGAR_SESIONES_SISTEMA(dias, TOKEN_SESION);
+  }
+
+  // Reiniciar base de datos de usuarios
+  function mntEjecutarResetUsuarios() {
+    if (!confirm("¿Está absolutamente seguro de que desea reiniciar la base de datos de usuarios? Se conservará únicamente el usuario administrador ADMIN de fábrica.")) return;
+    if (!confirm("⚠️ ¡ADVERTENCIA CRÍTICA! Esta acción es irreversible, vaciará todas las cuentas y forzará el cierre de sesión de cualquier otro operador en MEGUDAN. ¿Desea proceder?")) return;
+    
+    USR_MOSTRAR_ALERTA("Reiniciando base de datos de usuarios y re-poblando ADMIN...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Error de comunicación de red con el servidor de caché.");
+          return;
+        }
+        if (res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+          USR_CARGAR_USUARIOS();
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ERROR("Error de comunicación: " + err.message);
+      })
+      .MNT_RESET_USUARIOS_SISTEMA(TOKEN_SESION);
   }
 </script>
 </body>
