@@ -725,16 +725,16 @@
       
       if (u.ESTADO_USUARIO === "ACTIVO") {
         badgeClass = "badge-active";
-        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='USR_CAMBIAR_ESTADO(\\"" + u.ID_USUARIO + "\\", \\"INACTIVO\\")'>Inactivar</button>";
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick=\"USR_CAMBIAR_ESTADO('" + u.ID_USUARIO + "', 'INACTIVO')\">Inactivar</button>";
       } else if (u.ESTADO_USUARIO === "INACTIVO") {
         badgeClass = "badge-inactive";
-        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='USR_CAMBIAR_ESTADO(\\"" + u.ID_USUARIO + "\\", \\"ACTIVO\\")'>Activar</button>";
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick=\"USR_CAMBIAR_ESTADO('" + u.ID_USUARIO + "', 'ACTIVO')\">Activar</button>";
       } else if (u.ESTADO_USUARIO === "BLOQUEADO") {
         badgeClass = "badge-blocked";
-        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='USR_CAMBIAR_ESTADO(\\"" + u.ID_USUARIO + "\\", \\"ACTIVO\\")'>Desbloquear</button>";
+        accionesHtml = "<button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick=\"USR_CAMBIAR_ESTADO('" + u.ID_USUARIO + "', 'ACTIVO')\">Desbloquear</button>";
       } else if (u.ESTADO_USUARIO === "PENDIENTE") {
         badgeClass = "badge-pending";
-        accionesHtml = "<button class='button button-success' style='padding:4px 8px; font-size:11px; font-weight:700;' onclick='USR_ABRIR_APROBACION(\\"" + u.ID_USUARIO + "\\", \\"" + u.USUARIO + "\\")'>Aprobar Acceso</button>";
+        accionesHtml = "<button class='button button-success' style='padding:4px 8px; font-size:11px; font-weight:700;' onclick=\"USR_ABRIR_APROBACION('" + u.ID_USUARIO + "', '" + u.USUARIO + "')\">Aprobar Acceso</button>";
       }
       
       tr.innerHTML = 
@@ -886,7 +886,7 @@
             "<td>" + (s.EXPIRA_SESION || s.FECHA_EXPIRACION || "") + "</td>" +
             "<td><span class='badge " + estadoClass + "'>" + s.ESTADO_SESION + "</span></td>" +
             "<td>" +
-              (s.ESTADO_SESION === 'ACTIVA' ? "<button class='button button-danger' style='padding:4px 8px; font-size:11px;' onclick='USR_REVOCAR_SESION(\\"" + s.TOKEN_SESION + "\\")'>Revocar</button>" : '-') +
+              (s.ESTADO_SESION === 'ACTIVA' ? "<button class='button button-danger' style='padding:4px 8px; font-size:11px;' onclick=\"USR_REVOCAR_SESION('" + s.TOKEN_SESION + "')\">Revocar</button>" : '-') +
             "</td>";
           tbody.appendChild(tr);
         });
