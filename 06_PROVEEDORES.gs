@@ -45,7 +45,8 @@ function PROV_GUARDAR_PROVEEDOR(datos, tokenSesion) {
   const fila = encabezados.map(col => datos[col] !== undefined ? datos[col] : "");
   hoja.appendRow(fila);
 
-  return { ok: true, idProveedor: idProveedor, mensaje: "Proveedor guardado exitosamente." };
+  const responseObj = { ok: true, idProveedor: idProveedor, mensaje: "Proveedor guardado exitosamente." };
+  return typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(responseObj) : responseObj;
 }
 
 function PROV_OBTENER_SIGUIENTE_ID() {
@@ -105,7 +106,8 @@ function PROV_ACTUALIZAR_PROVEEDOR(datos, tokenSesion) {
   const filaNueva = encabezados.map(col => proveedorActualizado[col] !== undefined ? proveedorActualizado[col] : "");
   hoja.getRange(filaModificar, 1, 1, encabezados.length).setValues([filaNueva]);
 
-  return { ok: true, idProveedor: idProveedor, mensaje: "Proveedor actualizado con éxito." };
+  const responseObj = { ok: true, idProveedor: idProveedor, mensaje: "Proveedor actualizado con éxito." };
+  return typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(responseObj) : responseObj;
 }
 
 function PROV_INACTIVAR_PROVEEDOR(idProveedor, tokenSesion) {
@@ -119,19 +121,18 @@ function PROV_BUSCAR_PROVEEDOR(criterio, tokenSesion) {
   const hoja = ss.getSheetByName(PROV_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return null;
 
-    const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
   const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
 
   const idxId = encabezados.indexOf("ID_PROVEEDOR") !== -1 ? encabezados.indexOf("ID_PROVEEDOR") : encabezados.indexOf("ID_CLIENTE");
   const idxDoc = encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : encabezados.indexOf("NUMERO"));
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
-  
   if (idxId === -1 || idxDoc === -1) {
     throw new Error("No se pudieron resolver las columnas críticas de identificación en PROV_MAESTRO.");
   }
 
   const criterioNormalizado = String(criterio).trim().toUpperCase();
-  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, ""); // "90018294878"
+  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
 
   const filaEncontrada = registros.find(fila => {
     const valId = String(fila[idxId] || "").trim().toUpperCase();
@@ -150,7 +151,8 @@ function PROV_BUSCAR_PROVEEDOR(criterio, tokenSesion) {
   encabezados.forEach((col, idx) => {
     proveedor[col] = filaEncontrada[idx];
   });
-  return proveedor;
+  
+  return typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(proveedor) : proveedor;
 }
 
 function PROV_GENERAR_ID(tokenSesion) {

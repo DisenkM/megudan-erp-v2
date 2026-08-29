@@ -81,7 +81,9 @@ function CLI_GUARDAR_CLIENTE(datos, tokenSesion) {
   hoja.appendRow(fila);
 
   CLI_REGISTRAR_HISTORIAL(idCliente, "CREACION", "Cliente creado por " + usuarioEjecutor, usuarioEjecutor);
-  return { ok: true, idCliente: idCliente, mensaje: "Cliente registrado correctamente." };
+  
+  const responseObj = { ok: true, idCliente: idCliente, mensaje: "Cliente registrado correctamente." };
+  return typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(responseObj) : responseObj;
 }
 
 function CLI_OBTENER_SIGUIENTE_ID() {
@@ -160,7 +162,9 @@ function CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion) {
   hoja.getRange(filaModificar, 1, 1, encabezados.length).setValues([filaNueva]);
 
   CLI_REGISTRAR_HISTORIAL(idCliente, "MODIFICACION", "Cliente actualizado por " + usuarioEjecutor, usuarioEjecutor);
-  return { ok: true, idCliente: idCliente, mensaje: "Cliente actualizado correctamente." };
+  
+  const responseObj = { ok: true, idCliente: idCliente, mensaje: "Cliente actualizado correctamente." };
+  return typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(responseObj) : responseObj;
 }
 
 function CLI_INACTIVAR_CLIENTE(idCliente, tokenSesion) {
@@ -174,19 +178,18 @@ function CLI_BUSCAR_CLIENTE(criterio, tokenSesion) {
   const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return null;
 
-    const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
   const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
 
   const idxId = encabezados.indexOf("ID_CLIENTE") !== -1 ? encabezados.indexOf("ID_CLIENTE") : encabezados.indexOf("ID_PROVEEDOR");
   const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : encabezados.indexOf("NUMERO"));
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
-  
   if (idxId === -1 || idxDoc === -1) {
     throw new Error("No se pudieron resolver las columnas críticas de identificación en CLI_MAESTRO.");
   }
 
   const criterioNormalizado = String(criterio).trim().toUpperCase();
-  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, ""); // "90018294878"
+  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
 
   const filaEncontrada = registros.find(fila => {
     const valId = String(fila[idxId] || "").trim().toUpperCase();
@@ -205,7 +208,8 @@ function CLI_BUSCAR_CLIENTE(criterio, tokenSesion) {
   encabezados.forEach((col, idx) => {
     cliente[col] = filaEncontrada[idx];
   });
-  return cliente;
+  
+  return typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(cliente) : cliente;
 }
 
 function CLI_SHEET_GUARDAR() {

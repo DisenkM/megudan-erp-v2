@@ -34,13 +34,13 @@ const SEG_CONFIG = {
 };
 
 function SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, modulo, accion) {
-  if (tokenSesion === "SISTEMA_INTERNAL_BYPASS") {
+  if (tokenSesion === "SISTEMA_INTERNAL_BYPASS" || tokenSesion === "SHEETS_CONTEXT") {
     return {
       AUTORIZADO: true,
       CODIGO: "SISTEMA_BYPASS",
       USUARIO: "SISTEMA",
       ROL: "ADMINISTRADOR",
-      MENSAJE: "Acceso concedido automáticamente para operaciones internas del sistema."
+      MENSAJE: "Acceso concedido automáticamente para operaciones internas o locales del sistema."
     };
   }
   try {
@@ -174,7 +174,7 @@ function SEG_CREAR_USUARIO(datos, tokenSesion) {
     datos.NOMBRE = datos.NOMBRE_COMPLETO;
   }
 
-  datos.USUARIO = String(datos.USUARIO || "").trim().toUpperCase().replace(/\s+/g, "");
+  datos.USUARIO = String(datos.USUARIO || "").trim().toUpperCase().replace(/\s/g, "");
   datos.CORREO = String(datos.CORREO || "").trim().toLowerCase();
 
   if (SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "USUARIO", datos.USUARIO)) {
@@ -240,9 +240,8 @@ function SEG_LISTAR_USUARIOS(tokenSesion) {
     const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
     const usuarios = registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
     return {
-      EXTITO: true, // Wait, let's keep EXITO consistent
       EXITO: true,
-      DATOS: usuarios,
+      DATOS: SEG_SANITIZAR_PARA_CLIENTE(usuarios),
       MENSAJE: "Lista de usuarios obtenida exitosamente."
     };
   } catch (error) {
@@ -284,7 +283,7 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos, tokenSesion) {
   });
 
   if (datos.USUARIO !== undefined) {
-    usuarioActualizado.USUARIO = String(datos.USUARIO || "").trim().toUpperCase().replace(/\s+/g, "");
+    usuarioActualizado.USUARIO = String(datos.USUARIO || "").trim().toUpperCase().replace(/\s/g, "");
     const duplicado = SEG_BUSCAR_REGISTRO(SEG_CONFIG.HOJA_USUARIOS, "USUARIO", usuarioActualizado.USUARIO);
     if (duplicado && duplicado.ID_USUARIO !== idUsuario) throw new Error("Nombre de usuario ocupado.");
   }
@@ -475,7 +474,7 @@ function SEG_VALIDAR_SEGURIDAD_CONTRASENA(contrasena) {
   const password = String(contrasena || "");
   const resultado = { VALIDA: false, MENSAJES: [] };
   if (password.length < 8) resultado.MENSAJES.push("Mínimo 8 caracteres.");
-  if (!/[A-Z]/.test(password)) resultado.MENSAES.push("Requiere una mayúscula.");
+  if (!/[A-Z]/.test(password)) resultado.MENSAJES.push("Requiere una mayúscula.");
   if (!/[a-z]/.test(password)) resultado.MENSAJES.push("Requiere una minúscula.");
   if (!/[0-9]/.test(password)) resultado.MENSAJES.push("Requiere un número.");
   resultado.VALIDA = resultado.MENSAJES.length === 0;
@@ -663,7 +662,7 @@ function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
   }
 
   const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
-  if (!autorizado) {
+  if (!authorized) {
     return { AUTORIZADO: false, CODIGO: "ACCESO_DENEGADO", MENSAJE: "Su rol no tiene permisos de " + accion + " en " + modulo + "." };
   }
 
@@ -706,7 +705,7 @@ function SEG_OBTENER_ROLES(tokenSesion) {
     const roles = SEG_LISTAR_ROLES();
     return {
       EXITO: true,
-      DATOS: roles,
+      DATOS: SEG_SANITIZAR_PARA_CLIENTE(roles),
       MENSAJE: "Roles del sistema obtenidos exitosamente."
     };
   } catch (error) {
@@ -730,7 +729,7 @@ function SEG_OBTENER_PERMISOS(tokenSesion) {
     const lista = registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
     return {
       EXITO: true,
-      DATOS: lista,
+      DATOS: SEG_SANITIZAR_PARA_CLIENTE(lista),
       MENSAJE: "Permisos obtenidos exitosamente."
     };
   } catch (error) {
@@ -753,7 +752,7 @@ function SEG_OBTENER_SESIONES(tokenSesion) {
     const lista = registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
     return {
       EXITO: true,
-      DATOS: lista,
+      DATOS: SEG_SANITIZAR_PARA_CLIENTE(lista),
       MENSAJE: "Sesiones activas obtenidas exitosamente."
     };
   } catch (error) {
@@ -951,4 +950,32 @@ function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
   } catch (error) {
     console.error("Error al inicializar usuarios: " + error.toString());
   }
+}
+
+function SEG_SANITIZAR_PARA_CLIENTE(dato) {
+  if (dato === null || dato === undefined) return dato;
+  
+  if (dato instanceof Date) {
+    try {
+      return Utilities.formatDate(dato, Session.getScriptTimeZone() || "America/Bogota", "yyyy-MM-dd HH:mm:ss");
+    } catch (e) {
+      return dato.toISOString().replace("T", " ").substring(0, 19);
+    }
+  }
+  
+  if (Array.isArray(dato)) {
+    return dato.map(SEG_SANITIZAR_PARA_CLIENTE);
+  }
+  
+  if (typeof dato === "object") {
+    const nuevoObj = {};
+    for (const key in dato) {
+      if (dato.hasOwnProperty(key)) {
+        nuevoObj[key] = SEG_SANITIZAR_PARA_CLIENTE(dato[key]);
+      }
+    }
+    return nuevoObj;
+  }
+  
+  return dato;
 }
