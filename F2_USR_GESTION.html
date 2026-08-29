@@ -682,13 +682,29 @@
 
   // Carga asíncrona de datos desde el backend .gs
   function USR_CARGAR_USUARIOS() {
+    // Patrón defensivo: mostrar loader en la tabla antes de la llamada
+    const tbody = document.getElementById("USR_TABLA_USUARIOS");
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👤</div><strong>Cargando usuarios registrados...</strong></div></td></tr>`;
+    
     google.script.run
-      .withSuccessHandler(function(usuarios) {
-        USR_USUARIOS = usuarios;
-        USR_MOSTRAR_USUARIOS(usuarios);
+      .withSuccessHandler(function(res) {
+        // Garantizamos ocultar o limpiar loaders primero
+        if (!res) {
+          USR_MOSTRAR_ERROR("Respuesta nula del servidor de seguridad.");
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error de red: Respuesta vacía del servidor.</td></tr>`;
+          return;
+        }
+        if (res.EXITO) {
+          USR_USUARIOS = res.DATOS || [];
+          USR_MOSTRAR_USUARIOS(USR_USUARIOS);
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE || "No se pudo obtener la lista de usuarios.");
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Error:</strong> ` + (res.MENSAJE || "Acceso denegado") + `</td></tr>`;
+        }
       })
       .withFailureHandler(function(err) {
-        USR_MOSTRAR_ERROR("No se pudieron cargar los usuarios: " + err.message);
+        USR_MOSTRAR_ERROR("Error de sistema: " + err.message);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
       })
       .SEG_LISTAR_USUARIOS(TOKEN_SESION);
   }
@@ -766,59 +782,82 @@
   }
 
   function USR_CARGAR_ROLES() {
+    const tbody = document.getElementById("USR_TABLA_ROLES");
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🛡️</div><strong>Cargando roles predefinidos...</strong></div></td></tr>`;
+    
     google.script.run
-      .withSuccessHandler(function(roles) {
-        USR_ROLES = roles;
-        const tbody = document.getElementById("USR_TABLA_ROLES");
-        tbody.innerHTML = "";
-        
-        const rolesValidos = roles.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
-        rolesValidos.forEach(r => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = 
-            "<td><strong>" + r.ID_ROL + "</strong></td>" +
-            "<td>" + r.NOMBRE_ROL + "</td>" +
-            "<td>" + r.DESCRIPCION + "</td>" +
-            "<td>Nivel " + r.NIVEL_JERARQUIA + "</td>" +
-            "<td>" + r.ROL_SISTEMA + "</td>" +
-            "<td><span class='badge badge-active'>" + r.ESTADO_ROL + "</span></td>";
-          tbody.appendChild(tr);
-        });
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Respuesta nula del servidor al obtener roles.");
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error de comunicación al obtener roles.</td></tr>`;
+          return;
+        }
+        if (res.EXITO) {
+          USR_ROLES = res.DATOS || [];
+          tbody.innerHTML = "";
+          const rolesValidos = USR_ROLES.filter(r => r.ID_ROL && String(r.ID_ROL).trim() !== "");
+          rolesValidos.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = 
+              "<td><strong>" + r.ID_ROL + "</strong></td>" +
+              "<td>" + r.NOMBRE_ROL + "</td>" +
+              "<td>" + r.DESCRIPCION + "</td>" +
+              "<td>Nivel " + r.NIVEL_JERARQUIA + "</td>" +
+              "<td>" + r.ROL_SISTEMA + "</td>" +
+              "<td><span class='badge badge-active'>" + r.ESTADO_ROL + "</span></td>";
+            tbody.appendChild(tr);
+          });
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #dc2626;"><strong>Error:</strong> ` + res.MENSAJE + `</td></tr>`;
+        }
       })
       .withFailureHandler(function(err) {
         USR_MOSTRAR_ERROR("No se pudieron cargar los roles: " + err.message);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
       })
       .SEG_OBTENER_ROLES(TOKEN_SESION);
   }
 
   function USR_CARGAR_PERMISOS() {
+    const tbody = document.getElementById("USR_TABLA_PERMISOS");
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔑</div><strong>Cargando matriz de permisos...</strong></div></td></tr>`;
+    
     google.script.run
-      .withSuccessHandler(function(permisos) {
-        USR_PERMISOS = permisos;
-        const tbody = document.getElementById("USR_TABLA_PERMISOS");
-        tbody.innerHTML = "";
-
-        if (!permisos || permisos.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          USR_MOSTRAR_ERROR("Respuesta nula del servidor al obtener permisos.");
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error de red al cargar permisos.</td></tr>`;
           return;
         }
-
-        const permisosValidos = permisos.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
-        permisosValidos.forEach(p => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = 
-            "<td><strong>" + p.ID_PERMISO + "</strong></td>" +
-            "<td>" + p.ID_ROL + "</td>" +
-            "<td>" + p.MODULO + "</td>" +
-            "<td>" + (p.SUBMODULO || "-") + "</td>" +
-            "<td>" + p.ACCION + "</td>" +
-            "<td><span class='badge " + (p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive') + "'>" + p.PERMITIDO + "</span></td>" +
-            "<td>" + p.ESTADO_PERMISO + "</td>";
-          tbody.appendChild(tr);
-        });
+        if (res.EXITO) {
+          USR_PERMISOS = res.DATOS || [];
+          tbody.innerHTML = "";
+          if (USR_PERMISOS.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay permisos de rol parametrizados.</td></tr>`;
+            return;
+          }
+          const permisosValidos = USR_PERMISOS.filter(p => p.ID_PERMISO && String(p.ID_PERMISO).trim() !== "");
+          permisosValidos.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = 
+              "<td><strong>" + p.ID_PERMISO + "</strong></td>" +
+              "<td>" + p.ID_ROL + "</td>" +
+              "<td>" + p.MODULO + "</td>" +
+              "<td>" + (p.SUBMODULO || "-") + "</td>" +
+              "<td>" + p.ACCION + "</td>" +
+              "<td><span class='badge " + (p.PERMITIDO === 'SI' ? 'badge-active' : 'badge-inactive') + "'>" + p.PERMITIDO + "</span></td>" +
+              "<td>" + p.ESTADO_PERMISO + "</td>";
+            tbody.appendChild(tr);
+          });
+        } else {
+          USR_MOSTRAR_ERROR(res.MENSAJE);
+          tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Error:</strong> ` + res.MENSAJE + `</td></tr>`;
+        }
       })
       .withFailureHandler(function(err) {
         USR_MOSTRAR_ERROR("No se pudieron cargar los permisos: " + err.message);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
       })
       .SEG_OBTENER_PERMISOS(TOKEN_SESION);
   }

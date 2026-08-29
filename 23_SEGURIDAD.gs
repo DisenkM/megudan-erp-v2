@@ -234,10 +234,27 @@ function SEG_CONSULTAR_USUARIO(idUsuario, tokenSesion) {
 }
 
 function SEG_LISTAR_USUARIOS(tokenSesion) {
-  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
-  const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
-  const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
-  return registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
+  try {
+    const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
+    const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
+    const usuarios = registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
+    return {
+      EXTITO: true, // Wait, let's keep EXITO consistent
+      EXITO: true,
+      DATOS: usuarios,
+      MENSAJE: "Lista de usuarios obtenida exitosamente."
+    };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_LISTAR_USUARIOS", "SEGURIDAD", error);
+    }
+    return {
+      EXITO: false,
+      DATOS: [],
+      MENSAJE: "No se pudieron cargar los usuarios: " + (error.message || error.toString())
+    };
+  }
 }
 
 function SEG_ACTUALIZAR_USUARIO(idUsuario, datos, tokenSesion) {
@@ -683,24 +700,72 @@ function SEG_REGISTRAR_AUDITORIA(datos) {
 }
 
 function SEG_OBTENER_ROLES(tokenSesion) {
-  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
-  SEG_INICIALIZAR_ROLES_PREDEFINIDOS();
-  return SEG_LISTAR_ROLES();
+  try {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+    SEG_INICIALIZAR_ROLES_PREDEFINIDOS();
+    const roles = SEG_LISTAR_ROLES();
+    return {
+      EXITO: true,
+      DATOS: roles,
+      MENSAJE: "Roles del sistema obtenidos exitosamente."
+    };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_OBTENER_ROLES", "SEGURIDAD", error);
+    }
+    return {
+      EXITO: false,
+      DATOS: [],
+      MENSAJE: "No se pudieron cargar los roles: " + (error.message || error.toString())
+    };
+  }
 }
 
 function SEG_OBTENER_PERMISOS(tokenSesion) {
-  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
-  SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS();
-  const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
-  const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_PERMISOS);
-  return registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
+  try {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+    SEG_INICIALIZAR_PERMISOS_PREDEFINIDOS();
+    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_PERMISOS);
+    const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_PERMISOS);
+    const lista = registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
+    return {
+      EXITO: true,
+      DATOS: lista,
+      MENSAJE: "Permisos obtenidos exitosamente."
+    };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_OBTENER_PERMISOS", "SEGURIDAD", error);
+    }
+    return {
+      EXITO: false,
+      DATOS: [],
+      MENSAJE: "No se pudieron cargar los permisos: " + (error.message || error.toString())
+    };
+  }
 }
 
 function SEG_OBTENER_SESIONES(tokenSesion) {
-  SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
-  const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
-  const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_SESIONES);
-  return registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
+  try {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+    const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
+    const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_SESIONES);
+    const lista = registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
+    return {
+      EXITO: true,
+      DATOS: lista,
+      MENSAJE: "Sesiones activas obtenidas exitosamente."
+    };
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_OBTENER_SESIONES", "SEGURIDAD", error);
+    }
+    return {
+      EXITO: false,
+      DATOS: [],
+      MENSAJE: "No se pudieron cargar las sesiones: " + (error.message || error.toString())
+    };
+  }
 }
 
 function SEG_APROBAR_USUARIO(idUsuario, idRol, tokenSesion) {
