@@ -1,0 +1,468 @@
+<!-- ============================================================
+* INTERFAZ: F5_PROD_VIEW
+* MODULO: CATALOGO DE PRODUCTOS Y SERVICIOS (CRUD COMPLETO)
+* RESPONSABILIDAD: Visualización, búsqueda, creación, edición e inactivación de ítems del catálogo.
+* CONEXIÓN BACKEND: 07_PRODUCTOS.gs y 23_SEGURIDAD.gs
+* ESTADO: 100% Sincronizado, Dinámico, CSS3 y Adaptativo
+============================================================ -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Productos | MEGUDAN ERP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f4f6f8; color: #1f2937;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
+    
+    /* Header */
+    .header {
+      background-color: #16a34a; color: #ffffff;
+      padding: 18px 25px; border-radius: 8px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .header-icon { font-size: 28px; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    .header p { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+
+    /* Card */
+    .card {
+      background: #ffffff; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f3f4f6; padding-bottom: 12px; margin-bottom: 15px;
+    }
+    .card-title { margin: 0; font-size: 15px; font-weight: 700; color: #111827; }
+    
+    /* Search Bar */
+    .search-container {
+      display: flex; gap: 10px; margin-bottom: 15px;
+    }
+    .input {
+      flex: 1; padding: 10px 14px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 13px; outline: none;
+      transition: all 0.2s;
+    }
+    .input:focus {
+      border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+    }
+    
+    /* Buttons */
+    .button {
+      border: none; border-radius: 6px; padding: 10px 16px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .button-primary { background-color: #16a34a; color: #ffffff; }
+    .button-primary:hover { background-color: #15803d; }
+    .button-secondary { background-color: #e5e7eb; color: #374151; }
+    .button-secondary:hover { background-color: #d1d5db; }
+    .button-danger { background-color: #fee2e2; color: #b91c1c; }
+    .button-danger:hover { background-color: #fca5a5; }
+
+    /* Tables */
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th {
+      background-color: #f9fafb; padding: 12px 16px;
+      font-weight: 700; color: #4b5563; border-bottom: 1px solid #e5e7eb;
+    }
+    td { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: middle; }
+    tr:hover td { background-color: #f9fafb; }
+    
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 4px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-active { background-color: #dcfce7; color: #166534; }
+    .badge-inactive { background-color: #f3f4f6; color: #4b5563; }
+    .badge-type { background-color: #e0f2fe; color: #0369a1; }
+    .badge-tax { background-color: #fef3c7; color: #713f12; }
+
+    /* Empty states */
+    .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    
+    .message {
+      padding: 12px 15px; border-radius: 6px; margin-bottom: 15px;
+      font-size: 13px; font-weight: 600; display: none;
+    }
+    .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .message.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .message.info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    /* Modals */
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #ffffff; margin: 5% auto; padding: 20px;
+      border: 1px solid #e5e7eb; border-radius: 8px; width: 480px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; }
+    .modal-title { margin: 0; font-size: 16px; font-weight: 700; color: #111827; }
+    .close-btn { font-size: 20px; font-weight: bold; color: #9ca3af; cursor: pointer; }
+    .close-btn:hover { color: #111827; }
+    .modal-body { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+    .modal-body .field { display: flex; flex-direction: column; gap: 4px; }
+    .modal-body label { font-size: 11px; font-weight: 700; color: #4b5563; }
+    .modal-body .input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
+    .modal-body .input:focus { border-color: #16a34a; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-icon">📦</div>
+    <div>
+      <h1>Catálogo de Productos y Servicios</h1>
+      <p>ERP Operativo · Gestión e integración en vivo del Catálogo Comercial de MEGUDAN</p>
+    </div>
+  </header>
+
+  <div id="PROD_ALERT" class="message"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Listado de Catálogo Homologado</h2>
+      <div style="display: flex; gap: 8px;">
+        <button class="button button-primary" onclick="abrirModalProducto()">+ Nuevo Producto</button>
+        <button class="button button-secondary" onclick="prodCargarProductos()">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <div class="search-container">
+      <input type="text" id="PROD_BUSCADOR" class="input" placeholder="Buscar por código, descripción, tipo o categoría..." oninput="prodFiltrar()">
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Interno</th>
+            <th>Código de Referencia</th>
+            <th>Descripción del Item</th>
+            <th>Tipo</th>
+            <th>Precio Venta</th>
+            <th>Costo Referencia</th>
+            <th>IVA</th>
+            <th>Inventariable</th>
+            <th>Estado</th>
+            <th style="text-align: center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="PROD_TABLA">
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <strong>Cargando catálogo registrado...</strong>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Registro / Edición de Producto -->
+<div id="modal_producto" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal_title" class="modal-title">📦 Nuevo Producto</h3>
+      <span class="close-btn" onclick="cerrarModalProducto()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prod_id_producto">
+      
+      <div class="field">
+        <label for="prod_codigo">Código de Referencia *</label>
+        <input type="text" id="prod_codigo" class="input" placeholder="Ej: GUA-INM-01">
+      </div>
+      
+      <div class="field">
+        <label for="prod_descripcion">Descripción del Item *</label>
+        <input type="text" id="prod_descripcion" class="input" placeholder="Ej: Caña de Guadua Inmunizada 4m">
+      </div>
+      
+      <div class="field">
+        <label for="prod_tipo_producto">Tipo de Producto *</label>
+        <select id="prod_tipo_producto" class="input">
+          <option value="PRODUCTO">PRODUCTO</option>
+          <option value="SERVICIO">SERVICIO</option>
+          <option value="MATERIA_PRIMA">MATERIA PRIMA</option>
+          <option value="INSUMO">INSUMO</option>
+        </select>
+      </div>
+      
+      <div class="field">
+        <label for="prod_precio_venta">Precio de Venta (COP) *</label>
+        <input type="number" id="prod_precio_venta" class="input" min="0" value="0">
+      </div>
+      
+      <div class="field">
+        <label for="prod_costo_referencia">Costo de Referencia (COP) *</label>
+        <input type="number" id="prod_costo_referencia" class="input" min="0" value="0">
+      </div>
+      
+      <div class="field">
+        <label for="prod_iva">IVA *</label>
+        <input type="text" id="prod_iva" class="input" value="19%">
+      </div>
+      
+      <div class="field">
+        <label for="prod_control_inventario">¿Controla Inventario? *</label>
+        <select id="prod_control_inventario" class="input">
+          <option value="SÍ">SÍ</option>
+          <option value="NO">NO</option>
+        </select>
+      </div>
+      
+      <div class="field" id="campo_estado" style="display:none;">
+        <label for="prod_estado">Estado *</label>
+        <select id="prod_estado" class="input">
+          <option value="ACTIVO">ACTIVO</option>
+          <option value="INACTIVO">INACTIVO</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="cerrarModalProducto()">Cancelar</button>
+      <button class="button button-primary" onclick="guardarProducto()">Guardar Producto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
+  let LISTA_PRODUCTOS = [];
+  let PROCESANDO_GUARDADO = false;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    prodCargarProductos();
+  });
+
+  function mostrarAlerta(msg, tipo) {
+    const el = document.getElementById("PROD_ALERT");
+    el.textContent = msg;
+    el.className = "message " + tipo;
+    el.style.display = "block";
+    setTimeout(() => {
+      if (el.textContent === msg) {
+        el.style.display = "none";
+      }
+    }, 6000);
+  }
+
+  function prodCargarProductos() {
+    const tbody = document.getElementById("PROD_TABLA");
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📦</div><strong>Cargando catálogo registrado...</strong></div></td></tr>`;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          mostrarAlerta("Respuesta nula del servidor de productos.", "error");
+          tbody.innerHTML = `<tr><td colspan="10" class="empty-state">Error de red: Respuesta vacía del servidor.</td></tr>`;
+          return;
+        }
+        if (res.EXITO) {
+          LISTA_PRODUCTOS = res.DATOS || [];
+          prodMostrar(LISTA_PRODUCTOS);
+        } else {
+          mostrarAlerta(res.MENSAJE || "No se pudo obtener el catálogo.", "error");
+          tbody.innerHTML = `<tr><td colspan="10" class="empty-state" style="color: #dc2626;"><strong>Error de acceso:</strong> ` + (res.MENSAJE || "Acceso denegado") + `</td></tr>`;
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Error de sistema: " + err.message, "error");
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
+      })
+      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION);
+  }
+
+  function prodMostrar(datos) {
+    const tbody = document.getElementById("PROD_TABLA");
+    tbody.innerHTML = "";
+
+    if (!datos || datos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No hay registros de catálogo homologado en el sistema.</td></tr>`;
+      return;
+    }
+
+    datos.forEach(p => {
+      if (!p.ID_PRODUCTO) return;
+      const tr = document.createElement("tr");
+      const badState = p.ESTADO === "ACTIVO" ? "badge badge-active" : "badge badge-inactive";
+      
+      // Sanitización segura de comillas para los parámetros de la función JS
+      const stringProducto = JSON.stringify(p).replace(/"/g, "&quot;");
+      
+      tr.innerHTML = 
+        `<td><strong>` + p.ID_PRODUCTO + `</strong></td>` +
+        `<td><code>` + (p.CODIGO || "N/A") + `</code></td>` +
+        `<td>` + (p.DESCRIPCION || "") + `</td>` +
+        `<td><span class="badge badge-type">` + (p.TIPO_PRODUCTO || "PRODUCTO") + `</span></td>` +
+        `<td>$` + Number(p.PRECIO_VENTA || 0).toLocaleString('es-CO') + ` COP</td>` +
+        `<td>$` + Number(p.COSTO_REFERENCIA || 0).toLocaleString('es-CO') + ` COP</td>` +
+        `<td><span class="badge badge-tax">` + (p.IVA || "0%") + `</span></td>` +
+        `<td>` + (p.CONTROL_INVENTARIO || "SÍ") + `</td>` +
+        `<td><span class="` + badState + `">` + (p.ESTADO || "INACTIVO") + `</span></td>` +
+        `<td style="text-align: center; display: flex; justify-content: center; gap: 6px;">` +
+          `<button class="button button-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="abrirModalProducto('` + stringProducto + `')">✏️ Editar</button>` +
+          (p.ESTADO === "ACTIVO" ? `<button class="button button-danger" style="padding: 4px 8px; font-size: 11px;" onclick="inactivarProducto('` + p.ID_PRODUCTO + `')">🚫 Inactivar</button>` : "") +
+        `</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function prodFiltrar() {
+    const criterio = document.getElementById("PROD_BUSCADOR").value.trim().toUpperCase();
+    if (!criterio) {
+      prodMostrar(LISTA_PRODUCTOS);
+      return;
+    }
+
+    const filtrados = LISTA_PRODUCTOS.filter(p => {
+      return (
+        String(p.ID_PRODUCTO).toUpperCase().includes(criterio) ||
+        String(p.CODIGO).toUpperCase().includes(criterio) ||
+        String(p.DESCRIPCION).toUpperCase().includes(criterio) ||
+        String(p.TIPO_PRODUCTO).toUpperCase().includes(criterio) ||
+        String(p.ESTADO).toUpperCase().includes(criterio)
+      );
+    });
+    prodMostrar(filtrados);
+  }
+
+  function abrirModalProducto(stringProd) {
+    let p = null;
+    if (stringProd) {
+      try {
+        p = JSON.parse(stringProd.replace(/&quot;/g, '"'));
+      } catch (e) {
+        console.error("Error al parsear producto: ", e);
+      }
+    }
+    
+    document.getElementById("prod_id_producto").value = p ? p.ID_PRODUCTO : "";
+    document.getElementById("prod_codigo").value = p ? p.CODIGO : "";
+    document.getElementById("prod_descripcion").value = p ? p.DESCRIPCION : "";
+    document.getElementById("prod_tipo_producto").value = p ? p.TIPO_PRODUCTO : "PRODUCTO";
+    document.getElementById("prod_precio_venta").value = p ? p.PRECIO_VENTA : 0;
+    document.getElementById("prod_costo_referencia").value = p ? p.COSTO_REFERENCIA : 0;
+    document.getElementById("prod_iva").value = p ? p.IVA : "19%";
+    document.getElementById("prod_control_inventario").value = p ? p.CONTROL_INVENTARIO : "SÍ";
+    
+    if (p) {
+      document.getElementById("campo_estado").style.display = "block";
+      document.getElementById("prod_estado").value = p.ESTADO || "ACTIVO";
+      document.getElementById("modal_title").textContent = "✏️ Editar Producto";
+    } else {
+      document.getElementById("campo_estado").style.display = "none";
+      document.getElementById("modal_title").textContent = "📦 Nuevo Producto";
+    }
+    
+    document.getElementById("modal_producto").style.display = "block";
+  }
+
+  function cerrarModalProducto() {
+    document.getElementById("modal_producto").style.display = "none";
+  }
+
+  function guardarProducto() {
+    if (PROCESANDO_GUARDADO) return;
+    
+    const id = document.getElementById("prod_id_producto").value;
+    const datos = {
+      ID_PRODUCTO: id,
+      CODIGO: document.getElementById("prod_codigo").value.trim(),
+      DESCRIPCION: document.getElementById("prod_descripcion").value.trim(),
+      TIPO_PRODUCTO: document.getElementById("prod_tipo_producto").value,
+      PRECIO_VENTA: Number(document.getElementById("prod_precio_venta").value || 0),
+      COSTO_REFERENCIA: Number(document.getElementById("prod_costo_referencia").value || 0),
+      IVA: document.getElementById("prod_iva").value.trim(),
+      CONTROL_INVENTARIO: document.getElementById("prod_control_inventario").value,
+      ESTADO: id ? document.getElementById("prod_estado").value : "ACTIVO"
+    };
+
+    if (!datos.CODIGO || !datos.DESCRIPCION) {
+      alert("Por favor diligencie todos los campos obligatorios (*).");
+      return;
+    }
+
+    PROCESANDO_GUARDADO = true;
+    mostrarAlerta("Conectando con el backend contable...", "info");
+    cerrarModalProducto();
+
+    if (id) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          PROCESANDO_GUARDADO = false;
+          if (res && res.ok) {
+            mostrarAlerta(res.mensaje, "success");
+            prodCargarProductos();
+          } else {
+            mostrarAlerta("Error al actualizar el producto.", "error");
+          }
+        })
+        .withFailureHandler(function(err) {
+          PROCESANDO_GUARDADO = false;
+          mostrarAlerta("Fallo del servidor: " + err.message, "error");
+        })
+        .PROD_ACTUALIZAR_PRODUCTO(datos, TOKEN_SESION);
+    } else {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          PROCESANDO_GUARDADO = false;
+          if (res && res.ok) {
+            mostrarAlerta(res.mensaje, "success");
+            prodCargarProductos();
+          } else {
+            mostrarAlerta("Error al registrar el producto.", "error");
+          }
+        })
+        .withFailureHandler(function(err) {
+          PROCESANDO_GUARDADO = false;
+          mostrarAlerta("Fallo del servidor: " + err.message, "error");
+        })
+        .PROD_GUARDAR_PRODUCTO(datos, TOKEN_SESION);
+    }
+  }
+
+  function inactivarProducto(idProducto) {
+    if (!idProducto) return;
+    if (!confirm("¿Está seguro que desea marcar este producto como INACTIVO en la base de datos?")) return;
+    
+    mostrarAlerta("Desactivando ítem...", "info");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.ok) {
+          mostrarAlerta(res.mensaje, "success");
+          prodCargarProductos();
+        } else {
+          mostrarAlerta("No se pudo inactivar el producto.", "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Fallo: " + err.message, "error");
+      })
+      .PROD_ELIMINAR_PRODUCTO(idProducto, TOKEN_SESION);
+  }
+</script>
+</body>
+</html>

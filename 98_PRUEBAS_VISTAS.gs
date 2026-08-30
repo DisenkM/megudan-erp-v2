@@ -138,9 +138,63 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
   }
 
   // ==========================================================
-  // TEST 5: SIMULACIÓN DE ENRUTAMIENTO HTTP GET (doGet)
+  // TEST 5: COMPILACIÓN DE CATÁLOGO DE PRODUCTOS (F5_PROD_VIEW)
   // ==========================================================
-  console.log("\n🔌 [TEST 5] Probando Enrutamiento y Desvío HTTP (WEB_doGet):");
+  console.log("\n📦 [TEST 5] Evaluando compilación de F5_PROD_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F5_PROD_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("prodCargarProductos")) {
+      throw new Error("El módulo Javascript asíncrono de productos no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("PROD_LISTAR_PRODUCTOS_WEB")) {
+      throw new Error("La llamada RPC de productos PROD_LISTAR_PRODUCTOS_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F5_PROD_VIEW compilado correctamente.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F5_PROD_VIEW." });
+  } catch (errProd) {
+    console.error("   [FAIL] Error en Render de Productos: " + errProd.message);
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "FAIL", detalle: errProd.message });
+  }
+
+  // ==========================================================
+  // TEST 6: COMPILACIÓN DE SALDOS E INVENTARIO (F6_INV_VIEW)
+  // ==========================================================
+  console.log("\n🗃️ [TEST 6] Evaluando compilación de F6_INV_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F6_INV_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("invCargarSaldos")) {
+      throw new Error("El módulo Javascript asíncrono de inventario no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("INV_LISTAR_SALDOS_WEB")) {
+      throw new Error("La llamada RPC de inventario INV_LISTAR_SALDOS_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F6_INV_VIEW compilado correctamente.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F6_INV_VIEW." });
+  } catch (errInv) {
+    console.error("   [FAIL] Error en Render de Inventarios: " + errInv.message);
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "FAIL", detalle: errInv.message });
+  }
+
+  // ==========================================================
+  // TEST 7: SIMULACIÓN DE ENRUTAMIENTO HTTP GET (doGet)
+  // ==========================================================
+  console.log("\n🔌 [TEST 7] Probando Enrutamiento y Desvío HTTP (WEB_doGet):");
   try {
     if (typeof WEB_doGet !== "function") {
       throw new Error("La función enrutadora maestra WEB_doGet no está declarada.");

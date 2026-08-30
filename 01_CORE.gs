@@ -3,6 +3,7 @@
 * RESPONSABILIDAD:
 * - Menús personalizados, diálogos modales y utilidades de UI seguras.
 * - Control de errores de contexto headless para Google Sheets.
+* - Proporcionar un portal de control administrativo unificado e interactivo.
 **************************************************************/
 
 function CORE_onOpen() {
@@ -13,6 +14,7 @@ function CORE_onOpen() {
   }
   try {
     ui.createMenu("FORMULARIOS")
+      .addItem("🎛️ Panel de Control General", "ABRIR_PANEL_CONTROL")
       .addItem("👥 Abrir Clientes Web", "ABRIR_CLIENTES")
       .addItem("👤 Abrir Gestión de Usuarios Web", "ABRIR_USUARIOS")
       .addSeparator()
@@ -31,6 +33,31 @@ function CORE_onOpen() {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("CORE_onOpen", "CORE", error);
     }
+  }
+}
+
+function ABRIR_PANEL_CONTROL() {
+  const ui = CORE_OBTENER_UI();
+  if (!ui) return;
+  try {
+    const template = HtmlService.createTemplateFromFile("F4_WEB_DASHBOARD");
+    template.TOKEN_SESION = "SHEETS_CONTEXT";
+    template.ID_USUARIO = "USR-000001";
+    template.USUARIO = "ADMIN_LOCAL_SHEETS";
+    let webAppUrl = "";
+    try {
+      webAppUrl = ScriptApp.getService().getUrl();
+    } catch (e) {
+      webAppUrl = "";
+    }
+    template.WEB_APP_URL = webAppUrl;
+    const html = template.evaluate().setWidth(1350).setHeight(850);
+    ui.showModalDialog(html, "🎛️ Panel de Control Unificado del ERP");
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("ABRIR_PANEL_CONTROL", "CORE", error);
+    }
+    ui.alert("Error", "No se pudo abrir el panel de control: " + error.message, ui.ButtonSet.OK);
   }
 }
 

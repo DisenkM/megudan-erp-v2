@@ -2,6 +2,7 @@
 * 25_WEB.gs
 * RESPONSABILIDAD:
 * - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
+* - Dar soporte y enrutamiento a los módulos de Clientes, Seguridad, Productos e Inventarios.
 **************************************************************/
 
 const WEB_CONFIG = {
@@ -9,10 +10,16 @@ const WEB_CONFIG = {
   DASHBOARD: "F4_WEB_DASHBOARD",
   CLIENTES_FORM: "F1_CLI_FORM",
   SEGURIDAD_FORM: "F2_USR_GESTION",
+  PRODUCTOS_FORM: "F5_PROD_VIEW",
+  INVENTARIO_FORM: "F6_INV_VIEW",
+  
   RUTA_LOGIN: "login",
   RUTA_DASHBOARD: "dashboard",
   RUTA_CLIENTES: "clientes_form",
   RUTA_SEGURIDAD: "seguridad_form",
+  RUTA_PRODUCTOS: "productos_form",
+  RUTA_INVENTARIO: "inventario_form",
+  
   TITULO_ERP: "MEGUDAN ERP"
 };
 
@@ -30,6 +37,10 @@ function WEB_doGet(e) {
         return WEB_MOSTRAR_CLIENTES_FORM(parametros);
       case WEB_CONFIG.RUTA_SEGURIDAD:
         return WEB_MOSTRAR_SEGURIDAD_FORM(parametros);
+      case WEB_CONFIG.RUTA_PRODUCTOS:
+        return WEB_MOSTRAR_PRODUCTOS_FORM(parametros);
+      case WEB_CONFIG.RUTA_INVENTARIO:
+        return WEB_MOSTRAR_INVENTARIO_FORM(parametros);
       default:
         return WEB_MOSTRAR_ERROR("La página solicitada no existe o la ruta ingresada es inválida.");
     }
@@ -73,6 +84,13 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
     plantilla.TOKEN_SESION = tokenSesion;
     plantilla.ID_USUARIO = (validacion.SESION && validacion.SESION.ID_USUARIO) ? validacion.SESION.ID_USUARIO : "";
     plantilla.USUARIO = (validacion.SESION && validacion.SESION.USUARIO) ? validacion.SESION.USUARIO : "";
+    let webAppUrl = "";
+    try {
+      webAppUrl = ScriptApp.getService().getUrl();
+    } catch (e) {
+      webAppUrl = "";
+    }
+    plantilla.WEB_APP_URL = webAppUrl;
     
     return plantilla
       .evaluate()
@@ -134,6 +152,52 @@ function WEB_MOSTRAR_SEGURIDAD_FORM(parametros) {
       LOG_REGISTRAR_ERROR("WEB_MOSTRAR_SEGURIDAD_FORM", "WEB", error);
     }
     return WEB_MOSTRAR_ERROR("Error de sistema al cargar seguridad: " + error.toString());
+  }
+}
+
+function WEB_MOSTRAR_PRODUCTOS_FORM(parametros) {
+  try {
+    const token = String(parametros.token || "").trim();
+    const validacion = SEG_VALIDAR_SESION(token);
+    if (!validacion || validacion.VALIDA !== true) {
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.PRODUCTOS_FORM);
+    plantilla.TOKEN_SESION = token;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    return plantilla.evaluate()
+      .setTitle("Catálogo de Productos | ERP")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_MOSTRAR_PRODUCTOS_FORM", "WEB", error);
+    }
+    return WEB_MOSTRAR_ERROR("Error de sistema al cargar catálogo de productos: " + error.toString());
+  }
+}
+
+function WEB_MOSTRAR_INVENTARIO_FORM(parametros) {
+  try {
+    const token = String(parametros.token || "").trim();
+    const validacion = SEG_VALIDAR_SESION(token);
+    if (!validacion || validacion.VALIDA !== true) {
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.INVENTARIO_FORM);
+    plantilla.TOKEN_SESION = token;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    return plantilla.evaluate()
+      .setTitle("Existencias de Inventario | ERP")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_MOSTRAR_INVENTARIO_FORM", "WEB", error);
+    }
+    return WEB_MOSTRAR_ERROR("Error de sistema al cargar existencias de inventario: " + error.toString());
   }
 }
 

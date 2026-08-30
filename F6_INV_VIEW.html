@@ -1,0 +1,381 @@
+<!-- ============================================================
+* INTERFAZ: F6_INV_VIEW
+* MODULO: CONTROL DE SALDOS E INVENTARIO (AJUSTES DE STOCK EN VIVO)
+* RESPONSABILIDAD: Visualización asíncrona de existencias y registro de ajustes contables manuales de stock.
+* CONEXIÓN BACKEND: 11_INVENTARIO.gs y 23_SEGURIDAD.gs
+* ESTADO: 100% Sincronizado, Dinámico, CSS3 y Adaptativo
+============================================================ -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Existencias de Inventario | MEGUDAN ERP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f4f6f8; color: #1f2937;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
+    
+    /* Header */
+    .header {
+      background-color: #0891b2; color: #ffffff;
+      padding: 18px 25px; border-radius: 8px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .header-icon { font-size: 28px; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    .header p { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+
+    /* Card */
+    .card {
+      background: #ffffff; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f3f4f6; padding-bottom: 12px; margin-bottom: 15px;
+    }
+    .card-title { margin: 0; font-size: 15px; font-weight: 700; color: #111827; }
+    
+    /* Search Bar */
+    .search-container {
+      display: flex; gap: 10px; margin-bottom: 15px;
+    }
+    .input {
+      flex: 1; padding: 10px 14px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 13px; outline: none;
+      transition: all 0.2s;
+    }
+    .input:focus {
+      border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15);
+    }
+    
+    /* Buttons */
+    .button {
+      border: none; border-radius: 6px; padding: 10px 16px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .button-primary { background-color: #0891b2; color: #ffffff; }
+    .button-primary:hover { background-color: #0e7490; }
+    .button-secondary { background-color: #e5e7eb; color: #374151; }
+    .button-secondary:hover { background-color: #d1d5db; }
+
+    /* Tables */
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th {
+      background-color: #f9fafb; padding: 12px 16px;
+      font-weight: 700; color: #4b5563; border-bottom: 1px solid #e5e7eb;
+    }
+    td { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: middle; }
+    tr:hover td { background-color: #f9fafb; }
+    
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 4px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-qty { background-color: #e0f2fe; color: #0369a1; }
+    .badge-money { background-color: #fef3c7; color: #713f12; }
+    .badge-alert { background-color: #fee2e2; color: #991b1b; }
+
+    /* Empty states */
+    .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    
+    .message {
+      padding: 12px 15px; border-radius: 6px; margin-bottom: 15px;
+      font-size: 13px; font-weight: 600; display: none;
+    }
+    .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .message.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .message.info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    /* Modals */
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #ffffff; margin: 5% auto; padding: 20px;
+      border: 1px solid #e5e7eb; border-radius: 8px; width: 480px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; }
+    .modal-title { margin: 0; font-size: 16px; font-weight: 700; color: #111827; }
+    .close-btn { font-size: 20px; font-weight: bold; color: #9ca3af; cursor: pointer; }
+    .close-btn:hover { color: #111827; }
+    .modal-body { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+    .modal-body .field { display: flex; flex-direction: column; gap: 4px; }
+    .modal-body label { font-size: 11px; font-weight: 700; color: #4b5563; }
+    .modal-body .input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
+    .modal-body .input:focus { border-color: #0891b2; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-icon">🗃️</div>
+    <div>
+      <h1>Saldos y Existencias de Inventario</h1>
+      <p>ERP Operativo · Control asíncrono y costeo promedio ponderado de stock</p>
+    </div>
+  </header>
+
+  <div id="INV_ALERT" class="message"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Existencias Disponibles en Bodega</h2>
+      <div style="display: flex; gap: 8px;">
+        <button class="button button-primary" onclick="abrirModalAjuste()">🔧 Registrar Ajuste</button>
+        <button class="button button-secondary" onclick="invCargarSaldos()">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <div class="search-container">
+      <input type="text" id="INV_BUSCADOR" class="input" placeholder="Buscar por código, descripción o ID de producto..." oninput="invFiltrar()">
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Saldo</th>
+            <th>ID Producto</th>
+            <th>Código de Referencia</th>
+            <th>Descripción del Producto</th>
+            <th>Entradas Registradas</th>
+            <th>Salidas Registradas</th>
+            <th>Stock Final Disponible</th>
+            <th>Costo Promedio</th>
+            <th>Valor Total del Inventario</th>
+          </tr>
+        </thead>
+        <tbody id="INV_TABLA">
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <div class="empty-icon">🗃️</div>
+                <strong>Cargando existencias actuales...</strong>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Registro de Ajuste de Inventario -->
+<div id="modal_ajuste" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">🔧 Registrar Ajuste de Inventario</h3>
+      <span class="close-btn" onclick="cerrarModalAjuste()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="aju_id_producto">Seleccione el Producto *</label>
+        <select id="aju_id_producto" class="input"></select>
+      </div>
+      <div class="field">
+        <label for="aju_tipo_movimiento">Tipo de Movimiento *</label>
+        <select id="aju_tipo_movimiento" class="input">
+          <option value="ENTRADA">ENTRADA (Incrementa Stock)</option>
+          <option value="SALIDA">SALIDA (Disminuye Stock)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="aju_cantidad">Cantidad *</label>
+        <input type="number" id="aju_cantidad" class="input" min="1" value="1">
+      </div>
+      <div class="field">
+        <label for="aju_costo_unitario">Costo Unitario (COP) *</label>
+        <input type="number" id="aju_costo_unitario" class="input" min="0" value="0">
+      </div>
+      <div class="field">
+        <label for="aju_observacion">Observación / Motivo *</label>
+        <input type="text" id="aju_observacion" class="input" placeholder="Ej: Ajuste físico de inventario">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="cerrarModalAjuste()">Cancelar</button>
+      <button class="button button-primary" onclick="guardarAjuste()">Registrar Ajuste</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
+  let LISTA_SALDOS = [];
+  let AJUSTE_PROCESANDO = false;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    invCargarSaldos();
+  });
+
+  function mostrarAlerta(msg, tipo) {
+    const el = document.getElementById("INV_ALERT");
+    el.textContent = msg;
+    el.className = "message " + tipo;
+    el.style.display = "block";
+    setTimeout(() => {
+      if (el.textContent === msg) {
+        el.style.display = "none";
+      }
+    }, 6000);
+  }
+
+  function invCargarSaldos() {
+    const tbody = document.getElementById("INV_TABLA");
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🗃️</div><strong>Cargando existencias actuales...</strong></div></td></tr>`;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res) {
+          mostrarAlerta("Respuesta nula del servidor de inventarios.", "error");
+          tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Error de red: Respuesta vacía del servidor.</td></tr>`;
+          return;
+        }
+        if (res.EXITO) {
+          LISTA_SALDOS = res.DATOS || [];
+          invMostrar(LISTA_SALDOS);
+        } else {
+          mostrarAlerta(res.MENSAJE || "No se pudieron obtener las existencias.", "error");
+          tbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="color: #dc2626;"><strong>Error de acceso:</strong> ` + (res.MENSAJE || "Acceso denegado") + `</td></tr>`;
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Error de sistema: " + err.message, "error");
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
+      })
+      .INV_LISTAR_SALDOS_WEB(TOKEN_SESION);
+  }
+
+  function invMostrar(datos) {
+    const tbody = document.getElementById("INV_TABLA");
+    tbody.innerHTML = "";
+
+    if (!datos || datos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">No hay registros de existencias físicas de inventario.</td></tr>`;
+      return;
+    }
+
+    datos.forEach(item => {
+      if (!item.ID_PRODUCTO) return;
+      const tr = document.createElement("tr");
+      
+      const stockVal = Number(item.SALDO_FINAL || 0);
+      const stockClass = stockVal <= 10 ? "badge badge-alert" : "badge badge-qty";
+      
+      tr.innerHTML = 
+        `<td><strong>` + (item.ID_SALDO || "N/A") + `</strong></td>` +
+        `<td>` + item.ID_PRODUCTO + `</td>` +
+        `<td><code>` + (item.CODIGO_PRODUCTO || "N/A") + `</code></td>` +
+        `<td>` + (item.DESCRIPCION_PRODUCTO || "") + `</td>` +
+        `<td>` + Number(item.ENTRADAS || 0) + `</td>` +
+        `<td>` + Number(item.SALIDAS || 0) + `</td>` +
+        `<td><span class="` + stockClass + `">` + stockVal + `</span></td>` +
+        `<td>$` + Number(item.COSTO_PROMEDIO || 0).toLocaleString('es-CO') + ` COP</td>` +
+        `<td><span class="badge badge-money">$` + Number(item.VALOR_INVENTARIO || 0).toLocaleString('es-CO') + ` COP</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function invFiltrar() {
+    const criterio = document.getElementById("INV_BUSCADOR").value.trim().toUpperCase();
+    if (!criterio) {
+      invMostrar(LISTA_SALDOS);
+      return;
+    }
+
+    const filtrados = LISTA_SALDOS.filter(item => {
+      return (
+        String(item.ID_SALDO).toUpperCase().includes(criterio) ||
+        String(item.ID_PRODUCTO).toUpperCase().includes(criterio) ||
+        String(item.CODIGO_PRODUCTO).toUpperCase().includes(criterio) ||
+        String(item.DESCRIPCION_PRODUCTO).toUpperCase().includes(criterio)
+      );
+    });
+    invMostrar(filtrados);
+  }
+
+  function abrirModalAjuste() {
+    const select = document.getElementById("aju_id_producto");
+    select.innerHTML = "<option value=''>Cargando catálogo...</option>";
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          select.innerHTML = "<option value=''>Seleccione un producto...</option>";
+          res.DATOS.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.ID_PRODUCTO;
+            opt.text = p.DESCRIPCION + " (" + p.CODIGO + ")";
+            select.add(opt);
+          });
+        } else {
+          select.innerHTML = "<option value=''>Error al cargar productos</option>";
+        }
+      })
+      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION);
+      
+    document.getElementById("aju_cantidad").value = 1;
+    document.getElementById("aju_costo_unitario").value = 0;
+    document.getElementById("aju_observacion").value = "";
+    document.getElementById("modal_ajuste").style.display = "block";
+  }
+
+  function cerrarModalAjuste() {
+    document.getElementById("modal_ajuste").style.display = "none";
+  }
+
+  function guardarAjuste() {
+    if (AJUSTE_PROCESANDO) return;
+    
+    const datos = {
+      ID_PRODUCTO: document.getElementById("aju_id_producto").value,
+      TIPO_MOVIMIENTO: document.getElementById("aju_tipo_movimiento").value,
+      CANTIDAD: Number(document.getElementById("aju_cantidad").value || 0),
+      COSTO_UNITARIO: Number(document.getElementById("aju_costo_unitario").value || 0),
+      OBSERVACION: document.getElementById("aju_observacion").value.trim()
+    };
+    
+    if (!datos.ID_PRODUCTO || datos.CANTIDAD <= 0 || !datos.OBSERVACION) {
+      alert("Por favor diligencie todos los campos obligatorios (*).");
+      return;
+    }
+    
+    AJUSTE_PROCESANDO = true;
+    mostrarAlerta("Registrando ajuste de inventario en Sheets...", "info");
+    cerrarModalAjuste();
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        AJUSTE_PROCESANDO = false;
+        if (res && res.EXITO) {
+          mostrarAlerta(res.mensaje, "success");
+          invCargarSaldos();
+        } else {
+          mostrarAlerta("Error: " + (res ? res.mensaje : "Intente nuevamente"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        AJUSTE_PROCESANDO = false;
+        mostrarAlerta("Fallo crítico: " + err.message, "error");
+      })
+      .INV_GUARDAR_AJUSTE(datos, TOKEN_SESION);
+  }
+</script>
+</body>
+</html>
