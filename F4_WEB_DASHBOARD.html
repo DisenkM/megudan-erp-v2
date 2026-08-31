@@ -1,9 +1,10 @@
 <!-- ============================================================
-* INTERFAZ: F4_WEB_DASHBOARD
+* INTERFAZ: F4_WEB_DASHBOARD  (VERSIÓN 7.0 - MEGUDAN ERP V2)
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
 * RESPONSABILIDAD: Menú dinámico, visualización asíncrona de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
 * ESTADO: 100% Sincronizado mediante srcdoc (RPC Injection) libre de 404s e iFrame Drive Blocks
+* ARQUITECTURA: Acceso multinivel dinámico por roles, ocultando/mostrando módulos y Gestión de Usuarios
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -92,11 +93,8 @@
         <span class="sidebar-logo">MEGUDAN</span>
       </div>
       <nav class="sidebar-nav">
+        <!-- Menú renderizado de forma dinámica según el nivel del usuario de sesión -->
         <a class="nav-item active" onclick="abrirModulo('inicio')">🏠 Inicio</a>
-        <a class="nav-item" onclick="abrirModulo('clientes')">👥 Clientes / Terceros</a>
-        <a class="nav-item" onclick="abrirModulo('productos')">📦 Productos / Servicios</a>
-        <a class="nav-item" onclick="abrirModulo('inventario')">🗃️ Inventario / Existencias</a>
-        <a class="nav-item" onclick="abrirModulo('seguridad')">🔐 Gestión Seguridad</a>
       </nav>
     </div>
     <div class="sidebar-footer">
@@ -126,7 +124,7 @@
         <h2>¡Te damos la bienvenida al ERP V2!</h2>
         <p>
           Este panel web interactivo centraliza la operación de MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS.
-          Selecciona un módulo en la barra de la izquierda para comenzar a trabajar.
+          Selecciona un módulo en la barra de la izquierda para comenzar a trabajar según tus permisos autorizados.
         </p>
       </div>
       <iframe id="viewport-frame" class="module-frame"></iframe>
@@ -150,6 +148,8 @@
       document.getElementById("user-display").textContent = USUARIO;
       document.getElementById("avatar-letras").textContent = USUARIO.substring(0,2).toUpperCase();
     }
+    
+    // Obtener menú dinámico por niveles y configurar rol en pantalla
     google.script.run
       .withSuccessHandler(function(contexto) {
         if (contexto && contexto.VALIDO) {
@@ -157,6 +157,52 @@
         }
       })
       .SEG_OBTENER_CONTEXTO_SEGURIDAD(TOKEN_SESION);
+
+    // Cargar enrutador dinámico de vistas según el nivel/permisos
+    google.script.run
+      .withSuccessHandler(renderizarMenuDinamico)
+      .withFailureHandler(function(err) {
+        console.error("Fallo de compilación de menú dinámico: ", err.message);
+      })
+      .SEG_OBTENER_MENU_NIVEL(TOKEN_SESION);
+  }
+
+  function renderizarMenuDinamico(res) {
+    if (!res || !res.EXITO) {
+      console.error("Error del servidor de accesos: ", res ? res.MENSAJE : "Respuesta nula");
+      return;
+    }
+
+    const nav = document.querySelector(".sidebar-nav");
+    nav.innerHTML = ""; // Limpiar menú estático de fábrica
+
+    // 1. Agregar de forma obligatoria el botón de Inicio (Home)
+    const itemInicio = document.createElement("a");
+    itemInicio.className = "nav-item active";
+    itemInicio.setAttribute("onclick", "abrirModulo('inicio')");
+    itemInicio.innerHTML = "🏠 Inicio";
+    nav.appendChild(itemInicio);
+
+    // 2. Diccionario traductor de módulos permitidos
+    const modulosMapeados = {
+      "CLIENTES": { icon: "👥", label: "Clientes / Terceros", route: "clientes" },
+      "PRODUCTOS": { icon: "📦", label: "Productos / Servicios", route: "productos" },
+      "INVENTARIO": { icon: "🗃️", label: "Inventario / Existencias", route: "inventario" },
+      "SEGURIDAD": { icon: "🔐", label: "Gestión Seguridad", route: "seguridad" }
+    };
+
+    // 3. Renderizar únicamente los módulos habilitados por el administrador (checkin)
+    res.MODULOS.forEach(function(mod) {
+      const modUpper = String(mod).toUpperCase().trim();
+      if (modulosMapeados[modUpper]) {
+        const config = modulosMapeados[modUpper];
+        const item = document.createElement("a");
+        item.className = "nav-item";
+        item.setAttribute("onclick", `abrirModulo('${config.route}')`);
+        item.innerHTML = `${config.icon} ${config.label}`;
+        nav.appendChild(item);
+      }
+    });
   }
 
   function vigilarSesionERP() {

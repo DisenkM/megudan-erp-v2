@@ -1,5 +1,5 @@
 /**************************************************************
-* 25_WEB.gs (VERSIÓN 8.0 - ARQUITECTURA HÍBRIDA Standalone & RPC)
+* 25_WEB.gs (VERSIÓN 9.0 - ARQUITECTURA HÍBRIDA Standalone & RPC)
 * RESPONSABILIDAD:
 * - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
 * - Servir la compilación asíncrona de sub-vistas del iFrame en memoria.
@@ -58,8 +58,16 @@ function WEB_doGet(e) {
 
 function WEB_MOSTRAR_LOGIN() {
   try {
-    return HtmlService
-      .createTemplateFromFile(WEB_CONFIG.LOGIN)
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.LOGIN);
+    let webAppUrl = "";
+    try {
+      webAppUrl = ScriptApp.getService().getUrl();
+    } catch (e) {
+      webAppUrl = "";
+    }
+    plantilla.WEB_APP_URL = webAppUrl; // ◄ Inyectamos la URL real de script.google.com para evitar redirecciones a googleusercontent
+    
+    return plantilla
       .evaluate()
       .setTitle(WEB_CONFIG.TITULO_ERP + " | Iniciar sesión")
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -341,7 +349,7 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
       <body>
         <div class="error-container">
           <h3>⚠️ Error de Compilación del Módulo</h3>
-          <p>${error.message}</p>
+          <p>\${error.message}</p>
         </div>
       </body>
       </html>

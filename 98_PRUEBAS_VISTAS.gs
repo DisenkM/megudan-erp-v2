@@ -1,5 +1,5 @@
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 6.0 - COCHERA DE DIAGNÓSTICO EN VIVO)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 7.0 - COCHERA DE DIAGNÓSTICO EN VIVO)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -23,6 +23,10 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
   console.log("\n🔒 [TEST 1] Evaluando compilación de F3_WEB_LOGIN:");
   try {
     const template = HtmlService.createTemplateFromFile("F3_WEB_LOGIN");
+    
+    // 🛡️ INYECCIÓN DEFENSIVA DE MOCK URL PARA EVITAR ReferenceError DE NUEVA REDIRECCIÓN V6
+    template.WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyonax-D7-70eoWd8yHF2e4MGv4Pf9nBQTM-OspdRM-qBkYamEw/exec";
+    
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
@@ -44,7 +48,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "PASS", detalle: "Compilación limpia e inyección HTML5 confirmada en F3_WEB_LOGIN." });
   } catch (errLogin) {
     console.error("   [FAIL] Error en Render de Login: " + errLogin.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F3_WEB_LOGIN' (sin la extensión .html en el editor) y pega allí todo el contenido del artefacto 'F3_WEB_LOGIN_HTML-v5.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F3_WEB_LOGIN' (sin la extensión .html en el editor) y pega allí todo el contenido del artefacto 'F3_WEB_LOGIN_HTML-v6.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "FAIL", detalle: errLogin.message });
   }
 
@@ -70,7 +74,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     if (!contenidoHtml.includes("ADMIN_TEST_SUITE")) {
       throw new Error("Falla de interpolación: El alias de usuario de sesión no fue inyectado.");
     }
-    if (!contenidoHtml.includes("<iframe") && !contenidoHtml.includes("viewport-frame")) {
+    if (!contenidoHtml.includes("<iframe") && !contenidoHtml.includes("viewport-frame") && !contenidoHtml.includes("srcdoc")) {
       throw new Error("Estructura de iFrames segura no encontrada.");
     }
     
@@ -186,7 +190,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
       throw new Error("La llamada RPC de inventario INV_LISTAR_SALDOS_WEB no se encuentra en el script del cliente.");
     }
     
-    console.log("   [PASS] F6_INV_VIEW compilado correctamente.");
+    console.log("   [PASS] F6_INV_VIEW compiled correctly.");
     console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
     
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F6_INV_VIEW." });
@@ -234,7 +238,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "PASS", detalle: "Enrutador doGet validado ante cargas por defecto, intentos de bypass sin token y desvíos de seguridad." });
   } catch (errRouting) {
     console.error("   [FAIL] Error en Módulo de Enrutamiento: " + errRouting.message);
-    console.error("   💡 SOLUCIÓN: Asegúrate de que el archivo '25_WEB.gs' contenga el código completo de la versión '25_WEB-v8.gs' de Studio.");
+    console.error("   💡 SOLUCIÓN: Asegúrate de que el archivo '25_WEB.gs' contenga el código completo de la versión '25_WEB-v9.gs' de Studio.");
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "FAIL", detalle: errRouting.message });
   }
 
