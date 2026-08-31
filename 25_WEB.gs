@@ -68,6 +68,7 @@ function WEB_MOSTRAR_LOGIN() {
 }
 
 function WEB_MOSTRAR_DASHBOARD(parametros) {
+  parametros = parametros || {};
   try {
     const tokenSesion = String(parametros.token || "").trim();
     if (!tokenSesion) {
@@ -105,6 +106,7 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
 }
 
 function WEB_MOSTRAR_CLIENTES_FORM(parametros) {
+  parametros = parametros || {};
   try {
     const token = String(parametros.token || "").trim();
     const validacion = SEG_VALIDAR_SESION(token);
@@ -128,6 +130,7 @@ function WEB_MOSTRAR_CLIENTES_FORM(parametros) {
 }
 
 function WEB_MOSTRAR_SEGURIDAD_FORM(parametros) {
+  parametros = parametros || {};
   try {
     const token = String(parametros.token || "").trim();
     const validacion = SEG_VALIDAR_SESION(token);
@@ -156,6 +159,7 @@ function WEB_MOSTRAR_SEGURIDAD_FORM(parametros) {
 }
 
 function WEB_MOSTRAR_PRODUCTOS_FORM(parametros) {
+  parametros = parametros || {};
   try {
     const token = String(parametros.token || "").trim();
     const validacion = SEG_VALIDAR_SESION(token);
@@ -179,6 +183,7 @@ function WEB_MOSTRAR_PRODUCTOS_FORM(parametros) {
 }
 
 function WEB_MOSTRAR_INVENTARIO_FORM(parametros) {
+  parametros = parametros || {};
   try {
     const token = String(parametros.token || "").trim();
     const validacion = SEG_VALIDAR_SESION(token);
@@ -252,4 +257,103 @@ function WEB_MOSTRAR_ERROR(mensaje) {
   </html>
   `;
   return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Error");
+}
+
+
+/**************************************************************
+* WEB_OBTENER_COMPILACION_VISTA
+* RESPONSABILIDAD:
+* - Compilar e interpolar en memoria (Server-Side) las vistas HTML del ERP.
+* - Retornar el HTML final como cadena de texto plano al cliente.
+* - Evita por completo el uso de peticiones de red externas (iFrame src)
+*   eliminando errores 404 y bloqueos de sesión multi-login de Google.
+**************************************************************/
+function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
+  try {
+    const validacion = SEG_VALIDAR_SESION(tokenSesion);
+    if (!tokenSesion || !validacion || validacion.VALIDA !== true) {
+      throw new Error("Sesión inválida o expirada. Por favor, reinicie la página.");
+    }
+    
+    let archivoHtml = "";
+    const rutaNormalizada = String(ruta).trim().toLowerCase();
+    
+    switch (rutaNormalizada) {
+      case "clientes":
+        archivoHtml = WEB_CONFIG.CLIENTES_FORM;
+        break;
+      case "seguridad":
+        // Validar acceso para el módulo de seguridad
+        const acceso = SEG_VALIDAR_ACCESO(tokenSesion, "SEGURIDAD", "VER");
+        if (!acceso || acceso.AUTORIZADO !== true) {
+          throw new Error("ACCESO DENEGADO: No cuenta con permisos para ver este módulo.");
+        }
+        archivoHtml = WEB_CONFIG.SEGURIDAD_FORM;
+        break;
+      case "productos":
+        archivoHtml = WEB_CONFIG.PRODUCTOS_FORM;
+        break;
+      case "inventario":
+        archivoHtml = WEB_CONFIG.INVENTARIO_FORM;
+        break;
+      default:
+        throw new Error("El módulo solicitado '" + ruta + "' no existe.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(archivoHtml);
+    plantilla.TOKEN_SESION = tokenSesion;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    
+    // 🛡️ SHIM DE INTEGRACIÓN ASÍNCRONA (RPC)
+    // Permite que las sub-vistas cargadas vía srcdoc accedan al puente RPC de Google
+    let htmlFinal = plantilla.evaluate().getContent();
+    const shim = `
+    <script>
+      (function() {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+          try {
+            const parentWindow = window.parent;
+            if (parentWindow && parentWindow.google && parentWindow.google.script && parentWindow.google.script.run) {
+              window.google = window.google || {};
+              window.google.script = window.google.script || {};
+              window.google.script.run = parentWindow.google.script.run;
+              console.log("🛡️ [MEGUDAN SHIM] Conexión RPC asíncrona heredada con éxito del Dashboard superior.");
+            } else {
+              console.warn("⚠️ [MEGUDAN SHIM] No se encontró el puente RPC en window.parent.");
+            }
+          } catch (e) {
+            console.error("❌ [MEGUDAN SHIM] Error al heredar el puente RPC: ", e.message);
+          }
+        }
+      })();
+    </script>
+    `;
+    htmlFinal = htmlFinal.replace("<head>", "<head>" + shim);
+    return htmlFinal;
+
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_OBTENER_COMPILACION_VISTA", "WEB", error);
+    }
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff5f5; color: #b91c1c; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin:0; }
+          .error-container { border: 1.5px solid #fca5a5; background: #fee2e2; padding: 25px; border-radius: 8px; max-width: 500px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+          h3 { margin-top: 0; color: #991b1b; font-size: 18px; }
+          p { font-size: 13px; line-height: 1.6; color: #7f1d1d; margin-bottom: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="error-container">
+          <h3>⚠️ Error de Compilación del Módulo</h3>
+          <p>${error.message}</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
 }

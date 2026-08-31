@@ -5,7 +5,6 @@
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
 * ESTADO: 100% Accesible, Dinámico, Seguro y Adaptativo
 ============================================================ -->
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
@@ -242,6 +241,11 @@
               btn.textContent = "Ingresar al ERP";
               mostrarAlerta("No se pudo iniciar la sesión.", "error");
             }
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.textContent = "Ingresar al ERP";
+            mostrarAlerta("Error al crear sesión: " + err.message, "error");
           })
           .SEG_CREAR_SESION(autenticacion.USUARIO.ID_USUARIO);
       })

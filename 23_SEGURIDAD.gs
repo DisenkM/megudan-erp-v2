@@ -223,7 +223,7 @@ function SEG_CREAR_USUARIO(datos, tokenSesion) {
     RESULTADO: "EXITOSO"
   });
 
-  return { EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuario };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuario });
 }
 
 function SEG_CONSULTAR_USUARIO(idUsuario, tokenSesion) {
@@ -300,7 +300,7 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos, tokenSesion) {
   const filaActualizada = SEG_CONVERTIR_OBJETO_FILA(encabezados, usuarioActualizado);
   hoja.getRange(filaUsuario, 1, 1, encabezados.length).setValues([filaActualizada]);
 
-  return { EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuarioActualizado };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuarioActualizado });
 }
 
 function SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, tokenSesion) {
@@ -365,7 +365,7 @@ function SEG_CREAR_ROL(datos, tokenSesion) {
   const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, rol);
   hoja.appendRow(nuevaFila);
 
-  return { EXITO: true, ID_ROL: idRol, ROL: rol };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_ROL: idRol, ROL: rol });
 }
 
 function SEG_CONSULTAR_ROL(idRol) {
@@ -408,7 +408,7 @@ function SEG_ACTUALIZAR_ROL(idRol, datos, tokenSesion) {
   const filaActualizada = SEG_CONVERTIR_OBJETO_FILA(encabezados, rolActualizado);
   hoja.getRange(filaRol, 1, 1, encabezados.length).setValues([filaActualizada]);
 
-  return { EXITO: true, ID_ROL: idRol, ROL: rolActualizado };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_ROL: idRol, ROL: rolActualizado });
 }
 
 function SEG_CAMBIAR_ESTADO_ROL(idRol, nuevoEstado, tokenSesion) {
@@ -573,7 +573,7 @@ function SEG_CREAR_SESION(idUsuario) {
   const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, sesion);
   hoja.appendRow(nuevaFila);
 
-  return { EXITO: true, ID_SESION: idSesion, TOKEN_SESION: token, ID_USUARIO: usuario.ID_USUARIO, FECHA_EXPIRACION: fechaExp };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_SESION: idSesion, TOKEN_SESION: token, ID_USUARIO: usuario.ID_USUARIO, FECHA_EXPIRACION: fechaExp });
 }
 
 function SEG_BUSCAR_SESION(tokenSesion) {
@@ -595,7 +595,7 @@ function SEG_BUSCAR_SESION(tokenSesion) {
 
 function SEG_VALIDAR_SESION(tokenSesion) {
   if (tokenSesion === "SHEETS_CONTEXT") {
-    return {
+    return SEG_SANITIZAR_PARA_CLIENTE({
       VALIDA: true,
       CODIGO: "SESION_VALIDA",
       MENSAJE: "Acceso concedido automáticamente en entorno confiable de Google Sheets.",
@@ -608,7 +608,7 @@ function SEG_VALIDAR_SESION(tokenSesion) {
         EXPIRA_SESION: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
         ULTIMA_ACTIVIDAD: new Date()
       }
-    };
+    });
   }
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) return { VALIDA: false, CODIGO: "SESION_NO_ENCONTRADA", MENSAJE: "La sesión no existe." };
@@ -631,7 +631,7 @@ function SEG_VALIDAR_SESION(tokenSesion) {
   }
 
   SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
-  return { VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion };
+  return SEG_SANITIZAR_PARA_CLIENTE({ VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion });
 }
 
 function SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion) {
@@ -676,7 +676,7 @@ function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
   }
 
   if (rol.NOMBRE_ROL === SEG_CONFIG.ROL_ADMINISTRADOR) {
-    return { AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
+    return SEG_SANITIZAR_PARA_CLIENTE({ AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion });
   }
 
   const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
@@ -684,14 +684,14 @@ function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
     return { AUTORIZADO: false, CODIGO: "ACCESO_DENEGADO", MENSAJE: "Su rol no tiene permisos de " + accion + " en " + modulo + "." };
   }
 
-  return { AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
+  return SEG_SANITIZAR_PARA_CLIENTE({ AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion });
 }
 
 function SEG_OBTENER_CONTEXTO_SEGURIDAD(tokenSesion) {
   const validacion = SEG_VALIDAR_SESION(tokenSesion);
   if (!validacion || validacion.VALIDA !== true) return { VALIDO: false, MENSAJE: "No autorizado." };
   const rol = SEG_CONSULTAR_ROL(validacion.SESION.ID_ROL);
-  return { VALIDO: true, USUARIO: validacion.SESION.USUARIO, ROL: rol };
+  return SEG_SANITIZAR_PARA_CLIENTE({ VALIDO: true, USUARIO: validacion.SESION.USUARIO, ROL: rol });
 }
 
 function SEG_REGISTRAR_AUDITORIA(datos) {
@@ -973,11 +973,16 @@ function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
 function SEG_SANITIZAR_PARA_CLIENTE(dato) {
   if (dato === null || dato === undefined) return dato;
   
-  if (dato instanceof Date) {
+  // 🛡️ Robust Date detection (handles cross-context instances in V8 engine)
+  if (dato instanceof Date || (dato && typeof dato === "object" && typeof dato.getMonth === "function")) {
     try {
-      return Utilities.formatDate(dato, Session.getScriptTimeZone() || "America/Bogota", "yyyy-MM-dd HH:mm:ss");
+      return Utilities.formatDate(new Date(dato), Session.getScriptTimeZone() || "America/Bogota", "yyyy-MM-dd HH:mm:ss");
     } catch (e) {
-      return dato.toISOString().replace("T", " ").substring(0, 19);
+      try {
+        return new Date(dato).toISOString().replace("T", " ").substring(0, 19);
+      } catch (err) {
+        return String(dato);
+      }
     }
   }
   
