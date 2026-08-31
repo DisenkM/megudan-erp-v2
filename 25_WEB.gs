@@ -1,8 +1,9 @@
 /**************************************************************
-* 25_WEB.gs
+* 25_WEB.gs (VERSIÓN 8.0 - ARQUITECTURA HÍBRIDA Standalone & RPC)
 * RESPONSABILIDAD:
 * - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
-* - Dar soporte y enrutamiento a los módulos de Clientes, Seguridad, Productos e Inventarios.
+* - Servir la compilación asíncrona de sub-vistas del iFrame en memoria.
+* - Inyectar de forma transparente el Polyfill/Shim de comunicación RPC.
 **************************************************************/
 
 const WEB_CONFIG = {
@@ -23,6 +24,9 @@ const WEB_CONFIG = {
   TITULO_ERP: "MEGUDAN ERP"
 };
 
+/**
+ * Enrutador principal de peticiones HTTP GET (Web App Standalone)
+ */
 function WEB_doGet(e) {
   try {
     const parametros = e && e.parameter ? e.parameter : {};
@@ -85,6 +89,7 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
     plantilla.TOKEN_SESION = tokenSesion;
     plantilla.ID_USUARIO = (validacion.SESION && validacion.SESION.ID_USUARIO) ? validacion.SESION.ID_USUARIO : "";
     plantilla.USUARIO = (validacion.SESION && validacion.SESION.USUARIO) ? validacion.SESION.USUARIO : "";
+    
     let webAppUrl = "";
     try {
       webAppUrl = ScriptApp.getService().getUrl();
@@ -259,15 +264,9 @@ function WEB_MOSTRAR_ERROR(mensaje) {
   return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Error");
 }
 
-
-/**************************************************************
-* WEB_OBTENER_COMPILACION_VISTA
-* RESPONSABILIDAD:
-* - Compilar e interpolar en memoria (Server-Side) las vistas HTML del ERP.
-* - Retornar el HTML final como cadena de texto plano al cliente.
-* - Evita por completo el uso de peticiones de red externas (iFrame src)
-*   eliminando errores 404 y bloqueos de sesión multi-login de Google.
-**************************************************************/
+/**
+ * Compila las sub-vistas asíncronamente para inyección srcdoc
+ */
 function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
   try {
     const validacion = SEG_VALIDAR_SESION(tokenSesion);
@@ -283,7 +282,6 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
         archivoHtml = WEB_CONFIG.CLIENTES_FORM;
         break;
       case "seguridad":
-        // Validar acceso para el módulo de seguridad
         const acceso = SEG_VALIDAR_ACCESO(tokenSesion, "SEGURIDAD", "VER");
         if (!acceso || acceso.AUTORIZADO !== true) {
           throw new Error("ACCESO DENEGADO: No cuenta con permisos para ver este módulo.");
@@ -304,9 +302,6 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
     plantilla.TOKEN_SESION = tokenSesion;
     plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
     
-    
-    // 🛡️ SHIM DE INTEGRACIÓN ASÍNCRONA (RPC)
-    // Permite que las sub-vistas cargadas vía srcdoc accedan al puente RPC de Google
     let htmlFinal = plantilla.evaluate().getContent();
     const shim = `
     <script>
@@ -318,12 +313,10 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
               window.google = window.google || {};
               window.google.script = window.google.script || {};
               window.google.script.run = parentWindow.google.script.run;
-              console.log("🛡️ [MEGUDAN SHIM] Conexión RPC asíncrona heredada con éxito del Dashboard superior.");
-            } else {
-              console.warn("⚠️ [MEGUDAN SHIM] No se encontró el puente RPC en window.parent.");
+              console.log("🛡️ [MEGUDAN SHIM] Conexión RPC heredada con éxito.");
             }
           } catch (e) {
-            console.error("❌ [MEGUDAN SHIM] Error al heredar el puente RPC: ", e.message);
+            console.error("❌ [MEGUDAN SHIM] Error al heredar RPC: ", e.message);
           }
         }
       })();
@@ -342,9 +335,7 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
       <head>
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff5f5; color: #b91c1c; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin:0; }
-          .error-container { border: 1.5px solid #fca5a5; background: #fee2e2; padding: 25px; border-radius: 8px; max-width: 500px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-          h3 { margin-top: 0; color: #991b1b; font-size: 18px; }
-          p { font-size: 13px; line-height: 1.6; color: #7f1d1d; margin-bottom: 0; }
+          .error-container { border: 1.5px solid #fca5a5; background: #fee2e2; padding: 25px; border-radius: 8px; max-width: 500px; text-align: center; }
         </style>
       </head>
       <body>

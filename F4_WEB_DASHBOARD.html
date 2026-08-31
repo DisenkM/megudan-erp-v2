@@ -3,8 +3,9 @@
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
 * RESPONSABILIDAD: Menú dinámico, visualización asíncrona de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-* ESTADO: 100% Blindado frente a 'unsafe-eval' (CSP de Google) y Sandbox Bypass
+* ESTADO: 100% Sincronizado mediante srcdoc (RPC Injection) libre de 404s e iFrame Drive Blocks
 ============================================================ -->
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
@@ -139,19 +140,6 @@
   const USUARIO = "<?= USUARIO ?>";
   const WEB_APP_URL = "<?= WEB_APP_URL ?>";
 
-  function obtenerUrlModulo(ruta) {
-    let baseUrl = WEB_APP_URL;
-    if (!baseUrl || window.location.origin.indexOf("googleusercontent.com") !== -1) {
-      // Si estamos en un iframe modal de Sheets, window.location.origin no nos sirve para iframes doGet
-      // por lo que priorizamos usar el WEB_APP_URL que viene del servidor.
-      // Si no viene, caemos en el fallback local.
-      baseUrl = WEB_APP_URL || (window.location.origin + window.location.pathname);
-    } else {
-      baseUrl = window.location.origin + window.location.pathname;
-    }
-    return baseUrl + "?ruta=" + ruta + "&token=" + TOKEN_SESION;
-  }
-
   document.addEventListener("DOMContentLoaded", function() {
     configurarPerfilUsuario();
     vigilarSesionERP();
@@ -223,19 +211,56 @@
     welcome.style.display = "none";
     frame.style.display = "block";
 
+    // Previsualizador de carga local (Loader) mediante srcdoc
+    frame.srcdoc = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9fafb; color: #4b5563; }
+          .loader-container { text-align: center; }
+          .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <div class="loader-container">
+          <div class="spinner"></div>
+          <strong style="font-size: 14px;">Inyectando módulo en memoria...</strong>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Asignación de Títulos
     if (modulo === "clientes") {
       title.textContent = "👥 Clientes / Terceros";
-      frame.src = obtenerUrlModulo("clientes_form");
     } else if (modulo === "seguridad") {
       title.textContent = "🔐 Gestión de Seguridad";
-      frame.src = obtenerUrlModulo("seguridad_form");
     } else if (modulo === "productos") {
       title.textContent = "📦 Productos / Servicios";
-      frame.src = obtenerUrlModulo("productos_form");
     } else if (modulo === "inventario") {
       title.textContent = "🗃️ Inventarios / Existencias";
-      frame.src = obtenerUrlModulo("inventario_form");
     }
+
+    // Inyección Directa vía RPC con srcdoc (Bypass del 404 de Red)
+    google.script.run
+      .withSuccessHandler(function(htmlCompilado) {
+        if (!htmlCompilado) {
+          frame.srcdoc = "<h2>⚠️ Error de Servidor</h2><p>La compilación de la vista retornó un valor vacío.</p>";
+          return;
+        }
+        frame.srcdoc = htmlCompilado;
+      })
+      .withFailureHandler(function(err) {
+        frame.srcdoc = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background-color: #fff5f5; color: #b91c1c; border: 1.5px solid #fca5a5; border-radius: 8px;">
+            <h3 style="margin-top:0;">⚠️ Fallo de Integración Operacional</h3>
+            <p>${err.message}</p>
+          </div>
+        `;
+      })
+      .WEB_OBTENER_COMPILACION_VISTA(modulo, TOKEN_SESION);
   }
 
   function cerrarSesion() {

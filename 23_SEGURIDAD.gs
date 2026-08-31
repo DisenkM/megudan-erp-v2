@@ -1,5 +1,5 @@
 /**************************************************************
-* 23_SEGURIDAD.gs
+* 23_SEGURIDAD.gs (VERSIÓN 10.0 - MEGUDAN ERP V2)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida de Usuarios, Roles, Permisos, Sesiones y Auditoría.
 * - Proteger las macros y Web Apps mediante un Sistema de Control de Acceso Dual.
@@ -54,7 +54,7 @@ function SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, modulo, accion) {
     };
   } catch (uiError) {
     if (!tokenSesion || String(tokenSesion).trim() === "") {
-      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App. Nota: Si está ejecutando una función local de Sheets (como cargar, actualizar o inactivar desde la hoja) directamente desde el Editor de Apps Script, recuerde que el editor corre en un contexto headless (sin interfaz gráfica) y requiere token. Ejecute la función directamente desde el menú físico de Google Sheets ('FORMULARIOS') para activar el bypass automático de seguridad local.");
+      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App.");
     }
     const validacion = SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion);
     if (!validacion || validacion.AUTORIZADO !== true) {
@@ -75,7 +75,7 @@ function SEG_OBTENER_ENCABEZADOS(nombreHoja) {
   const hoja = SEG_OBTENER_HOJA(nombreHoja);
   const ultimaColumna = hoja.getLastColumn();
   if (ultimaColumna === 0) throw new Error("La hoja '" + nombreHoja + "' no contiene encabezados.");
-  return hoja.getRange(1, 1, 1, ultimaColumna).getDisplayValues()[0].map(h => String(h || "").trim().toUpperCase());
+  return hoja.getRange(1, 1, 1, ultimaColumna).getDisplayValues().map(h => String(h || "").trim().toUpperCase());
 }
 
 function SEG_OBTENER_REGISTROS(nombreHoja) {
@@ -238,7 +238,7 @@ function SEG_LISTAR_USUARIOS(tokenSesion) {
     const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
     const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
     const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
-    const usuarios = registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
+    const usuarios = registros.filter(r => r && String(r).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
     return {
       EXITO: true,
       DATOS: SEG_SANITIZAR_PARA_CLIENTE(usuarios),
@@ -248,11 +248,7 @@ function SEG_LISTAR_USUARIOS(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_LISTAR_USUARIOS", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar los usuarios: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar los usuarios: " + error.toString() };
   }
 }
 
@@ -378,7 +374,7 @@ function SEG_LISTAR_ROLES(tokenSesion) {
   }
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_ROLES);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_ROLES);
-  return registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
+  return registros.filter(r => r && String(r).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
 }
 
 function SEG_ACTUALIZAR_ROL(idRol, datos, tokenSesion) {
@@ -451,8 +447,8 @@ function SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion) {
 }
 
 function SEG_VERIFICAR_ACCESO(idUsuario, modulo, accion) {
-  const autorizado = SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion);
-  if (!autorizado) {
+  const authorized = SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion);
+  if (!authorized) {
     throw new Error("ACCESO DENEGADO. No tiene autorización para '" + accion + "' en el módulo '" + modulo + "'.");
   }
   return true;
@@ -473,10 +469,10 @@ function SEG_GENERAR_HASH_CONTRASENA(contrasena) {
 function SEG_VALIDAR_SEGURIDAD_CONTRASENA(contrasena) {
   const password = String(contrasena || "");
   const resultado = { VALIDA: false, MENSAJES: [] };
-  if (password.length < 8) resultado.MENSAJES.push("Mínimo 8 caracteres.");
+  if (password.length < 8) resultado.MENSAES.push("Mínimo 8 caracteres.");
   if (!/[A-Z]/.test(password)) resultado.MENSAJES.push("Requiere una mayúscula.");
   if (!/[a-z]/.test(password)) resultado.MENSAJES.push("Requiere una minúscula.");
-  if (!/[0-9]/.test(password)) resultado.MENSAJES.push("Requiere un número.");
+  if (!/[1-9]/.test(password)) resultado.MENSAJES.push("Requiere un número.");
   resultado.VALIDA = resultado.MENSAJES.length === 0;
   return resultado;
 }
@@ -730,11 +726,7 @@ function SEG_OBTENER_ROLES(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_ROLES", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar los roles: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar los roles: " + error.toString() };
   }
 }
 
@@ -754,11 +746,7 @@ function SEG_OBTENER_PERMISOS(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_PERMISOS", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar los permisos: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar los permisos: " + error.toString() };
   }
 }
 
@@ -777,11 +765,7 @@ function SEG_OBTENER_SESIONES(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_SESIONES", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar las sesiones: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar las sesiones: " + error.toString() };
   }
 }
 
@@ -816,7 +800,7 @@ function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
     throw new Error("Esta operación solo está permitida para administradores dentro de Google Sheets.");
   }
   const splitData = base64Data.split(",");
-  const contentType = splitData[0].match(/:(.*?);/)[1];
+  const contentType = splitData.match(/:(.*?);/)[1];
   const bytes = Utilities.base64Decode(splitData[1]);
   const blob = Utilities.newBlob(bytes, contentType, nombreArchivo);
 
@@ -839,7 +823,7 @@ function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
   const datos = hojaEmpresa.getRange(2, 1, hojaEmpresa.getLastRow() - 1, 2).getValues();
   let filaModificar = -1;
   for (let i = 0; i < datos.length; i++) {
-    if (datos[i][0].toString().trim().toUpperCase() === "LOGO_URL" || datos[i][0].toString().trim().toUpperCase() === "LOGO") {
+    if (datos[i].toString().trim().toUpperCase() === "LOGO_URL" || datos[i].toString().trim().toUpperCase() === "LOGO") {
       filaModificar = i + 2;
       break;
     }
@@ -973,7 +957,6 @@ function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
 function SEG_SANITIZAR_PARA_CLIENTE(dato) {
   if (dato === null || dato === undefined) return dato;
   
-  // 🛡️ Robust Date detection (handles cross-context instances in V8 engine)
   if (dato instanceof Date || (dato && typeof dato === "object" && typeof dato.getMonth === "function")) {
     try {
       return Utilities.formatDate(new Date(dato), Session.getScriptTimeZone() || "America/Bogota", "yyyy-MM-dd HH:mm:ss");
@@ -1003,12 +986,6 @@ function SEG_SANITIZAR_PARA_CLIENTE(dato) {
   return dato;
 }
 
-
-/**************************************************************
-* 23.01 REGISTRO PÚBLICO DE USUARIOS (AUTO-REGISTRO)
-* RESPONSABILIDAD: Permite a los usuarios auto-registrarse desde la web.
-* El estado del usuario por defecto es PENDIENTE de aprobación por el admin.
-**************************************************************/
 function SEG_REGISTRAR_USUARIO_PUBLICO(datos) {
   try {
     if (!datos) return { EXITO: false, MENSAJE: "No se proporcionaron datos." };
@@ -1025,23 +1002,19 @@ function SEG_REGISTRAR_USUARIO_PUBLICO(datos) {
       return { EXITO: false, MENSAJE: "La contraseña es obligatoria." };
     }
 
-    // Estructurar el payload para SEG_CREAR_USUARIO
     const payload = {
       USUARIO: datos.USUARIO,
       NOMBRE: datos.NOMBRE,
       CORREO: datos.CORREO,
       CONTRASENA_PLANA: datos.CONTRASENA_PLANA,
-      ID_ROL: "ROL-000006", // Rol OPERATIVO de fábrica
+      ID_ROL: "ROL-000006", 
       ESTADO_USUARIO: "PENDIENTE",
       DEBE_CAMBIAR_CONTRASENA: "NO"
     };
 
-    // Registrar utilizando el bypass de sistema ya que no hay sesión activa aún
     const res = SEG_CREAR_USUARIO(payload, "SISTEMA_INTERNAL_BYPASS");
     if (res && res.EXITO) {
-      // Establecer contraseña hash de forma segura
       SEG_ESTABLECER_CONTRASENA(res.ID_USUARIO, datos.CONTRASENA_PLANA, "AUTO_REGISTRO", "SISTEMA_INTERNAL_BYPASS");
-      
       return {
         EXITO: true,
         MENSAJE: "¡Registro exitoso! Tu usuario '" + datos.USUARIO + "' ha sido creado con estado PENDIENTE. Un administrador debe aprobar tu cuenta para permitir el ingreso."
