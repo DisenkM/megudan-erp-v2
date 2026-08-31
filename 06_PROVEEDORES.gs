@@ -77,7 +77,7 @@ function PROV_ACTUALIZAR_PROVEEDOR(datos, tokenSesion) {
   const idProveedor = datos.ID_PROVEEDOR;
   const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
   const idxID = encabezados.indexOf("ID_PROVEEDOR");
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getDisplayValues();
 
   let filaModificar = -1;
   for (let i = 0; i < registros.length; i++) {
@@ -122,7 +122,7 @@ function PROV_BUSCAR_PROVEEDOR(criterio, tokenSesion) {
   if (!hoja || hoja.getLastRow() < 2) return null;
 
   const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getDisplayValues();
 
   const idxId = encabezados.indexOf("ID_PROVEEDOR") !== -1 ? encabezados.indexOf("ID_PROVEEDOR") : encabezados.indexOf("ID_CLIENTE");
   const idxDoc = encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : encabezados.indexOf("NUMERO"));

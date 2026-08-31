@@ -1,8 +1,8 @@
 /**************************************************************
-* 24_LOGS.gs
+* 24_LOGS.gs (VERSIÓN ACTUALIZADA - MEGUDAN ERP V2)
 * RESPONSABILIDAD:
 * - Registro unificado de eventos de sistema, auditoría y control de errores.
-* - SISTEMA DE PRUEBAS Y DIAGNÓSTICO INTEGRAL (Automático para desarrolladores).
+* - Sistema de pruebas y diagnóstico en caliente del ERP.
 **************************************************************/
 
 /**
@@ -14,35 +14,28 @@
 function LOG_REGISTRAR_ERROR(funcion, modulo, error) {
   const ahora = new Date();
   const mensaje = error.message || error.toString();
-  const stack = error.stack || "No disponible";
-  const usuario = Session.getActiveUser().getEmail() || "SISTEMA";
-
-  console.error(
-    "=================================\n" +
-    "❌ ERROR EN ERP MEGUDAN\n" +
-    "=================================\n" +
-    "Fecha: " + ahora.toISOString() + "\n" +
-    "Módulo: " + modulo + "\n" +
-    "Función: " + funcion + "\n" +
-    "Mensaje: " + mensaje + "\n" +
-    "Usuario: " + usuario + "\n" +
-    "Stack Trace:\n" + stack + "\n" +
-    "================================="
-  );
-
+  const stack = error.stack || "";
+  const usuario = (typeof Session !== "undefined" && Session.getActiveUser()) ? (Session.getActiveUser().getEmail() || "SISTEMA") : "SISTEMA";
+  
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hojaAuditoria = ss.getSheetByName("USR_AUDITORIA");
-    if (!hojaAuditoria) return;
-
+    if (!hojaAuditoria) {
+      console.error("La hoja USR_AUDITORIA no existe. Error original en [" + funcion + "]: " + mensaje);
+      return;
+    }
+    
     let idAuditoria = "AUD-ERR-" + ahora.getTime();
     if (typeof SEG_GENERAR_ID === "function") {
       try {
         idAuditoria = SEG_GENERAR_ID("USR_AUDITORIA", "ID_AUDITORIA", "AUD");
-      } catch (e) {}
+      } catch (e) {
+        // Fallback en caso de que falle la generación de ID
+      }
     }
-
+    
     const headers = hojaAuditoria.getRange(1, 1, 1, hojaAuditoria.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
+    
     const logObj = {
       ID_AUDITORIA: idAuditoria,
       FECHA_HORA: ahora,
@@ -55,7 +48,7 @@ function LOG_REGISTRAR_ERROR(funcion, modulo, error) {
       ORIGEN_ACCESO: "SISTEMA",
       FECHA_CREACION: ahora
     };
-
+    
     const rowData = headers.map(h => logObj[h] !== undefined ? logObj[h] : "");
     hojaAuditoria.appendRow(rowData);
   } catch (errDb) {
@@ -113,84 +106,96 @@ function LOG_EJECUTAR_DIAGNOSTICO_COMPLETO() {
       resultados.push({ prueba: "HOJA_" + nombre, estado: "FALLA", detalle: "Ausente de la base de datos." });
     }
   });
-
+  
   // 2. Diagnóstico del Bug Crítico de Campos Obligatorios (ReferenceError de value)
   console.log("\n2. Diagnosticando Validador de Campos Obligatorios (Bug de la variable 'value'):");
   try {
     const datosPrueba = { TEST_CAMPO: "Valor Correcto" };
-    SEG_VALIDAR_OBLIGATORIOS(datosPrueba, ["TEST_CAMPO"]);
-    try {
-      if (typeof SEG_VALIDAR_OBLIGATORIOS === "function") {
+    if (typeof SEG_VALIDAR_OBLIGATORIOS === "function") {
+      SEG_VALIDAR_OBLIGATORIOS(datosPrueba, ["TEST_CAMPO"]);
+      try {
         SEG_VALIDAR_OBLIGATORIOS(datosPrueba, ["CAMPO_FALTANTE"]);
         console.error("   [FAIL] El validador no detectó el campo faltante.");
         resultados.push({ prueba: "VALIDADOR_BUG", estado: "FALLA", detalle: "El validador ignoró campos obligatorios vacíos." });
-      } else {
-        throw new Error("La función SEG_VALIDAR_OBLIGATORIOS no está disponible.");
+      } catch (valErr) {
+        if (valErr.toString().includes("ReferenceError")) {
+          console.error("   [BUG DETECTADO] El validador arrojó un ReferenceError. Bug de variable 'value' activo.");
+          resultados.push({ prueba: "VALIDADOR_BUG", estado: "CRÍTICO", detalle: "ReferenceError detectado en el validador original." });
+        } else {
+          console.log("   [PASS] El validador detuvo la ejecución con un mensaje controlado de campo obligatorio.");
+          resultados.push({ prueba: "VALIDADOR_BUG", estado: "OK", detalle: "Validador limpio y libre de ReferenceError." });
+        }
       }
-    } catch (valErr) {
-      if (valErr.toString().includes("ReferenceError")) {
-        console.error("   [BUG DETECTADO] El validador arrojó un ReferenceError. Bug de variable 'value' activo.");
-        resultados.push({ prueba: "VALIDADOR_BUG", estado: "CRÍTICO", detalle: "ReferenceError detectado en el validador original." });
-      } else {
-        console.log("   [PASS] El validador detuvo la ejecución con un mensaje controlado de campo obligatorio.");
-        resultados.push({ prueba: "VALIDADOR_BUG", estado: "OK", detalle: "Validador limpio y libre de ReferenceError." });
-      }
-    }
-  } catch (errGeneral) {
-    console.error("   [FAIL] Fallo crítico al ejecutar validador: " + errGeneral.toString());
-    resultados.push({ prueba: "VALIDADOR_BUG", estado: "FALLA", detalle: errGeneral.toString() });
-  }
-
-  // 3. Prueba de Algoritmo de Criptografía (SHA-256)
-  console.log("\n3. Probando encriptación Hash SHA-256:");
-  try {
-    const hashOriginal = SEG_GENERAR_HASH_CONTRASENA("Admin123!");
-    const hashEsperado = "3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121";
-    if (hashOriginal === hashEsperado) {
-      console.log("   [PASS] Generador Hash SHA-256 produce resultados idénticos al estándar.");
-      resultados.push({ prueba: "HASH_SHA256", estado: "OK", detalle: "Hash criptográfico seguro verificado." });
     } else {
-      console.error("   [FAIL] Mismatch de Hash. Obtenido: " + hashOriginal);
-      resultados.push({ prueba: "HASH_SHA256", estado: "FALLA", detalle: "Resultado hash inconsistente." });
+      throw new Error("La función SEG_VALIDAR_OBLIGATORIOS no está disponible.");
+    }
+  } catch (errObl) {
+    console.error("   [FAIL] Error al probar validador: " + errObl.toString());
+    resultados.push({ prueba: "VALIDADOR_BUG", estado: "FALLA", detalle: errObl.toString() });
+  }
+  
+  // 3. Prueba de Encriptación SHA-256 (Generador de Hash)
+  console.log("\n3. Probando Encriptación SHA-256 (Generador de Hash):");
+  try {
+    if (typeof SEG_GENERAR_HASH_CONTRASENA === "function") {
+      const hashOriginal = SEG_GENERAR_HASH_CONTRASENA("Admin123!");
+      const hashEsperado = "3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121"; // hash of Admin123!
+      if (hashOriginal === hashEsperado) {
+        console.log("   [PASS] Generador Hash SHA-256 produce resultados idénticos al estándar.");
+        resultados.push({ prueba: "HASH_SHA256", estado: "OK", detalle: "Hash criptográfico seguro verificado." });
+      } else {
+        console.error("   [FAIL] Mismatch de Hash. Obtenido: " + hashOriginal);
+        resultados.push({ prueba: "HASH_SHA256", estado: "FALLA", detalle: "Resultado hash inconsistente." });
+      }
+    } else {
+      throw new Error("La función SEG_GENERAR_HASH_CONTRASENA no está disponible.");
     }
   } catch (errCrypt) {
     console.error("   [FAIL] Fallo al encriptar: " + errCrypt.toString());
     resultados.push({ prueba: "HASH_SHA256", estado: "FALLA", detalle: errCrypt.toString() });
   }
-
+  
   // 4. Prueba del Algoritmo del Dígito de Verificación (DIAN)
   console.log("\n4. Probando cálculo matemático del Dígito de Verificación:");
   try {
-    const dvCalculado = CLI_CALCULAR_DV("901915723"); // NIT real de MEGUDAN
-    if (dvCalculado === "2") {
-      console.log("   [PASS] NIT 901915723 calculado exitosamente con Dv 2.");
-      resultados.push({ prueba: "DIAN_DV", estado: "OK", detalle: "Algoritmo de la DIAN operando al 100% de precisión." });
+    if (typeof CLI_CALCULAR_DV === "function") {
+      const dvCalculado = CLI_CALCULAR_DV("901915723"); // NIT real de MEGUDAN
+      if (dvCalculado === "2") {
+        console.log("   [PASS] NIT 901915723 calculado exitosamente con Dv 2.");
+        resultados.push({ prueba: "DIAN_DV", estado: "OK", detalle: "Algoritmo de la DIAN operando al 100% de precisión." });
+      } else {
+        console.error("   [FAIL] Dv calculado incorrecto: " + dvCalculado + " (Esperado: 2).");
+        resultados.push({ prueba: "DIAN_DV", estado: "FALLA", detalle: "Mismatch en el Dv matemático de Colombia." });
+      }
     } else {
-      console.error("   [FAIL] Dv calculado incorrecto: " + dvCalculado + " (Esperado: 2).");
-      resultados.push({ prueba: "DIAN_DV", estado: "FALLA", detalle: "Mismatch en el Dv matemático de Colombia." });
+      throw new Error("La función CLI_CALCULAR_DV no está disponible.");
     }
   } catch (errDv) {
     console.error("   [FAIL] Fallo al calcular Dv: " + errDv.toString());
     resultados.push({ prueba: "DIAN_DV", estado: "FALLA", detalle: errDv.toString() });
   }
-
+  
   // 5. Prueba de Roles y Autocuración (Self-Healing)
   console.log("\n5. Probando Inicialización y Autocuración de Roles y Permisos:");
   try {
-    SEG_INICIALIZAR_ROLES_PREDEFINIDOS();
-    const roles = SEG_LISTAR_ROLES();
-    if (roles.length >= 7) {
-      console.log("   [PASS] Base de datos de roles autocurada y cargada con " + roles.length + " roles.");
-      resultados.push({ prueba: "SELF_HEALING_ROLES", estado: "OK", detalle: "Roles del sistema inicializados." });
+    if (typeof SEG_INICIALIZAR_ROLES_PREDEFINIDOS === "function" && typeof SEG_LISTAR_ROLES === "function") {
+      SEG_INICIALIZAR_ROLES_PREDEFINIDOS();
+      const roles = SEG_LISTAR_ROLES();
+      if (roles.length >= 7) {
+        console.log("   [PASS] Base de datos de roles autocurada y cargada con " + roles.length + " roles.");
+        resultados.push({ prueba: "SELF_HEALING_ROLES", estado: "OK", detalle: "Roles del sistema inicializados." });
+      } else {
+        console.warn("   [WARN] Roles incompletos detectados.");
+        resultados.push({ prueba: "SELF_HEALING_ROLES", estado: "WARN", detalle: "Faltan roles por poblar." });
+      }
     } else {
-      console.warn("   [WARN] Roles incompletos detectados.");
-      resultados.push({ prueba: "SELF_HEALING_ROLES", estado: "WARN", detalle: "Faltan roles por poblar." });
+      throw new Error("Funciones de inicialización de roles no disponibles.");
     }
   } catch (errHealing) {
     console.error("   [FAIL] Error en autocuración: " + errHealing.toString());
     resultados.push({ prueba: "SELF_HEALING_ROLES", estado: "FALLA", detalle: errHealing.toString() });
   }
-
+  
   // 6. Prueba de Seguridad Dual (Sheets vs Web App)
   console.log("\n6. Probando Validación de Contexto de Seguridad Dual:");
   try {
@@ -234,11 +239,12 @@ function LOG_EJECUTAR_DIAGNOSTICO_COMPLETO() {
   } catch (errDual) {
     console.error("   [FAIL] Fallo en la suite de seguridad dual: " + errDual.toString());
   }
-
+  
   // Imprimir Resumen del Reporte
   console.log("\n==================================================================");
   console.log("📊 RESUMEN FINAL DEL DIAGNÓSTICO");
   console.log("==================================================================");
+  
   let totalPasadas = 0;
   let totalCriticas = 0;
   
@@ -251,23 +257,28 @@ function LOG_EJECUTAR_DIAGNOSTICO_COMPLETO() {
       console.error("   ❌ " + r.prueba.padEnd(25) + " | ESTADO: FALLÓ | Detalle: " + r.detalle);
     }
   });
+  
   console.log("==================================================================");
   console.log("Pruebas Ejecutadas: " + resultados.length + " | Pasadas: " + totalPasadas + " | Falladas: " + totalCriticas);
   console.log("==================================================================");
   
   // Escribir en USR_AUDITORIA como registro de test de sistema
   try {
-    SEG_REGISTRAR_AUDITORIA({
-      MODULO: "LOGS",
-      SUBMODULO: "DIAGNOSTICO",
-      ACCION: "TEST_DIAGNOSTICO",
-      TIPO_REGISTRO: "SISTEMA",
-      DESCRIPCION: "Diagnóstico completo del ERP ejecutado. Pasó: " + totalPasadas + ", Falló: " + totalCriticas,
-      RESULTADO: totalCriticas === 0 ? "EXITOSO" : "ERROR",
-      MENSAJE_RESULTADO: "Ejecución de test suite terminada."
-    });
-  } catch (e) {}
-
+    if (typeof SEG_REGISTRAR_AUDITORIA === "function") {
+      SEG_REGISTRAR_AUDITORIA({
+        MODULO: "LOGS",
+        SUBMODULO: "DIAGNOSTICO",
+        ACCION: "TEST_DIAGNOSTICO",
+        TIPO_REGISTRO: "SISTEMA",
+        DESCRIPCION: "Diagnóstico completo del ERP ejecutado. Pasó: " + totalPasadas + ", Falló: " + totalCriticas,
+        RESULTADO: totalCriticas === 0 ? "EXITOSO" : "ERROR",
+        MENSAJE_RESULTADO: "Ejecución de test suite terminada."
+      });
+    }
+  } catch (e) {
+    // Silenciar fallas de escritura
+  }
+  
   return {
     EXITO: totalCriticas === 0,
     PASADAS: totalPasadas,

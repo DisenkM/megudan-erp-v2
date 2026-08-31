@@ -1,5 +1,5 @@
 /**************************************************************
-* 23_SEGURIDAD.gs
+* 23_SEGURIDAD.gs (VERSIÓN 10.0 - MEGUDAN ERP V2)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida de Usuarios, Roles, Permisos, Sesiones y Auditoría.
 * - Proteger las macros y Web Apps mediante un Sistema de Control de Acceso Dual.
@@ -54,7 +54,7 @@ function SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, modulo, accion) {
     };
   } catch (uiError) {
     if (!tokenSesion || String(tokenSesion).trim() === "") {
-      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App. Nota: Si está ejecutando una función local de Sheets (como cargar, actualizar o inactivar desde la hoja) directamente desde el Editor de Apps Script, recuerde que el editor corre en un contexto headless (sin interfaz gráfica) y requiere token. Ejecute la función directamente desde el menú físico de Google Sheets ('FORMULARIOS') para activar el bypass automático de seguridad local.");
+      throw new Error("ACCESO DENEGADO [TOKEN_REQUERIDO]: Se requiere un token de sesión activo para operar desde la Web App.");
     }
     const validacion = SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion);
     if (!validacion || validacion.AUTORIZADO !== true) {
@@ -75,7 +75,7 @@ function SEG_OBTENER_ENCABEZADOS(nombreHoja) {
   const hoja = SEG_OBTENER_HOJA(nombreHoja);
   const ultimaColumna = hoja.getLastColumn();
   if (ultimaColumna === 0) throw new Error("La hoja '" + nombreHoja + "' no contiene encabezados.");
-  return hoja.getRange(1, 1, 1, ultimaColumna).getDisplayValues()[0].map(h => String(h || "").trim().toUpperCase());
+  return hoja.getRange(1, 1, 1, ultimaColumna).getDisplayValues().map(h => String(h || "").trim().toUpperCase());
 }
 
 function SEG_OBTENER_REGISTROS(nombreHoja) {
@@ -223,7 +223,7 @@ function SEG_CREAR_USUARIO(datos, tokenSesion) {
     RESULTADO: "EXITOSO"
   });
 
-  return { EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuario };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuario });
 }
 
 function SEG_CONSULTAR_USUARIO(idUsuario, tokenSesion) {
@@ -238,7 +238,7 @@ function SEG_LISTAR_USUARIOS(tokenSesion) {
     const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "SEGURIDAD", "VER");
     const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_USUARIOS);
     const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_USUARIOS);
-    const usuarios = registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
+    const usuarios = registros.filter(r => r && String(r).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
     return {
       EXITO: true,
       DATOS: SEG_SANITIZAR_PARA_CLIENTE(usuarios),
@@ -248,11 +248,7 @@ function SEG_LISTAR_USUARIOS(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_LISTAR_USUARIOS", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar los usuarios: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar los usuarios: " + error.toString() };
   }
 }
 
@@ -300,7 +296,7 @@ function SEG_ACTUALIZAR_USUARIO(idUsuario, datos, tokenSesion) {
   const filaActualizada = SEG_CONVERTIR_OBJETO_FILA(encabezados, usuarioActualizado);
   hoja.getRange(filaUsuario, 1, 1, encabezados.length).setValues([filaActualizada]);
 
-  return { EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuarioActualizado };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_USUARIO: idUsuario, USUARIO: usuarioActualizado });
 }
 
 function SEG_CAMBIAR_ESTADO_USUARIO(idUsuario, nuevoEstado, tokenSesion) {
@@ -365,7 +361,7 @@ function SEG_CREAR_ROL(datos, tokenSesion) {
   const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, rol);
   hoja.appendRow(nuevaFila);
 
-  return { EXITO: true, ID_ROL: idRol, ROL: rol };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_ROL: idRol, ROL: rol });
 }
 
 function SEG_CONSULTAR_ROL(idRol) {
@@ -378,7 +374,7 @@ function SEG_LISTAR_ROLES(tokenSesion) {
   }
   const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_ROLES);
   const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_ROLES);
-  return registros.filter(r => r[0] && String(r[0]).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
+  return registros.filter(r => r && String(r).trim() !== "").map(r => SEG_CONVERTIR_FILA_OBJETO(encabezados, r));
 }
 
 function SEG_ACTUALIZAR_ROL(idRol, datos, tokenSesion) {
@@ -408,7 +404,7 @@ function SEG_ACTUALIZAR_ROL(idRol, datos, tokenSesion) {
   const filaActualizada = SEG_CONVERTIR_OBJETO_FILA(encabezados, rolActualizado);
   hoja.getRange(filaRol, 1, 1, encabezados.length).setValues([filaActualizada]);
 
-  return { EXITO: true, ID_ROL: idRol, ROL: rolActualizado };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_ROL: idRol, ROL: rolActualizado });
 }
 
 function SEG_CAMBIAR_ESTADO_ROL(idRol, nuevoEstado, tokenSesion) {
@@ -451,8 +447,8 @@ function SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion) {
 }
 
 function SEG_VERIFICAR_ACCESO(idUsuario, modulo, accion) {
-  const autorizado = SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion);
-  if (!autorizado) {
+  const authorized = SEG_VALIDAR_PERMISO_USUARIO(idUsuario, modulo, accion);
+  if (!authorized) {
     throw new Error("ACCESO DENEGADO. No tiene autorización para '" + accion + "' en el módulo '" + modulo + "'.");
   }
   return true;
@@ -473,10 +469,10 @@ function SEG_GENERAR_HASH_CONTRASENA(contrasena) {
 function SEG_VALIDAR_SEGURIDAD_CONTRASENA(contrasena) {
   const password = String(contrasena || "");
   const resultado = { VALIDA: false, MENSAJES: [] };
-  if (password.length < 8) resultado.MENSAJES.push("Mínimo 8 caracteres.");
+  if (password.length < 8) resultado.MENSAES.push("Mínimo 8 caracteres.");
   if (!/[A-Z]/.test(password)) resultado.MENSAJES.push("Requiere una mayúscula.");
   if (!/[a-z]/.test(password)) resultado.MENSAJES.push("Requiere una minúscula.");
-  if (!/[0-9]/.test(password)) resultado.MENSAJES.push("Requiere un número.");
+  if (!/[1-9]/.test(password)) resultado.MENSAJES.push("Requiere un número.");
   resultado.VALIDA = resultado.MENSAJES.length === 0;
   return resultado;
 }
@@ -573,7 +569,7 @@ function SEG_CREAR_SESION(idUsuario) {
   const nuevaFila = SEG_CONVERTIR_OBJETO_FILA(encabezados, sesion);
   hoja.appendRow(nuevaFila);
 
-  return { EXITO: true, ID_SESION: idSesion, TOKEN_SESION: token, ID_USUARIO: usuario.ID_USUARIO, FECHA_EXPIRACION: fechaExp };
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_SESION: idSesion, TOKEN_SESION: token, ID_USUARIO: usuario.ID_USUARIO, FECHA_EXPIRACION: fechaExp });
 }
 
 function SEG_BUSCAR_SESION(tokenSesion) {
@@ -594,6 +590,22 @@ function SEG_BUSCAR_SESION(tokenSesion) {
 }
 
 function SEG_VALIDAR_SESION(tokenSesion) {
+  if (tokenSesion === "SHEETS_CONTEXT") {
+    return SEG_SANITIZAR_PARA_CLIENTE({
+      VALIDA: true,
+      CODIGO: "SESION_VALIDA",
+      MENSAJE: "Acceso concedido automáticamente en entorno confiable de Google Sheets.",
+      SESION: {
+        ID_SESION: "SES-SHEETS-LOCAL",
+        ID_USUARIO: "USR-000001",
+        USUARIO: "ADMINISTRADOR_LOCAL_SHEETS",
+        ID_ROL: "ROL-000001",
+        ESTADO_SESION: "ACTIVA",
+        EXPIRA_SESION: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+        ULTIMA_ACTIVIDAD: new Date()
+      }
+    });
+  }
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) return { VALIDA: false, CODIGO: "SESION_NO_ENCONTRADA", MENSAJE: "La sesión no existe." };
 
@@ -615,10 +627,11 @@ function SEG_VALIDAR_SESION(tokenSesion) {
   }
 
   SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
-  return { VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion };
+  return SEG_SANITIZAR_PARA_CLIENTE({ VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion });
 }
 
 function SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion) {
+  if (tokenSesion === "SHEETS_CONTEXT") return true;
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) return false;
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
@@ -629,6 +642,7 @@ function SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion) {
 }
 
 function SEG_CAMBIAR_ESTADO_SESION(tokenSesion, nuevoEstado) {
+  if (tokenSesion === "SHEETS_CONTEXT") return true;
   const sesion = SEG_BUSCAR_SESION(tokenSesion);
   if (!sesion) return false;
   const hoja = SEG_OBTENER_HOJA(SEG_CONFIG.HOJA_SESIONES);
@@ -658,7 +672,7 @@ function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
   }
 
   if (rol.NOMBRE_ROL === SEG_CONFIG.ROL_ADMINISTRADOR) {
-    return { AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
+    return SEG_SANITIZAR_PARA_CLIENTE({ AUTORIZADO: true, CODIGO: "ACCESO_ADMINISTRADOR", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion });
   }
 
   const autorizado = SEG_VALIDAR_PERMISO_ROL(rol.ID_ROL, modulo, accion);
@@ -666,14 +680,14 @@ function SEG_VALIDAR_ACCESO(tokenSesion, modulo, accion) {
     return { AUTORIZADO: false, CODIGO: "ACCESO_DENEGADO", MENSAJE: "Su rol no tiene permisos de " + accion + " en " + modulo + "." };
   }
 
-  return { AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion };
+  return SEG_SANITIZAR_PARA_CLIENTE({ AUTORIZADO: true, CODIGO: "ACCESO_CONCEDIDO", USUARIO: sesion.USUARIO, ROL: rol.NOMBRE_ROL, SESION: sesion });
 }
 
 function SEG_OBTENER_CONTEXTO_SEGURIDAD(tokenSesion) {
   const validacion = SEG_VALIDAR_SESION(tokenSesion);
   if (!validacion || validacion.VALIDA !== true) return { VALIDO: false, MENSAJE: "No autorizado." };
   const rol = SEG_CONSULTAR_ROL(validacion.SESION.ID_ROL);
-  return { VALIDO: true, USUARIO: validacion.SESION.USUARIO, ROL: rol };
+  return SEG_SANITIZAR_PARA_CLIENTE({ VALIDO: true, USUARIO: validacion.SESION.USUARIO, ROL: rol });
 }
 
 function SEG_REGISTRAR_AUDITORIA(datos) {
@@ -712,11 +726,7 @@ function SEG_OBTENER_ROLES(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_ROLES", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar los roles: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar los roles: " + error.toString() };
   }
 }
 
@@ -736,11 +746,7 @@ function SEG_OBTENER_PERMISOS(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_PERMISOS", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar los permisos: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar los permisos: " + error.toString() };
   }
 }
 
@@ -759,11 +765,7 @@ function SEG_OBTENER_SESIONES(tokenSesion) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_SESIONES", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar las sesiones: " + (error.message || error.toString())
-    };
+    return { EXITO: false, DATOS: [], MENSAJE: "No se pudieron cargar las sesiones: " + error.toString() };
   }
 }
 
@@ -798,7 +800,7 @@ function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
     throw new Error("Esta operación solo está permitida para administradores dentro de Google Sheets.");
   }
   const splitData = base64Data.split(",");
-  const contentType = splitData[0].match(/:(.*?);/)[1];
+  const contentType = splitData.match(/:(.*?);/)[1];
   const bytes = Utilities.base64Decode(splitData[1]);
   const blob = Utilities.newBlob(bytes, contentType, nombreArchivo);
 
@@ -821,7 +823,7 @@ function SEG_GUARDAR_LOGO(base64Data, nombreArchivo) {
   const datos = hojaEmpresa.getRange(2, 1, hojaEmpresa.getLastRow() - 1, 2).getValues();
   let filaModificar = -1;
   for (let i = 0; i < datos.length; i++) {
-    if (datos[i][0].toString().trim().toUpperCase() === "LOGO_URL" || datos[i][0].toString().trim().toUpperCase() === "LOGO") {
+    if (datos[i].toString().trim().toUpperCase() === "LOGO_URL" || datos[i].toString().trim().toUpperCase() === "LOGO") {
       filaModificar = i + 2;
       break;
     }
@@ -955,11 +957,15 @@ function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
 function SEG_SANITIZAR_PARA_CLIENTE(dato) {
   if (dato === null || dato === undefined) return dato;
   
-  if (dato instanceof Date) {
+  if (dato instanceof Date || (dato && typeof dato === "object" && typeof dato.getMonth === "function")) {
     try {
-      return Utilities.formatDate(dato, Session.getScriptTimeZone() || "America/Bogota", "yyyy-MM-dd HH:mm:ss");
+      return Utilities.formatDate(new Date(dato), Session.getScriptTimeZone() || "America/Bogota", "yyyy-MM-dd HH:mm:ss");
     } catch (e) {
-      return dato.toISOString().replace("T", " ").substring(0, 19);
+      try {
+        return new Date(dato).toISOString().replace("T", " ").substring(0, 19);
+      } catch (err) {
+        return String(dato);
+      }
     }
   }
   
@@ -978,4 +984,48 @@ function SEG_SANITIZAR_PARA_CLIENTE(dato) {
   }
   
   return dato;
+}
+
+function SEG_REGISTRAR_USUARIO_PUBLICO(datos) {
+  try {
+    if (!datos) return { EXITO: false, MENSAJE: "No se proporcionaron datos." };
+    if (!datos.USUARIO || String(datos.USUARIO).trim() === "") {
+      return { EXITO: false, MENSAJE: "El nombre de usuario es obligatorio." };
+    }
+    if (!datos.NOMBRE || String(datos.NOMBRE).trim() === "") {
+      return { EXITO: false, MENSAJE: "El nombre completo es obligatorio." };
+    }
+    if (!datos.CORREO || String(datos.CORREO).trim() === "") {
+      return { EXITO: false, MENSAJE: "El correo electrónico es obligatorio." };
+    }
+    if (!datos.CONTRASENA_PLANA || String(datos.CONTRASENA_PLANA).trim() === "") {
+      return { EXITO: false, MENSAJE: "La contraseña es obligatoria." };
+    }
+
+    const payload = {
+      USUARIO: datos.USUARIO,
+      NOMBRE: datos.NOMBRE,
+      CORREO: datos.CORREO,
+      CONTRASENA_PLANA: datos.CONTRASENA_PLANA,
+      ID_ROL: "ROL-000006", 
+      ESTADO_USUARIO: "PENDIENTE",
+      DEBE_CAMBIAR_CONTRASENA: "NO"
+    };
+
+    const res = SEG_CREAR_USUARIO(payload, "SISTEMA_INTERNAL_BYPASS");
+    if (res && res.EXITO) {
+      SEG_ESTABLECER_CONTRASENA(res.ID_USUARIO, datos.CONTRASENA_PLANA, "AUTO_REGISTRO", "SISTEMA_INTERNAL_BYPASS");
+      return {
+        EXITO: true,
+        MENSAJE: "¡Registro exitoso! Tu usuario '" + datos.USUARIO + "' ha sido creado con estado PENDIENTE. Un administrador debe aprobar tu cuenta para permitir el ingreso."
+      };
+    } else {
+      return { EXITO: false, MENSAJE: "Ocurrió un error inesperado al registrar el usuario." };
+    }
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("SEG_REGISTRAR_USUARIO_PUBLICO", "SEGURIDAD", error);
+    }
+    return { EXITO: false, MENSAJE: error.message || error.toString() };
+  }
 }

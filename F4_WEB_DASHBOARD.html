@@ -1,9 +1,9 @@
 <!-- ============================================================
 * INTERFAZ: F4_WEB_DASHBOARD
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
-* RESPONSABILIDAD: Menú dinámico, visualización de módulos y vigilancia de sesión
+* RESPONSABILIDAD: Menú dinámico, visualización asíncrona de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-* ESTADO: 100% Blindado frente a 'unsafe-eval' (CSP de Google)
+* ESTADO: 100% Sincronizado mediante srcdoc (RPC Injection) libre de 404s e iFrame Drive Blocks
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -24,45 +24,56 @@
     
     /* Sidebar */
     .sidebar {
-      width: 260px; background-color: #1f2937; color: #f3f4f6;
+      width: 260px; background-color: #111827; color: #ffffff;
       display: flex; flex-direction: column; justify-content: space-between;
-      border-right: 1px solid #374151; padding: 20px 0;
+      padding: 20px 0; border-right: 1px solid #1f2937;
     }
-    .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid #374151; }
-    .sidebar-logo { font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; }
-    .sidebar-nav { margin-top: 20px; display: flex; flex-direction: column; gap: 5px; }
+    .sidebar-header { padding: 10px 25px; margin-bottom: 20px; }
+    .sidebar-logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: #3b82f6; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
     .nav-item {
-      padding: 12px 20px; color: #9ca3af; text-decoration: none; font-size: 14px;
-      font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;
+      padding: 12px 25px; font-size: 13px; font-weight: 600; color: #9ca3af;
+      text-decoration: none; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 10px; border-left: 3px solid transparent;
     }
-    .nav-item:hover, .nav-item.active { background-color: #111827; color: #ffffff; }
+    .nav-item:hover { color: #f3f4f6; background-color: #1f2937; }
+    .nav-item.active { color: #ffffff; background-color: #1f2937; border-left-color: #3b82f6; }
     
-    /* Sidebar Footer */
-    .sidebar-footer { padding: 20px; border-top: 1px solid #374151; display: flex; flex-direction: column; gap: 15px; }
-    .user-profile { display: flex; align-items: center; gap: 10px; }
-    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #374151; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: white; }
+    .sidebar-footer { padding: 20px 25px; border-top: 1px solid #1f2937; display: flex; flex-direction: column; gap: 15px; }
+    .user-profile { display: flex; align-items: center; gap: 12px; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%; background-color: #3b82f6;
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
     .user-info { display: flex; flex-direction: column; }
-    .user-name { font-size: 13px; font-weight: bold; color: white; }
+    .user-name { font-size: 13px; font-weight: 700; color: #f3f4f6; }
     .user-role { font-size: 11px; color: #9ca3af; }
-    .btn-logout { background-color: #ef4444; border: none; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: all 0.2s; }
-    .btn-logout:hover { background-color: #dc2626; }
-    
-    /* Main Panel */
-    .main-panel { flex: 1; display: flex; flex-direction: column; }
-    .topbar {
-      height: 64px; background-color: white; border-bottom: 1px solid #e5e7eb;
-      display: flex; align-items: center; justify-content: space-between; padding: 0 25px;
+    .btn-logout {
+      background: none; border: 1px solid #dc2626; color: #ef4444;
+      padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; width: 100%; text-align: center;
     }
-    .topbar-title { font-size: 18px; font-weight: bold; color: #1f2937; }
-    .session-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6b7280; }
+    .btn-logout:hover { background-color: #dc2626; color: #ffffff; }
+
+    /* Main Panel */
+    .main-panel { flex: 1; display: flex; flex-direction: column; background-color: #f3f4f6; }
+    .topbar {
+      height: 60px; background-color: #ffffff; border-bottom: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
+    }
+    .topbar-title { font-size: 16px; font-weight: 700; color: #111827; }
+    .session-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #4b5563; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; }
-    .status-dot.status-warning { background-color: #f59e0b; animation: pulse 1.5s infinite; }
-    
+    .status-dot.status-warning { background-color: #f59e0b; }
+
     /* Viewport */
-    .viewport { flex: 1; padding: 25px; display: flex; flex-direction: column; }
+    .viewport { flex: 1; padding: 30px; display: flex; flex-direction: column; }
     .welcome-card {
-      background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 40px;
-      text-align: center; display: flex; flex-direction: column; gap: 15px; align-items: center;
+      background: white; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 40px; text-align: center; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 15px; max-width: 600px;
+      margin: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
     .welcome-icon { font-size: 48px; }
     .welcome-card h2 { margin: 0; font-size: 22px; font-weight: 800; color: #111827; }
@@ -74,7 +85,6 @@
   </style>
 </head>
 <body>
-
 <div class="dashboard-layout">
   <aside class="sidebar">
     <div>
@@ -84,9 +94,9 @@
       <nav class="sidebar-nav">
         <a class="nav-item active" onclick="abrirModulo('inicio')">🏠 Inicio</a>
         <a class="nav-item" onclick="abrirModulo('clientes')">👥 Clientes / Terceros</a>
+        <a class="nav-item" onclick="abrirModulo('productos')">📦 Productos / Servicios</a>
+        <a class="nav-item" onclick="abrirModulo('inventario')">🗃️ Inventario / Existencias</a>
         <a class="nav-item" onclick="abrirModulo('seguridad')">🔐 Gestión Seguridad</a>
-        <a class="nav-item" style="opacity: 0.5; cursor: not-allowed;">🗃️ Inventario (Próximamente)</a>
-        <a class="nav-item" style="opacity: 0.5; cursor: not-allowed;">🏗️ Obras (Próximamente)</a>
       </nav>
     </div>
     <div class="sidebar-footer">
@@ -109,6 +119,7 @@
         <span id="session-time">Vigilando sesión activa...</span>
       </div>
     </header>
+
     <div class="viewport">
       <div id="welcome-card" class="welcome-card">
         <div class="welcome-icon">🌲</div>
@@ -127,6 +138,7 @@
   const TOKEN_SESION = "<?= TOKEN_SESION ?>";
   const ID_USUARIO = "<?= ID_USUARIO ?>";
   const USUARIO = "<?= USUARIO ?>";
+  const WEB_APP_URL = "<?= WEB_APP_URL ?>";
 
   document.addEventListener("DOMContentLoaded", function() {
     configurarPerfilUsuario();
@@ -159,7 +171,8 @@
             return;
           }
           if (!res.VALIDA) {
-            try { window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad."); } catch (e) { window.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad."); }
+            const loginUrl = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad.";
+            try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
           } else {
             dot.className = "status-dot";
             timeText.textContent = "Sesión Activa";
@@ -183,7 +196,7 @@
     });
 
     document.querySelectorAll(".nav-item").forEach(item => {
-      if (item.textContent.toLowerCase().includes(modulo)) {
+      if (item.getAttribute("onclick") && item.getAttribute("onclick").includes(`'${modulo}'`)) {
         item.classList.add("active");
       }
     });
@@ -198,23 +211,68 @@
     welcome.style.display = "none";
     frame.style.display = "block";
 
+    // Previsualizador de carga local (Loader) mediante srcdoc
+    frame.srcdoc = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9fafb; color: #4b5563; }
+          .loader-container { text-align: center; }
+          .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <div class="loader-container">
+          <div class="spinner"></div>
+          <strong style="font-size: 14px;">Inyectando módulo en memoria...</strong>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Asignación de Títulos
     if (modulo === "clientes") {
       title.textContent = "👥 Clientes / Terceros";
-      frame.src = window.location.origin + window.location.pathname + "?ruta=clientes_form&token=" + TOKEN_SESION;
     } else if (modulo === "seguridad") {
       title.textContent = "🔐 Gestión de Seguridad";
-      frame.src = window.location.origin + window.location.pathname + "?ruta=seguridad_form&token=" + TOKEN_SESION;
+    } else if (modulo === "productos") {
+      title.textContent = "📦 Productos / Servicios";
+    } else if (modulo === "inventario") {
+      title.textContent = "🗃️ Inventarios / Existencias";
     }
+
+    // Inyección Directa vía RPC con srcdoc (Bypass del 404 de Red)
+    google.script.run
+      .withSuccessHandler(function(htmlCompilado) {
+        if (!htmlCompilado) {
+          frame.srcdoc = "<h2>⚠️ Error de Servidor</h2><p>La compilación de la vista retornó un valor vacío.</p>";
+          return;
+        }
+        frame.srcdoc = htmlCompilado;
+      })
+      .withFailureHandler(function(err) {
+        frame.srcdoc = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background-color: #fff5f5; color: #b91c1c; border: 1.5px solid #fca5a5; border-radius: 8px;">
+            <h3 style="margin-top:0;">⚠️ Fallo de Integración Operacional</h3>
+            <p>${err.message}</p>
+          </div>
+        `;
+      })
+      .WEB_OBTENER_COMPILACION_VISTA(modulo, TOKEN_SESION);
   }
 
   function cerrarSesion() {
     if (!confirm("¿Desea cerrar sesión en el ERP?")) return;
     google.script.run
       .withSuccessHandler(function() {
-        try { window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente."); } catch (e) { window.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente."); }
+        const loginUrl = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente.";
+        try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
       })
       .withFailureHandler(function() {
-        try { window.top.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada."); } catch (e) { window.location.replace(window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada."); }
+        const loginUrl = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada.";
+        try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
       })
       .SEG_CERRAR_SESION(TOKEN_SESION);
   }

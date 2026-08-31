@@ -31,7 +31,7 @@ function CLI_VALIDAR_DUPLICADO(tipoDoc, numDoc, idExcluir) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return false;
-  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 4).getValues();
+  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 4).getDisplayValues();
   return datos.some(fila => {
     if (idExcluir && String(fila[0]) === String(idExcluir)) return false;
     return String(fila[2]) === String(tipoDoc) && String(fila[3]) === String(numDoc);
@@ -130,7 +130,7 @@ function CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion) {
   const idCliente = datos.ID_CLIENTE;
   const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
   const idxID = encabezados.indexOf("ID_CLIENTE");
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getDisplayValues();
 
   let filaModificar = -1;
   for (let i = 0; i < registros.length; i++) {
@@ -179,7 +179,7 @@ function CLI_BUSCAR_CLIENTE(criterio, tokenSesion) {
   if (!hoja || hoja.getLastRow() < 2) return null;
 
   const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getDisplayValues();
 
   const idxId = encabezados.indexOf("ID_CLIENTE") !== -1 ? encabezados.indexOf("ID_CLIENTE") : encabezados.indexOf("ID_PROVEEDOR");
   const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : encabezados.indexOf("NUMERO"));

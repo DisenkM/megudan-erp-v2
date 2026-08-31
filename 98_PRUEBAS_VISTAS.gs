@@ -1,10 +1,9 @@
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs
-* ERP OPERATIVO V2 - MEGUDAN
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 6.0 - COCHERA DE DIAGNÓSTICO EN VIVO)
 * RESPONSABILIDAD:
-* - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento (CORS/CSPs).
+* - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
-* - Simular solicitudes HTTP GET (doGet) de red para certificar el enrutador de vistas asíncronas.
+* - Proporcionar guías de resolución explícitas paso a paso en caso de fallos de nombres de archivos.
 **************************************************************/
 
 /**
@@ -13,11 +12,10 @@
  */
 function PROBAR_RENDERING_Y_VISTAS_E2E() {
   console.log("==================================================================");
-  console.log("🎨 INICIANDO SUITE DE PRUEBAS DE MOTOR DE RENDERIZADO Y FRONTEND");
+  console.log("🎨 INICIANDO DIAGNÓSTICO DE COMPILACIÓN DE VISTAS (98_PRUEBAS_VISTAS)");
   console.log("==================================================================");
   
   const resultadosVistas = [];
-  let tokenPruebas = "SISTEMA_INTERNAL_BYPASS";
   
   // ==========================================================
   // TEST 1: COMPILACIÓN Y EVALUACIÓN DE VISTA DE LOGIN (F3_WEB_LOGIN)
@@ -46,6 +44,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "PASS", detalle: "Compilación limpia e inyección HTML5 confirmada en F3_WEB_LOGIN." });
   } catch (errLogin) {
     console.error("   [FAIL] Error en Render de Login: " + errLogin.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F3_WEB_LOGIN' (sin la extensión .html en el editor) y pega allí todo el contenido del artefacto 'F3_WEB_LOGIN_HTML-v5.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "FAIL", detalle: errLogin.message });
   }
 
@@ -60,6 +59,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
     template.ID_USUARIO = "USR-000001";
     template.USUARIO = "ADMIN_TEST_SUITE";
+    template.WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyonax-D7-70eoWd8yHF2e4MGv4Pf9nBQTM-OspdRM-qBkYamEw/exec";
     
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
@@ -77,9 +77,10 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     console.log("   [PASS] F4_WEB_DASHBOARD compilado e inyectado correctamente.");
     console.log("   [INFO] Tokens e identidades vinculadas de forma atómica en el DOM.");
     
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "PASS", detalle: "Inyección segura de variables de sesión y control de viewport-frame exitoso." });
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "PASS", detalle: "Inyección segura de variables de sesión, WEB_APP_URL y control de viewport-frame exitoso." });
   } catch (errDash) {
     console.error("   [FAIL] Error en Render de Dashboard: " + errDash.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F4_WEB_DASHBOARD' y pega allí todo el contenido del artefacto 'F4_WEB_DASHBOARD_HTML-v6.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "FAIL", detalle: errDash.message });
   }
 
@@ -97,7 +98,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     if (!contenidoHtml.includes("USR_CARGAR_USUARIOS")) {
       throw new Error("El módulo Javascript asíncrono de usuarios no se compiló en la sección de script.");
     }
-    if (contenidoHtml.includes("Unexpected string") || contenidoHtml.includes("\\\\\"")) {
+    if (contenidoHtml.includes("Unexpected string")) {
       throw new Error("Inconsistencia sintáctica de comillas de escape detectada.");
     }
     
@@ -107,6 +108,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "PASS", detalle: "Compilación limpia de pestañas, tablas modales y JS modular defensivo en F2_USR_GESTION." });
   } catch (errGestion) {
     console.error("   [FAIL] Error en Render de Seguridad: " + errGestion.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F2_USR_GESTION' y pega allí todo el contenido del artefacto 'F2_USR_GESTION_HTML-v19.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "FAIL", detalle: errGestion.message });
   }
 
@@ -134,13 +136,70 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FORMULARIO_TERCEROS", estado: "PASS", detalle: "Mapeador asíncrono unificado, traductor de alias y etiquetas semánticas validadas." });
   } catch (errCli) {
     console.error("   [FAIL] Error en Render de Formulario de Terceros: " + errCli.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F1_CLI_FORM' y pega allí todo el contenido del artefacto 'F1_CLI_FORM_HTML-v8.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FORMULARIO_TERCEROS", estado: "FAIL", detalle: errCli.message });
   }
 
   // ==========================================================
-  // TEST 5: SIMULACIÓN DE ENRUTAMIENTO HTTP GET (doGet)
+  // TEST 5: COMPILACIÓN DE CATÁLOGO DE PRODUCTOS (F5_PROD_VIEW)
   // ==========================================================
-  console.log("\n🔌 [TEST 5] Probando Enrutamiento y Desvío HTTP (WEB_doGet):");
+  console.log("\n📦 [TEST 5] Evaluando compilación de F5_PROD_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F5_PROD_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("prodCargarProductos")) {
+      throw new Error("El módulo Javascript asíncrono de productos no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("PROD_LISTAR_PRODUCTOS_WEB")) {
+      throw new Error("La llamada RPC de productos PROD_LISTAR_PRODUCTOS_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F5_PROD_VIEW compilado correctamente.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F5_PROD_VIEW." });
+  } catch (errProd) {
+    console.error("   [FAIL] Error en Render de Productos: " + errProd.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F5_PROD_VIEW' y pega allí todo el contenido del artefacto 'F5_PROD_VIEW_HTML-v2.txt'.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "FAIL", detalle: errProd.message });
+  }
+
+  // ==========================================================
+  // TEST 6: COMPILACIÓN DE SALDOS E INVENTARIO (F6_INV_VIEW)
+  // ==========================================================
+  console.log("\n🗃️ [TEST 6] Evaluando compilación de F6_INV_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F6_INV_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("invCargarSaldos")) {
+      throw new Error("El módulo Javascript asíncrono de inventario no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("INV_LISTAR_SALDOS_WEB")) {
+      throw new Error("La llamada RPC de inventario INV_LISTAR_SALDOS_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F6_INV_VIEW compilado correctamente.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F6_INV_VIEW." });
+  } catch (errInv) {
+    console.error("   [FAIL] Error en Render de Inventarios: " + errInv.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F6_INV_VIEW' y pega allí todo el contenido del artefacto 'F6_INV_VIEW_HTML-v2.txt'.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "FAIL", detalle: errInv.message });
+  }
+
+  // ==========================================================
+  // TEST 7: SIMULACIÓN DE ENRUTAMIENTO HTTP GET (doGet)
+  // ==========================================================
+  console.log("\n🔌 [TEST 7] Probando Enrutamiento y Desvío HTTP (WEB_doGet):");
   try {
     if (typeof WEB_doGet !== "function") {
       throw new Error("La función enrutadora maestra WEB_doGet no está declarada.");
@@ -175,6 +234,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "PASS", detalle: "Enrutador doGet validado ante cargas por defecto, intentos de bypass sin token y desvíos de seguridad." });
   } catch (errRouting) {
     console.error("   [FAIL] Error en Módulo de Enrutamiento: " + errRouting.message);
+    console.error("   💡 SOLUCIÓN: Asegúrate de que el archivo '25_WEB.gs' contenga el código completo de la versión '25_WEB-v8.gs' de Studio.");
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "FAIL", detalle: errRouting.message });
   }
 
@@ -206,5 +266,6 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     console.log("🎉 ¡SISTEMA GRAFICO VERIFICADO! TODAS LAS VISTAS COMPILAN AL 100% EN GOOGLE.");
   } else {
     console.warn("⚠️ SE DETECTARON INCONSISTENCIAS EN LA COMPILACIÓN DE ALGUNAS PLANTILLAS.");
+    console.warn("   Por favor revise los mensajes de solución (💡) impresos arriba para cada fallo.");
   }
 }

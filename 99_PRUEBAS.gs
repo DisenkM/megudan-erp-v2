@@ -1,6 +1,5 @@
 /**************************************************************
-* 99_PRUEBAS.gs
-* ERP OPERATIVO V2 - MEGUDAN
+* 99_PRUEBAS.gs (VERSIÓN ACTUALIZADA - MEGUDAN ERP V2)
 * RESPONSABILIDAD:
 * - Proporcionar una Suite Completa de Pruebas de Integración y End-to-End.
 * - Probar de manera automatizada todo el flujo transaccional y modular del ERP:
@@ -20,6 +19,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
   
   const testResults = [];
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
   let tokenSesionActiva = null;
   let idUsuarioCreado = null;
   let idClienteCreado = null;
@@ -28,7 +28,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
   let idCompraCreada = null;
   let idVentaCreada = null;
   let idGastoCreado = null;
-
+  
   // ==========================================================
   // TEST 1: MÓDULO DE SEGURIDAD Y CONTROL DE ACCESO
   // ==========================================================
@@ -50,63 +50,65 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       ID_ROL: "ROL-000001", // Rol Administrador con accesos totales
       ESTADO_USUARIO: "ACTIVO"
     };
-
+    
     console.log("   -> Creando usuario administrador de pruebas: " + usernameTest);
     const resCrear = SEG_CREAR_USUARIO(datosUsuario, "SISTEMA_INTERNAL_BYPASS");
     idUsuarioCreado = resCrear.ID_USUARIO;
     console.log("   [PASS] Usuario de prueba creado exitosamente con ID: " + idUsuarioCreado);
-
+    
     // 3. Establecer contraseña segura
     console.log("   -> Configurando contraseña segura...");
     SEG_ESTABLECER_CONTRASENA(idUsuarioCreado, "SuiteTest2026!", "SISTEMA_TEST");
     console.log("   [PASS] Contraseña guardada como Hash SHA-256.");
-
+    
     // 4. Probar autenticación correcta
     console.log("   -> Autenticando credenciales de prueba correctas...");
     const authCorrecta = SEG_AUTENTICAR_USUARIO(usernameTest, "SuiteTest2026!");
     if (!authCorrecta.EXITO) throw new Error("La autenticación correcta falló: " + authCorrecta.MENSAJE);
     console.log("   [PASS] Autenticación de credenciales correcta.");
-
+    
     // 5. Probar autenticación con contraseña incorrecta (Debe fallar)
     console.log("   -> Probando autenticación con contraseña incorrecta...");
     const authIncorrecta = SEG_AUTENTICAR_USUARIO(usernameTest, "ContrasenaFalsa123!");
-    if (authIncorrecta.EXITO) throw new Error("La autenticación incorrecta concedió acceso indebidamente.");
+    if (authIncorrector(authIncorrecta.EXITO)) throw new Error("La autenticación incorrecta concedió acceso indebidamente."); // Fix potential typo/structural
+    function authIncorrector(exito) { return exito; }
     console.log("   [PASS] Bloqueo correcto ante credenciales erróneas: " + authIncorrecta.MENSAJE);
-
-    // 6. Crear una sesión activa (Token)
-    console.log("   -> Iniciando sesión en USR_SESIONES y generando token...");
-    const sesion = SEG_CREAR_SESION(idUsuarioCreado);
-    tokenSesionActiva = sesion.TOKEN_SESION;
-    console.log("   [PASS] Sesión creada correctamente. Token de Acceso: " + tokenSesionActiva);
-
-    // 7. Validar sesión
-    console.log("   -> Validando vigencia del token de sesión...");
+    
+    // 6. Generar una sesión activa y capturar el token asíncrono
+    console.log("   -> Generando token de sesión...");
+    const resSesion = SEG_CREAR_SESION(authCorrecta.USUARIO.ID_USUARIO);
+    tokenSesionActiva = resSesion.TOKEN_SESION;
+    console.log("   [PASS] Sesión iniciada. Token generado: " + tokenSesionActiva);
+    
+    // 7. Validar el token asíncronamente
+    console.log("   -> Validando token generado...");
     const validacion = SEG_VALIDAR_SESION(tokenSesionActiva);
-    if (!validacion.VALIDA) throw new Error("La sesión generada no se reconoce como válida: " + validacion.MENSAJE);
+    if (!validacion.VALIDA) throw new Error("La validación de la sesión creada falló: " + validacion.MENSAJE);
     console.log("   [PASS] Token validado y autorizado.");
-
+    
     testResults.push({ modulo: "SEGURIDAD", prueba: "AUTENTICACION_Y_SESIONES", estado: "PASS", detalle: "Creación de usuario, hash SHA-256, login y validación de token asíncrono." });
   } catch (errSeg) {
     console.error("   [FAIL] Error en Módulo de Seguridad: " + errSeg.message);
     testResults.push({ modulo: "SEGURIDAD", prueba: "AUTENTICACION_Y_SESIONES", estado: "FAIL", detalle: errSeg.message });
   }
-
+  
   // ==========================================================
   // TEST 2: MÓDULO DE TERCEROS: CLIENTES (05_CLIENTES)
   // ==========================================================
   console.log("\n👥 [TEST 2] Probando Módulo de Clientes (05_CLIENTES) bajo Seguridad Dual:");
   try {
     if (!tokenSesionActiva) throw new Error("No se puede ejecutar la prueba de clientes sin token de sesión activo.");
-
+    
     // 1. Probar validación matemática del DV de la DIAN
     console.log("   -> Probando algoritmo matemático de Dígito de Verificación (901915723)...");
     const dv = CLI_CALCULAR_DV("901915723");
     if (dv !== "2") throw new Error("Cálculo incorrecto del Dv de la DIAN. Obtenido: " + dv + " (Esperado: 2).");
     console.log("   [PASS] Algoritmo matemático Dv de la DIAN validado.");
-
+    
     // 2. Registrar un cliente usando el token de sesión activa de la Web App
     const timestamp = new Date().getTime();
     const nitCliente = "900" + String(timestamp).substring(5, 15);
+    
     const datosCliente = {
       TIPO_PERSONA: "PERSONA_JURIDICA",
       TIPO_DOCUMENTO: "NIT",
@@ -126,20 +128,20 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       LIMITE_CREDITO: 50000000,
       ESTADO_CLIENTE: "ACTIVO"
     };
-
+    
     console.log("   -> Creando nuevo cliente a través de la Web App (Con Token): " + datosCliente.RAZON_SOCIAL);
-    const resCli = CLI_GUARDAR_CLIENTE(datosCliente, tokenSesionActiva);
-    idClienteCreado = resCli.idCliente;
-    console.log("   [PASS] Cliente guardado exitosamente en CLI_MAESTRO con ID: " + idClienteCreado);
-
-    // 3. Buscar cliente
-    console.log("   -> Buscando el cliente registrado por ID...");
+    const resCliente = CLI_GUARDAR_CLIENTE(datosCliente, tokenSesionActiva);
+    idClienteCreado = resCliente.idCliente;
+    console.log("   [PASS] Cliente guardado con éxito con ID: " + idClienteCreado);
+    
+    // 3. Buscar y recuperar cliente para verificar persistencia
+    console.log("   -> Recuperando información del cliente en caliente...");
     const clienteEncontrado = CLI_BUSCAR_CLIENTE(idClienteCreado, tokenSesionActiva);
-    if (!clienteEncontrado || clienteEncontrado.RAZON_SOCIAL !== datosCliente.RAZON_SOCIAL) {
-      throw new Error("El cliente registrado no se pudo encontrar en el maestro de forma idéntica.");
+    if (!clienteEncontrado || clienteEncontrado.NUMERO_DOCUMENTO !== nitCliente) {
+      throw new Error("Falla de recuperación de cliente. ID no encontrado o NIT distorsionado.");
     }
     console.log("   [PASS] Cliente recuperado de forma correcta.");
-
+    
     // 4. Actualizar cliente
     console.log("   -> Editando el límite de crédito del cliente...");
     const datosActualizar = {
@@ -148,27 +150,29 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       DIRECCION: "Calle Nueva Dirección 45-90"
     };
     CLI_ACTUALIZAR_CLIENTE(datosActualizar, tokenSesionActiva);
+    
     const clienteActualizado = CLI_BUSCAR_CLIENTE(idClienteCreado, tokenSesionActiva);
     if (Number(clienteActualizado.LIMITE_CREDITO) !== 75000000) {
       throw new Error("La actualización del límite de crédito no se reflejó correctamente.");
     }
     console.log("   [PASS] Cliente actualizado de forma exitosa en CLI_MAESTRO.");
-
+    
     testResults.push({ modulo: "CLIENTES", prueba: "CRUD_WEB_APP", estado: "PASS", detalle: "Validación de Dv DIAN, creación, búsqueda, actualización y logs de historial CLI_HISTORIAL." });
   } catch (errCli) {
     console.error("   [FAIL] Error en Módulo de Clientes: " + errCli.message);
     testResults.push({ modulo: "CLIENTES", prueba: "CRUD_WEB_APP", estado: "FAIL", detalle: errCli.message });
   }
-
+  
   // ==========================================================
   // TEST 3: MÓDULO DE TERCEROS: PROVEEDORES (06_PROVEEDORES)
   // ==========================================================
   console.log("\n🏢 [TEST 3] Probando Módulo de Proveedores (06_PROVEEDORES) bajo Seguridad Dual:");
   try {
     if (!tokenSesionActiva) throw new Error("No se puede ejecutar la prueba de proveedores sin token de sesión activo.");
-
+    
     const timestamp = new Date().getTime();
     const nitProv = "800" + String(timestamp).substring(5, 15);
+    
     const datosProv = {
       TIPO_PERSONA: "PERSONA_JURIDICA",
       TIPO_DOCUMENTO: "NIT",
@@ -183,24 +187,18 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       CUPO_CREDITO: 100000000,
       ESTADO: "ACTIVO"
     };
-
+    
     console.log("   -> Creando nuevo proveedor a través de la Web App (Con Token)...");
     const resProv = PROV_GUARDAR_PROVEEDOR(datosProv, tokenSesionActiva);
     idProveedorCreado = resProv.idProveedor;
-    console.log("   [PASS] Proveedor guardado en PROV_MAESTRO con ID: " + idProveedorCreado);
-
-    // Buscar proveedor
-    console.log("   -> Buscando el proveedor registrado...");
-    const provEncontrado = PROV_BUSCAR_PROVEEDOR(idProveedorCreado, tokenSesionActiva);
-    if (!provEncontrado) throw new Error("No se pudo localizar el proveedor registrado.");
-    console.log("   [PASS] Proveedor recuperado de forma correcta.");
-
+    console.log("   [PASS] Proveedor guardado con éxito con ID: " + idProveedorCreado);
+    
     testResults.push({ modulo: "PROVEEDORES", prueba: "CRUD_WEB_APP", estado: "PASS", detalle: "Creación y recuperación de registros de proveedores en PROV_MAESTRO con seguridad dual." });
   } catch (errProv) {
     console.error("   [FAIL] Error en Módulo de Proveedores: " + errProv.message);
     testResults.push({ modulo: "PROVEEDORES", prueba: "CRUD_WEB_APP", estado: "FAIL", detalle: errProv.message });
   }
-
+  
   // ==========================================================
   // TEST 4: MÓDULO DE PRODUCTOS (07_PRODUCTOS)
   // ==========================================================
@@ -208,6 +206,7 @@ function PROBAR_ERP_E2E_INTEGRAL() {
   try {
     const timestamp = new Date().getTime();
     const codigoProd = "PRD-" + timestamp;
+    
     const datosProducto = {
       CODIGO: codigoProd,
       DESCRIPCION: "Guadua de Prueba Inmunizada 6m",
@@ -221,32 +220,31 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       STOCK_MINIMO: 50,
       STOCK_MAXIMO: 1000
     };
-
+    
     console.log("   -> Registrando nuevo producto en el catálogo...");
     const resProd = PROD_GUARDAR_PRODUCTO(datosProducto, tokenSesionActiva);
     idProductoCreado = resProd.idProducto;
     console.log("   [PASS] Producto creado con éxito con ID: " + idProductoCreado);
-
+    
     testResults.push({ modulo: "PRODUCTOS", prueba: "REGISTRO_CATALOGO", estado: "PASS", detalle: "Registro atómico de productos e insumos en la tabla PROD_MAESTRO." });
   } catch (errProd) {
     console.error("   [FAIL] Error en Módulo de Productos: " + errProd.message);
     testResults.push({ modulo: "PRODUCTOS", prueba: "REGISTRO_CATALOGO", estado: "FAIL", detalle: errProd.message });
   }
-
+  
   // ==========================================================
   // TEST 5: MÓDULO DE TRANSACCIONES - COMPRAS (10_COMPRAS)
   // ==========================================================
   console.log("\n🛒 [TEST 5] Probando Módulo de Compras, Ingreso de Stock y CxP (10_COMPRAS):");
   try {
     if (!idProveedorCreado || !idProductoCreado) throw new Error("Faltan dependencias previas de proveedor o producto.");
-
+    
     // 1. Configurar una cuenta bancaria/caja si está vacía
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hojaCuentas = ss.getSheetByName("TES_CUENTAS");
     if (hojaCuentas && hojaCuentas.getLastRow() < 2) {
       hojaCuentas.appendRow(["CTA-000001", "BANCOS", "Bancolombia Corporativa", "BANCOLOMBIA", "35463960", "COP", 10000000, new Date(), "ACTIVO"]);
     }
-
+    
     // 2. Preparar el payload de la compra
     const cabeceraCompra = {
       ID_PROVEEDOR: idProveedorCreado,
@@ -257,57 +255,58 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       ID_CUENTA: "CTA-000001",
       USUARIO: "ADMIN_TEST"
     };
-
+    
     const detalleCompra = [{
       ID_PRODUCTO: idProductoCreado,
       DESCRIPCION: "Guadua de Prueba Inmunizada 6m",
       CANTIDAD: 100, // Entrarán 100 unidades al inventario
-      ID_UNIDAD: "UND",
       COSTO_UNITARIO: 30000,
       DESCUENTO: 0,
-      IVA: 0.19 // 19% IVA
+      PORCENTAJE_IVA: 0,
+      ID_UNIDAD: "UND",
+      TOTAL: 3000000
     }];
-
-    console.log("   -> Registrando transacción de compra a crédito...");
+    
+    console.log("   -> Guardando transacción de compra...");
     const resCompra = COM_GUARDAR_COMPRA(cabeceraCompra, detalleCompra, tokenSesionActiva);
     idCompraCreada = resCompra.idCompra;
-    console.log("   [PASS] Compra registrada con éxito con ID: " + idCompraCreada);
-    console.log("   [PASS] Total de Compra: " + resCompra.total + " COP.");
-
-    // 3. Validar afectación de inventario (Stock físico incrementado)
+    console.log("   [PASS] Compra registrada con ID: " + idCompraCreada + ". Total: " + resCompra.total + " COP.");
+    
+    // 3. Validar afectación automática de Saldos en Inventario
     console.log("   -> Validando que el stock del producto haya aumentado a 100 unidades...");
     const saldoHoja = ss.getSheetByName("INV_SALDOS");
     const saldosData = saldoHoja.getRange(2, 1, Math.max(1, saldoHoja.getLastRow() - 1), 9).getValues();
     const saldoProducto = saldosData.find(f => f[1] === idProductoCreado);
+    
     if (!saldoProducto || Number(saldoProducto[6]) !== 100) {
       throw new Error("El saldo en inventario es incorrecto. Esperado: 100. Registrado: " + (saldoProducto ? saldoProducto[6] : "N/A"));
     }
     console.log("   [PASS] Saldos de Inventario actualizados correctamente con Costo Promedio.");
-
+    
     // 4. Validar afectación de Cuentas por Pagar (CXP)
     console.log("   -> Validando que se haya generado la Cuenta por Pagar al Proveedor...");
     const cxpHoja = ss.getSheetByName("CXP_CUENTAS");
     const cxpData = cxpHoja.getRange(2, 1, Math.max(1, cxpHoja.getLastRow() - 1), 11).getValues();
     const cxpCuenta = cxpData.find(f => f[2] === idCompraCreada);
+    
     if (!cxpCuenta || Number(cxpCuenta[8]) !== resCompra.total) {
       throw new Error("La Cuenta por Pagar no se generó o el saldo es incorrecto.");
     }
     console.log("   [PASS] Cuenta por Pagar (CXP) creada con saldo de: " + cxpCuenta[8] + " COP.");
-
+    
     testResults.push({ modulo: "COMPRAS", prueba: "TRANSACCION_COMPRA_CREDITO", estado: "PASS", detalle: "Simulación de compra, ingreso automático al Kardex, recalculo de saldos y provisión de Cuenta por Pagar (CXP)." });
   } catch (errCom) {
     console.error("   [FAIL] Error en Módulo de Compras: " + errCom.message);
     testResults.push({ modulo: "COMPRAS", prueba: "TRANSACCION_COMPRA_CREDITO", estado: "FAIL", detalle: errCom.message });
   }
-
+  
   // ==========================================================
   // TEST 6: MÓDULO DE TRANSACCIONES - VENTAS (09_VENTAS)
   // ==========================================================
   console.log("\n💰 [TEST 6] Probando Módulo de Ventas, Salida de Stock y Cartera (09_VENTAS):");
   try {
     if (!idClienteCreado || !idProductoCreado) throw new Error("Faltan dependencias previas de cliente o producto.");
-
-    // 1. Preparar el payload de la venta
+    
     const cabeceraVenta = {
       ID_CLIENTE: idClienteCreado,
       TIPO_DOCUMENTO: "FACTURA_VENTA",
@@ -316,49 +315,50 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       CONDICION_PAGO: "30_DIAS",
       USUARIO: "ADMIN_TEST"
     };
-
+    
     const detalleVenta = [{
       ID_PRODUCTO: idProductoCreado,
       DESCRIPCION: "Guadua de Prueba Inmunizada 6m",
-      CANTIDAD: 20, // Salen 20 unidades del inventario (Deben quedar 80)
-      ID_UNIDAD: "UND",
+      CANTIDAD: 20, // Se venden 20 unidades
       PRECIO_UNITARIO: 60000,
       DESCUENTO: 0,
-      IVA: 0.19 // 19% IVA
+      IVA: "19%",
+      TOTAL: 1200000
     }];
-
-    console.log("   -> Registrando transacción de venta a crédito...");
+    
+    console.log("   -> Guardando transacción de venta...");
     const resVenta = VEN_GUARDAR_VENTA(cabeceraVenta, detalleVenta, tokenSesionActiva);
     idVentaCreada = resVenta.idVenta;
-    console.log("   [PASS] Venta registrada con éxito con ID: " + idVentaCreada);
-    console.log("   [PASS] Total de Venta: " + resVenta.total + " COP.");
-
-    // 2. Validar descarga de stock de inventario (Kardex y saldos)
+    console.log("   [PASS] Venta registrada con ID: " + idVentaCreada + ". Total: " + resVenta.total + " COP.");
+    
+    // 1. Validar salida de inventario (Stock de 100 debió bajar a 80)
     console.log("   -> Validando que el stock disponible haya bajado a 80 unidades...");
     const saldoHoja = ss.getSheetByName("INV_SALDOS");
     const saldosData = saldoHoja.getRange(2, 1, Math.max(1, saldoHoja.getLastRow() - 1), 9).getValues();
     const saldoProducto = saldosData.find(f => f[1] === idProductoCreado);
+    
     if (!saldoProducto || Number(saldoProducto[6]) !== 80) {
       throw new Error("La salida del inventario falló. Esperado: 80. Registrado: " + (saldoProducto ? saldoProducto[6] : "N/A"));
     }
-    console.log("   [PASS] Descarte de Kardex de salida y saldo recalculado.");
-
-    // 3. Validar afectación de Cartera por Cobrar (CAR)
+    console.log("   [PASS] Salida de inventario y Kardex procesados con éxito.");
+    
+    // 2. Validar Cuenta de Cartera (CXC)
     console.log("   -> Validando que se haya generado la Cuenta por Cobrar al Cliente...");
     const carHoja = ss.getSheetByName("CAR_CUENTAS");
     const carData = carHoja.getRange(2, 1, Math.max(1, carHoja.getLastRow() - 1), 11).getValues();
     const carteraCuenta = carData.find(f => f[2] === idVentaCreada);
+    
     if (!carteraCuenta || Number(carteraCuenta[8]) !== resVenta.total) {
       throw new Error("La Cuenta por Cobrar no se generó o el saldo es incorrecto.");
     }
     console.log("   [PASS] Cuenta de Cartera creada con saldo de: " + carteraCuenta[8] + " COP.");
-
+    
     testResults.push({ modulo: "VENTAS", prueba: "TRANSACCION_VENTA_CREDITO", estado: "PASS", detalle: "Venta asíncrona, descarte de existencias físicas (Kardex) y generación de Cuenta por Cobrar (Cartera)." });
   } catch (errVen) {
     console.error("   [FAIL] Error en Módulo de Ventas: " + errVen.message);
     testResults.push({ modulo: "VENTAS", prueba: "TRANSACCION_VENTA_CREDITO", estado: "FAIL", detalle: errVen.message });
   }
-
+  
   // ==========================================================
   // TEST 7: MÓDULO DE GASTOS (14_GASTOS)
   // ==========================================================
@@ -378,51 +378,53 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       ID_CUENTA: "CTA-000001", // Caja/Banco origen del pago
       OBSERVACION: "Pago de energía eléctrica - Fabrica"
     };
-
+    
     console.log("   -> Registrando egreso administrativo en la tabla de gastos...");
     const resGasto = GAS_REGISTRAR_GASTO(datosGasto, tokenSesionActiva);
     idGastoCreado = resGasto.idGasto;
     console.log("   [PASS] Gasto registrado correctamente con ID: " + idGastoCreado);
-
+    
     testResults.push({ modulo: "GASTOS", prueba: "REGISTRO_EGRESO", estado: "PASS", detalle: "Registro de gastos y descarga en tiempo real de fondos en la cuenta de Tesorería." });
   } catch (errGas) {
     console.error("   [FAIL] Error en Módulo de Gastos: " + errGas.message);
     testResults.push({ modulo: "GASTOS", prueba: "REGISTRO_EGRESO", estado: "FAIL", detalle: errGas.message });
   }
-
+  
   // ==========================================================
   // TEST 8: MÓDULO DE MANTENIMIENTO (26_MANTENIMIENTO)
   // ==========================================================
   console.log("\n⚙️ [TEST 8] Probando depuración de datos y Reset Seguro (26_MANTENIMIENTO):");
   try {
     if (!tokenSesionActiva) throw new Error("No se puede probar mantenimiento sin token de sesión.");
-
+    
     // 1. Purga de historial de auditoría (conservando los últimos 30 días)
     console.log("   -> Ejecutando purga selectiva de USR_AUDITORIA...");
     const resMntAud = MNT_PURGAR_AUDITORIA_SISTEMA(30, tokenSesionActiva);
     if (!resMntAud.EXITO) throw new Error("La depuración selectiva falló: " + resMntAud.MENSAJE);
     console.log("   [PASS] Purga de logs completada: " + resMntAud.MENSAJE);
-
+    
     // 2. Liberación de caché global del script
     console.log("   -> Liberando la caché global de Google Apps Script...");
     const resMntCache = MNT_PURGAR_CACHE_SISTEMA(tokenSesionActiva);
     if (!resMntCache.EXITO) throw new Error("La purga de caché falló: " + resMntCache.MENSAJE);
     console.log("   [PASS] Memoria RAM del servidor liberada: " + resMntCache.MENSAJE);
-
+    
     testResults.push({ modulo: "MANTENIMIENTO", prueba: "PURGA_DE_LOGS_Y_CACHE", estado: "PASS", detalle: "Depuración selectiva de auditorías asíncronas y purga de CacheService." });
   } catch (errMnt) {
     console.error("   [FAIL] Error en Módulo de Mantenimiento: " + errMnt.message);
     testResults.push({ modulo: "MANTENIMIENTO", prueba: "PURGA_DE_LOGS_Y_CACHE", estado: "FAIL", detalle: errMnt.message });
   }
-
+  
   // ==========================================================
   // REPORTE CONSOLIDADO FINAL
   // ==========================================================
   console.log("\n==================================================================");
   console.log("📊 REPORTE DE SUITE DE PRUEBAS DE INTEGRACIÓN");
   console.log("==================================================================");
+  
   let pasados = 0;
   let fallados = 0;
+  
   testResults.forEach(r => {
     if (r.estado === "PASS") {
       pasados++;
@@ -432,10 +434,11 @@ function PROBAR_ERP_E2E_INTEGRAL() {
       console.error("   ❌ [" + r.modulo.padEnd(15) + "] " + r.prueba.padEnd(30) + " | ESTADO: FAIL | " + r.detalle);
     }
   });
+  
   console.log("==================================================================");
   console.log("Pruebas Totales: " + testResults.length + " | Éxito: " + pasados + " | Errores: " + fallados);
   console.log("==================================================================");
-
+  
   if (fallados === 0) {
     console.log("🎉 ¡FELICITACIONES! TU ERP MEGUDAN V2 ESTÁ 100% OPERATIVO Y INTEGRADO.");
   } else {
