@@ -1,5 +1,5 @@
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 7.0 - COCHERA DE DIAGNÓSTICO EN VIVO)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 11.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -48,7 +48,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "PASS", detalle: "Compilación limpia e inyección HTML5 confirmada en F3_WEB_LOGIN." });
   } catch (errLogin) {
     console.error("   [FAIL] Error en Render de Login: " + errLogin.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F3_WEB_LOGIN' (sin la extensión .html en el editor) y pega allí todo el contenido del artefacto 'F3_WEB_LOGIN_HTML-v6.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F3_WEB_LOGIN' (sin la extensión .html en el editor) y pega allí todo el contenido del artefacto 'F3_WEB_LOGIN_HTML-v7.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "FAIL", detalle: errLogin.message });
   }
 
@@ -74,7 +74,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     if (!contenidoHtml.includes("ADMIN_TEST_SUITE")) {
       throw new Error("Falla de interpolación: El alias de usuario de sesión no fue inyectado.");
     }
-    if (!contenidoHtml.includes("<iframe") && !contenidoHtml.includes("viewport-frame") && !contenidoHtml.includes("srcdoc")) {
+    if (!contenidoHtml.includes("contenedor-principal") && !contenidoHtml.includes("inyectarHTMLConScripts")) {
       throw new Error("Estructura de iFrames segura no encontrada.");
     }
     
@@ -84,7 +84,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "PASS", detalle: "Inyección segura de variables de sesión, WEB_APP_URL y control de viewport-frame exitoso." });
   } catch (errDash) {
     console.error("   [FAIL] Error en Render de Dashboard: " + errDash.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F4_WEB_DASHBOARD' y pega allí todo el contenido del artefacto 'F4_WEB_DASHBOARD_HTML-v6.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F4_WEB_DASHBOARD' y pega allí todo el contenido del artefacto 'F4_WEB_DASHBOARD_HTML-v11.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "FAIL", detalle: errDash.message });
   }
 

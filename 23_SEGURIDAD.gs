@@ -1,5 +1,5 @@
 /**************************************************************
-* 23_SEGURIDAD.gs (VERSIÓN 12.0 - MEGUDAN ERP V2)
+* 23_SEGURIDAD.gs (VERSIÓN 15.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida de Usuarios, Roles, Permisos, Sesiones y Auditoría.
 * - Proteger las macros y Web Apps mediante un Sistema de Control de Acceso Dual.
@@ -543,11 +543,16 @@ function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
   }
 
   SEG_ACTUALIZAR_USUARIO(usuario.ID_USUARIO, { INTENTOS_FALLIDOS: 0, ULTIMO_ACCESO: SEG_AHORA() }, "SISTEMA_INTERNAL_BYPASS");
+  
+  // ⚡ AUTOMATICALLY CREATE THE SESSION IN THE SAME HOP TO PRESERVE USER GESTURE CONTEXT!
+  const resSesion = SEG_CREAR_SESION(usuario.ID_USUARIO);
+  
   return {
     EXITO: true,
     CODIGO: "AUTENTICACION_CORRECTA",
     MENSAJE: "Autenticación correcta.",
-    USUARIO: { ID_USUARIO: usuario.ID_USUARIO, USUARIO: usuario.USUARIO, NOMBRE: usuario.NOMBRE || usuario.NOMBRE_COMPLETO || "", CORREO: usuario.CORREO, ID_ROL: usuario.ID_ROL }
+    USUARIO: { ID_USUARIO: usuario.ID_USUARIO, USUARIO: usuario.USUARIO, NOMBRE: usuario.NOMBRE || usuario.NOMBRE_COMPLETO || "", CORREO: usuario.CORREO, ID_ROL: usuario.ID_ROL },
+    SESION: resSesion
   };
 }
 
@@ -594,7 +599,7 @@ function SEG_BUSCAR_SESION(tokenSesion) {
   return null;
 }
 
-function SEG_VALIDAR_SESION(tokenSesion) {
+function SEG_VALIDAR_SESION(tokenSesion, esPoller) {
   if (tokenSesion === "SHEETS_CONTEXT") {
     return SEG_SANITIZAR_PARA_CLIENTE({
       VALIDA: true,
@@ -631,7 +636,11 @@ function SEG_VALIDAR_SESION(tokenSesion) {
     return { VALIDA: false, CODIGO: "SESION_EXPIRADA_INACTIVIDAD", MENSAJE: "La sesión ha expirado por inactividad." };
   }
 
-  SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
+  // Si la petición proviene del poller de segundo plano, evitamos reescribir y actualizar la actividad en Sheets
+  // para no agotar la cuota de escritura de la base de datos y permitir que el tiempo de inactividad venza realmente.
+  if (esPoller !== true) {
+    SEG_ACTUALIZAR_ACTIVIDAD_SESION(tokenSesion);
+  }
   return SEG_SANITIZAR_PARA_CLIENTE({ VALIDA: true, CODIGO: "SESION_VALIDA", MENSAJE: "Sesión autorizada.", SESION: sesion });
 }
 
@@ -769,20 +778,12 @@ function SEG_OBTENER_SESIONES(tokenSesion) {
     const encabezados = SEG_OBTENER_ENCABEZADOS(SEG_CONFIG.HOJA_SESIONES);
     const registros = SEG_OBTENER_REGISTROS(SEG_CONFIG.HOJA_SESIONES);
     const lista = registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
-    return {
-      EXITO: true,
-      DATOS: SEG_SANITIZAR_PARA_CLIENTE(lista),
-      MENSAJE: "Sesiones activas obtenidas exitosamente."
-    };
+    return SEG_SANITIZAR_PARA_CLIENTE(lista); // ◄ RETORNA EL ARREGLO DIRECTAMENTE
   } catch (error) {
     if (typeof LOG_REGISTRAR_ERROR === "function") {
       LOG_REGISTRAR_ERROR("SEG_OBTENER_SESIONES", "SEGURIDAD", error);
     }
-    return {
-      EXITO: false,
-      DATOS: [],
-      MENSAJE: "No se pudieron cargar las sesiones: " + (error.message || error.toString())
-    };
+    return []; // ◄ Retorna un arreglo vacío para evitar que falle .filter() en el frontend
   }
 }
 

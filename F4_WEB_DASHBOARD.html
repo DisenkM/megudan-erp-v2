@@ -1,10 +1,12 @@
 <!-- ============================================================
-* INTERFAZ: F4_WEB_DASHBOARD  (VERSIÓN 7.0 - MEGUDAN ERP V2)
+* INTERFAZ: F4_WEB_DASHBOARD (VERSIÓN v11.0)
+<!-- ============================================================
+
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
 * RESPONSABILIDAD: Menú dinámico, visualización asíncrona de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-* ESTADO: 100% Sincronizado mediante srcdoc (RPC Injection) libre de 404s e iFrame Drive Blocks
-* ARQUITECTURA: Acceso multinivel dinámico por roles, ocultando/mostrando módulos y Gestión de Usuarios
+* ESTADO: 100% Sincronizado mediante SPA con control absoluto de inactividad de 30 minutos.
+* ARQUITECTURA: Acceso multinivel dinámico por roles, ocultando/mostrando módulos, Gestión de Usuarios y Autocierre de 30 Minutos.
 ============================================================ -->
 <!DOCTYPE html>
 <html lang="es">
@@ -79,9 +81,10 @@
     .welcome-icon { font-size: 48px; }
     .welcome-card h2 { margin: 0; font-size: 22px; font-weight: 800; color: #111827; }
     .welcome-card p { margin: 0; font-size: 14px; color: #4b5563; line-height: 1.5; }
-    .module-frame {
+    .module-container {
       width: 100%; height: 100%; border: none; border-radius: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: white; flex: 1; display: none;
+      overflow-y: auto; padding: 0px;
     }
   </style>
 </head>
@@ -127,7 +130,8 @@
           Selecciona un módulo en la barra de la izquierda para comenzar a trabajar según tus permisos autorizados.
         </p>
       </div>
-      <iframe id="viewport-frame" class="module-frame"></iframe>
+      <!-- CONTENEDOR PRINCIPAL PARA INYECCIÓN DE VISTAS (SPA STYLE, LIBRE DE IFRAMES Y 403s) -->
+      <div id="contenedor-principal" class="module-container"></div>
     </div>
   </div>
 </div>
@@ -205,8 +209,52 @@
     });
   }
 
+  // (VERSIÓN 11.0 - V2 ERP - LIBRO 1) - SISTEMA DE AUTOCIERRE POR INACTIVIDAD DE 30 MINUTOS
+  let tiempoInactividadCliente = 0; // en segundos
+  const MAXIMO_TIEMPO_INACTIVIDAD = 1800; // 30 minutos * 60 segundos
+
+  // Registrar eventos de interacción reales del usuario para resetear el contador de inactividad
+  function registrarInteraccionUsuario() {
+    tiempoInactividadCliente = 0; // Reiniciamos el segundero local
+  }
+
+  // Escuchas de eventos globales en el DOM del Dashboard
+  ["mousemove", "keypress", "click", "scroll", "touchstart"].forEach(function(evento) {
+    document.addEventListener(evento, registrarInteraccionUsuario, { passive: true });
+  });
+
+  // Hilo de control de tiempo de inactividad local (corriendo cada segundo)
+  setInterval(function() {
+    if (TOKEN_SESION === "SHEETS_CONTEXT") return; // Si corre en el editor confiable de Sheets, ignoramos
+    
+    tiempoInactividadCliente++;
+    if (tiempoInactividadCliente >= MAXIMO_TIEMPO_INACTIVIDAD) {
+      console.warn("🛡️ [MEGUDAN ACCESO] Autocierre disparado por inactividad de 30 minutos.");
+      alert("Su sesión ha sido cerrada automáticamente por inactividad de 30 minutos.");
+      ejecutarCierrePorInactividad();
+    }
+  }, 1000);
+
+  function ejecutarCierrePorInactividad() {
+    google.script.run
+      .withSuccessHandler(function() {
+        redireccionarAlLoginConMensaje("Su sesión ha expirado por inactividad.");
+      })
+      .withFailureHandler(function() {
+        redireccionarAlLoginConMensaje("Sesión terminada.");
+      })
+      .SEG_CERRAR_SESION(TOKEN_SESION);
+  }
+
+  function redireccionarAlLoginConMensaje(mensaje) {
+    const loginUrl = (WEB_APP_URL || (window.location.origin + window.location.pathname)) + "?ruta=login&mensaje=" + encodeURIComponent(mensaje);
+    try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
+  }
+
   function vigilarSesionERP() {
     setInterval(function() {
+      if (TOKEN_SESION === "SHEETS_CONTEXT") return;
+      
       google.script.run
         .withSuccessHandler(function(res) {
           const dot = document.getElementById("session-dot");
@@ -217,8 +265,7 @@
             return;
           }
           if (!res.VALIDA) {
-            const loginUrl = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Su sesión ha expirado por inactividad.";
-            try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
+            redireccionarAlLoginConMensaje("Su sesión ha expirado por inactividad.");
           } else {
             dot.className = "status-dot";
             timeText.textContent = "Sesión Activa";
@@ -228,13 +275,13 @@
           document.getElementById("session-dot").className = "status-dot status-warning";
           document.getElementById("session-time").textContent = "Sin Conexión con Sheets";
         })
-        .SEG_VALIDAR_SESION(TOKEN_SESION);
+        .SEG_VALIDAR_SESION(TOKEN_SESION, true); // ◄ Enviamos 'true' como segundo parámetro para evitar writes continuos en Sheets
     }, 60000);
   }
 
   function abrirModulo(modulo) {
     const welcome = document.getElementById("welcome-card");
-    const frame = document.getElementById("viewport-frame");
+    const contenedor = document.getElementById("contenedor-principal");
     const title = document.getElementById("module-title");
 
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -248,34 +295,26 @@
     });
 
     if (modulo === "inicio") {
-      frame.style.display = "none";
+      contenedor.style.display = "none";
       welcome.style.display = "flex";
       title.textContent = "🏠 Panel Principal";
       return;
     }
 
     welcome.style.display = "none";
-    frame.style.display = "block";
+    contenedor.style.display = "block";
 
-    // Previsualizador de carga local (Loader) mediante srcdoc
-    frame.srcdoc = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9fafb; color: #4b5563; }
-          .loader-container { text-align: center; }
-          .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        </style>
-      </head>
-      <body>
-        <div class="loader-container">
-          <div class="spinner"></div>
-          <strong style="font-size: 14px;">Inyectando módulo en memoria...</strong>
+    // Previsualizador de carga local (Loader) mediante inyección en el contenedor principal
+    contenedor.innerHTML = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 400px; background-color: #f9fafb; color: #4b5563;">
+        <div style="text-align: center;">
+          <div style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+          <strong style="font-size: 14px;">Compilando e inyectando módulo en memoria...</strong>
         </div>
-      </body>
-      </html>
+      </div>
+      <style>
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      </style>
     `;
 
     // Asignación de Títulos
@@ -289,17 +328,18 @@
       title.textContent = "🗃️ Inventarios / Existencias";
     }
 
-    // Inyección Directa vía RPC con srcdoc (Bypass del 404 de Red)
+    // Inyección Directa vía RPC con HTML Injection (SPA)
     google.script.run
       .withSuccessHandler(function(htmlCompilado) {
         if (!htmlCompilado) {
-          frame.srcdoc = "<h2>⚠️ Error de Servidor</h2><p>La compilación de la vista retornó un valor vacío.</p>";
+          contenedor.innerHTML = "<h2>⚠️ Error de Servidor</h2><p>La compilación de la vista retornó un valor vacío.</p>";
           return;
         }
-        frame.srcdoc = htmlCompilado;
+        // Inyectar HTML y evaluar/ejecutar scripts manualmente para que sean funcionales
+        inyectarHTMLConScripts(contenedor, htmlCompilado);
       })
       .withFailureHandler(function(err) {
-        frame.srcdoc = `
+        contenedor.innerHTML = `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background-color: #fff5f5; color: #b91c1c; border: 1.5px solid #fca5a5; border-radius: 8px;">
             <h3 style="margin-top:0;">⚠️ Fallo de Integración Operacional</h3>
             <p>${err.message}</p>
@@ -309,15 +349,61 @@
       .WEB_OBTENER_COMPILACION_VISTA(modulo, TOKEN_SESION);
   }
 
+  // Helper para inyectar HTML, forzar la ejecución de los bloques script, y emular DOMContentLoaded
+  function inyectarHTMLConScripts(container, html) {
+    // 🛡️ SPA Polyfill: Capturar el addEventListener original de document para interceptar DOMContentLoaded
+    const originalAddEventListener = document.addEventListener;
+    
+    // Sobrescribir temporalmente document.addEventListener durante la inyección de scripts
+    document.addEventListener = function(type, listener, options) {
+      if (type === "DOMContentLoaded") {
+        // El evento ya pasó en el Dashboard de nivel superior. Ejecutamos el inicializador de la sub-vista de inmediato.
+        try {
+          listener();
+        } catch (e) {
+          console.error("❌ [MEGUDAN SPA] Error ejecutando callback de inicialización de sub-vista: ", e);
+        }
+      } else {
+        originalAddEventListener.call(document, type, listener, options);
+      }
+    };
+
+    container.innerHTML = html;
+    const scripts = container.querySelectorAll("script");
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement("script");
+      // Copiar atributos
+      Array.from(oldScript.attributes).forEach(attr => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+      
+      let code = oldScript.innerHTML;
+      
+      // 1. Comentar constantes globales heredadas del Dashboard para evitar colisión de redeclaración (const/let a comment)
+      code = code.replace(/^\s*(const|let)\s+(TOKEN_SESION|ID_USUARIO|USUARIO|WEB_APP_URL)\b.*/gm, "// $1 $2 (Heredado del Dashboard)");
+      
+      // 2. Convertir re-declaraciones de const/let locales a var al inicio de línea para evitar SyntaxError en cargas sucesivas del mismo módulo
+      code = code.replace(/^\s*const\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/gm, "var $1");
+      code = code.replace(/^\s*let\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/gm, "var $1");
+      
+      newScript.appendChild(document.createTextNode(code));
+      // Reemplazar viejo script con nuevo script para forzar evaluación por el motor JS
+      oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+
+    // 🛡️ Restaurar document.addEventListener a su estado nativo de Sheets/Apps Script
+    document.addEventListener = originalAddEventListener;
+  }
+
   function cerrarSesion() {
     if (!confirm("¿Desea cerrar sesión en el ERP?")) return;
     google.script.run
       .withSuccessHandler(function() {
-        const loginUrl = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión cerrada correctamente.";
+        const loginUrl = (WEB_APP_URL || (window.location.origin + window.location.pathname)) + "?ruta=login&mensaje=Sesión cerrada correctamente.";
         try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
       })
       .withFailureHandler(function() {
-        const loginUrl = window.location.origin + window.location.pathname + "?ruta=login&mensaje=Sesión terminada.";
+        const loginUrl = (WEB_APP_URL || (window.location.origin + window.location.pathname)) + "?ruta=login&mensaje=Sesión terminada.";
         try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
       })
       .SEG_CERRAR_SESION(TOKEN_SESION);

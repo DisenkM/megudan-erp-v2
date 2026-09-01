@@ -1,5 +1,5 @@
 /**************************************************************
-* 25_WEB.gs (VERSIÓN 9.0 - ARQUITECTURA HÍBRIDA Standalone & RPC)
+* 25_WEB.gs (VERSIÓN 10.0 - ARQUITECTURA HÍBRIDA Standalone & RPC)
 * RESPONSABILIDAD:
 * - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
 * - Servir la compilación asíncrona de sub-vistas del iFrame en memoria.
@@ -220,15 +220,26 @@ function WEB_MOSTRAR_INVENTARIO_FORM(parametros) {
 }
 
 function WEB_REDIRECCION_LOGIN(mensaje) {
+  let webAppUrl = "";
+  try {
+    webAppUrl = ScriptApp.getService().getUrl();
+  } catch (e) {
+    webAppUrl = "";
+  }
   const mensajeSeguro = String(mensaje || "Debe iniciar sesión.");
   const parametroMensaje = encodeURIComponent(mensajeSeguro);
+  
+  // ⚡ COMPUTE THE ABSOLUTE script.google.com URL ON THE SERVER-SIDE!
+  // This completely bypasses window.location.origin inside the sandboxed iframe.
+  const urlDestino = webAppUrl ? (webAppUrl + "?ruta=login&mensaje=" + parametroMensaje) : ("?ruta=login&mensaje=" + parametroMensaje);
+  
   const html = `
   <!DOCTYPE html>
   <html>
   <head>
     <base target="_top">
     <script>
-      const urlDestino = window.location.origin + window.location.pathname + "?ruta=login&mensaje=" + "${parametroMensaje}";
+      const urlDestino = "${urlDestino}";
       try {
         window.top.location.replace(urlDestino);
       } catch (e) {
@@ -241,7 +252,9 @@ function WEB_REDIRECCION_LOGIN(mensaje) {
   </body>
   </html>
   `;
-  return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Redirigiendo");
+  return HtmlService.createHtmlOutput(html)
+    .setTitle(WEB_CONFIG.TITULO_ERP + " | Redirigiendo")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function WEB_MOSTRAR_ERROR(mensaje) {
@@ -355,4 +368,15 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
       </html>
     `;
   }
+}
+
+
+/**
+ * Wrapper de compatibilidad para obtención e inyección directa de plantillas HTML (SPA)
+ * @param {string} nombreVista Nombre del módulo (clientes, seguridad, productos, inventario)
+ * @param {string} tokenSesion Token de sesión activo del usuario
+ * @return {string} Contenido HTML renderizado e interpolado con sus parámetros
+ */
+function OBTENER_VISTA_HTML(nombreVista, tokenSesion) {
+  return WEB_OBTENER_COMPILACION_VISTA(nombreVista, tokenSesion);
 }

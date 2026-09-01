@@ -1,5 +1,5 @@
 <!-- ============================================================
-* INTERFAZ: F3_WEB_LOGIN
+* INTERFAZ: F3_WEB_LOGIN (VERSIÓN v7.0 - COCHERA DE DIAGNÓSTICO EN VIVO)
 * MODULO: SEGURIDAD (ACCESO PUBLICO / WEB PORTAL)
 * RESPONSABILIDAD: Portal de inicio de sesión, auto-registro público y recuperación de contraseña del ERP
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
@@ -227,36 +227,34 @@
           return;
         }
 
-        mostrarAlerta("Credenciales validadas. Iniciando sesión...", "success");
-        google.script.run
-          .withSuccessHandler(function(sesion) {
-            if (!sesion) {
-              btn.disabled = false;
-              btn.textContent = "Ingresar al ERP";
-              mostrarAlerta("No se pudo recibir respuesta del servidor de sesión.", "error");
-              return;
-            }
-            if (sesion.EXITO) {
-              // 🛡️ Redirección blindada al canal oficial de script.google.com/macros/s/.../exec o /dev
-              // Evitamos colapsar el iframe modal dentro de *.googleusercontent.com
-              let urlBase = WEB_APP_URL;
-              if (!urlBase) {
-                urlBase = window.location.origin + window.location.pathname;
-              }
-              const url = urlBase + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
-              try { window.top.location.replace(url); } catch (e) { window.location.replace(url); }
-            } else {
-              btn.disabled = false;
-              btn.textContent = "Ingresar al ERP";
-              mostrarAlerta("No se pudo iniciar la sesión.", "error");
-            }
-          })
-          .withFailureHandler(function(err) {
-            btn.disabled = false;
-            btn.textContent = "Ingresar al ERP";
-            mostrarAlerta("Error al crear sesión: " + err.message, "error");
-          })
-          .SEG_CREAR_SESION(autenticacion.USUARIO.ID_USUARIO);
+        mostrarAlerta("Credenciales validadas. Redirigiendo...", "success");
+        
+        const sesion = autenticacion.SESION;
+        if (!sesion) {
+          btn.disabled = false;
+          btn.textContent = "Ingresar al ERP";
+          mostrarAlerta("La sesión no pudo ser inicializada en el servidor.", "error");
+          return;
+        }
+
+        let urlBase = WEB_APP_URL;
+        if (!urlBase) {
+          urlBase = window.location.origin + window.location.pathname;
+        }
+        const url = urlBase + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
+        
+        // 🚀 Intenta redireccionar de inmediato (a veces se permite porque es el primer callback de red asíncrono)
+        try { 
+          window.top.location.replace(url); 
+          
+          // Por si el replace falla silenciosamente, mostramos el botón después de 1 segundo
+          setTimeout(function() {
+            mostrarBotonRedireccionDirecta(url);
+          }, 1000);
+        } catch (e) { 
+          // Si el sandbox de iframe bloquea la redirección desatendida, desplegamos un botón gigante con interacción directa!
+          mostrarBotonRedireccionDirecta(url);
+        }
       })
       .withFailureHandler(function(err) {
         btn.disabled = false;
@@ -264,6 +262,29 @@
         mostrarAlerta("Error de sistema: " + err.message, "error");
       })
       .SEG_AUTENTICAR_USUARIO(user, pass);
+  }
+
+  function mostrarBotonRedireccionDirecta(url) {
+    const card = document.querySelector(".card");
+    if (!card) return;
+    card.innerHTML = `
+      <div style="text-align: center; padding: 25px 0;">
+        <div style="font-size: 54px; margin-bottom: 20px; animation: bounce 2s infinite;">🔓</div>
+        <h2 style="color: #ffffff; margin-top: 0; margin-bottom: 12px; font-weight: 800; font-size: 22px;">¡Acceso Autorizado!</h2>
+        <p style="font-size: 13px; color: #9ca3af; line-height: 1.6; margin-bottom: 25px; max-width: 320px; margin-left: auto; margin-right: auto;">
+          Tu sesión se ha creado con éxito. Clic en el botón inferior para entrar al ERP Megudan de forma segura.
+        </p>
+        <button class="btn" style="background-color: #10b981; font-weight: 800; padding: 14px 20px; font-size: 14px; border-radius: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);" onclick="window.top.location.replace('${url}')">
+          🚀 ENTRAR AL PANEL DE CONTROL
+        </button>
+      </div>
+      <style>
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      </style>
+    `;
   }
 
   function ejecutarRegistro() {
