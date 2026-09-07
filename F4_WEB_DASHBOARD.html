@@ -1,11 +1,9 @@
 <!-- ============================================================
-* INTERFAZ: F4_WEB_DASHBOARD (VERSIÓN v11.0)
-<!-- ============================================================
-
+* INTERFAZ: F4_WEB_DASHBOARD (VERSIÓN 16.0 - V2 ERP - LIBRO 1)
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
 * RESPONSABILIDAD: Menú dinámico, visualización asíncrona de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-* ESTADO: 100% Sincronizado mediante SPA con control absoluto de inactividad de 30 minutos.
+<!-- (VERSIÓN 14.0 - V2 ERP - LIBRO 1) 
 * ARQUITECTURA: Acceso multinivel dinámico por roles, ocultando/mostrando módulos, Gestión de Usuarios y Autocierre de 30 Minutos.
 ============================================================ -->
 <!DOCTYPE html>
@@ -190,8 +188,11 @@
     // 2. Diccionario traductor de módulos permitidos
     const modulosMapeados = {
       "CLIENTES": { icon: "👥", label: "Clientes / Terceros", route: "clientes" },
+      "VENTAS": { icon: "💰", label: "Ventas / Facturación", route: "ventas" },
+      "COMPRAS": { icon: "🛒", label: "Compras / CxP", route: "compras" },
       "PRODUCTOS": { icon: "📦", label: "Productos / Servicios", route: "productos" },
       "INVENTARIO": { icon: "🗃️", label: "Inventario / Existencias", route: "inventario" },
+      "FINANZAS": { icon: "📊", label: "Finanzas / Contabilidad", route: "finanzas" },
       "SEGURIDAD": { icon: "🔐", label: "Gestión Seguridad", route: "seguridad" }
     };
 
@@ -320,12 +321,18 @@
     // Asignación de Títulos
     if (modulo === "clientes") {
       title.textContent = "👥 Clientes / Terceros";
+    } else if (modulo === "compras") {
+      title.textContent = "🛒 Compras y Cuentas por Pagar";
+    } else if (modulo === "ventas") {
+      title.textContent = "💰 Emisión de Ventas";
     } else if (modulo === "seguridad") {
       title.textContent = "🔐 Gestión de Seguridad";
     } else if (modulo === "productos") {
       title.textContent = "📦 Productos / Servicios";
     } else if (modulo === "inventario") {
       title.textContent = "🗃️ Inventarios / Existencias";
+    } else if (modulo === "finanzas") {
+      title.textContent = "📊 Finanzas, Contabilidad y Reportes";
     }
 
     // Inyección Directa vía RPC con HTML Injection (SPA)

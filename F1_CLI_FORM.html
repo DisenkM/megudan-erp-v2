@@ -1,10 +1,4 @@
-<!-- ============================================================
-* INTERFAZ: F1_CLI_FORM (VERSIÓN 1.0 - V2 ERP - LIBRO 1)
-* MODULO: CLIENTES / PROVEEDORES (TERCEROS UNIFICADOS - ALINEADO CON ALEGRA Y DIAN)
-* RESPONSABILIDAD: Captura, validación tributaria y mapeo API de Terceros
-* CONEXIÓN BACKEND: 05_CLIENTES.gs, 06_PROVEEDORES.gs y 23_SEGURIDAD.gs
-* ESTADO: 100% Sincronizado, Autoadaptativo, con cálculo de DV DIAN en vivo y mapeo de IDs externos
-============================================================ -->
+<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
 <div class="form-container" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #1f2937;">
   
   <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 800; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; display: flex; align-items: center; gap: 10px;">
@@ -327,6 +321,14 @@
 </footer>
 
 <script>
+  // (VERSIÓN 2.0 - V2 ERP - LIBRO 1)
+  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
+  const aliasMap = {
+    FORMA_PAGO: "CONDICION_PAGO",
+    LIMITE_CREDITO: "CUPO_CREDITO",
+    CONTACTO_PRINCIPAL: "NOMBRE_CONTACTO"
+  };
+  const targetKey = "ID_CLIENTE";
   // Sincronizar checkboxes de responsabilidades DIAN
   document.querySelectorAll('input[name="responsabilidad_rut"]').forEach(cb => {
     cb.addEventListener("change", compilarResponsabilidadesRUT);

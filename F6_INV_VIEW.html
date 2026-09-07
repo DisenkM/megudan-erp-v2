@@ -1,10 +1,5 @@
-<!-- ============================================================
-* INTERFAZ: F6_INV_VIEW
-* MODULO: CONTROL DE SALDOS E INVENTARIO (AJUSTES DE STOCK EN VIVO)
-* RESPONSABILIDAD: Visualización asíncrona de existencias y registro de ajustes contables manuales de stock.
-* CONEXIÓN BACKEND: 11_INVENTARIO.gs y 23_SEGURIDAD.gs
-* ESTADO: 100% Sincronizado, Dinámico, CSS3 y Adaptativo
-============================================================ -->
+<!-- (VERSIÓN 4.0 - V2 ERP - LIBRO 1) -->
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
@@ -16,108 +11,122 @@
     body {
       margin: 0; padding: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
-      background-color: #f4f6f8; color: #1f2937;
+      background-color: #f8fafc; color: #1e293b;
     }
     .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
     
     /* Header */
     .header {
-      background-color: #0891b2; color: #ffffff;
-      padding: 18px 25px; border-radius: 8px;
-      margin-bottom: 20px; display: flex; align-items: center; gap: 15px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      background-color: #0891b2; color: white; padding: 20px;
+      border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; gap: 15px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
-    .header-icon { font-size: 28px; }
-    .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
-    .header p { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+    .header-icon { font-size: 32px; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+    .header p { margin: 5px 0 0; font-size: 13px; opacity: 0.9; }
 
-    /* Card */
+    /* Tabs */
+    .tabs-container {
+      display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0;
+    }
+    .tab-btn {
+      padding: 12px 24px; border: none; background: none; font-size: 14px; font-weight: 700;
+      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+    }
+    .tab-btn:hover { color: #0891b2; }
+    .tab-btn.active { color: #0891b2; border-bottom-color: #0891b2; }
+    
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    
+    /* Alerts */
+    .message {
+      padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;
+    }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    /* Cards */
     .card {
-      background: #ffffff; border: 1px solid #e5e7eb;
-      border-radius: 8px; padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      background-color: white; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
     }
     .card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #f3f4f6; padding-bottom: 12px; margin-bottom: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 15px;
     }
-    .card-title { margin: 0; font-size: 15px; font-weight: 700; color: #111827; }
+    .card-title {
+      margin: 0; font-size: 16px; font-weight: 800; color: #1e293b;
+      display: flex; align-items: center; gap: 8px;
+    }
     
-    /* Search Bar */
-    .search-container {
-      display: flex; gap: 10px; margin-bottom: 15px;
-    }
+    /* Form & inputs */
+    .search-container { display: flex; gap: 10px; margin-bottom: 15px; }
     .input {
-      flex: 1; padding: 10px 14px; border: 1px solid #d1d5db;
-      border-radius: 6px; font-size: 13px; outline: none;
-      transition: all 0.2s;
+      width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; transition: border 0.2s;
     }
-    .input:focus {
-      border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15);
+    .input:focus { border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1); }
+    .input-inline-edit {
+      width: 140px; padding: 4px 8px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; text-align: center;
     }
-    
-    /* Buttons */
-    .button {
-      border: none; border-radius: 6px; padding: 10px 16px;
-      font-size: 13px; font-weight: 700; cursor: pointer;
-      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
-    }
-    .button-primary { background-color: #0891b2; color: #ffffff; }
-    .button-primary:hover { background-color: #0e7490; }
-    .button-secondary { background-color: #e5e7eb; color: #374151; }
-    .button-secondary:hover { background-color: #d1d5db; }
+    .input-inline-edit:focus { border-color: #0891b2; }
 
     /* Tables */
-    .table-container { overflow-x: auto; margin-top: 10px; }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-    th {
-      background-color: #f9fafb; padding: 12px 16px;
-      font-weight: 700; color: #4b5563; border-bottom: 1px solid #e5e7eb;
-    }
-    td { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: middle; }
-    tr:hover td { background-color: #f9fafb; }
+    .table-container { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 15px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 12px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; background-color: #ffffff; }
+    tr:hover td { background-color: #f8fafc; }
+    
+    /* Images */
+    .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #cbd5e1; }
+    .product-img-large { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; border: 1px solid #cbd5e1; display: block; margin: 10px auto; }
     
     /* Badges */
-    .badge {
-      display: inline-block; padding: 4px 8px; border-radius: 12px;
-      font-size: 11px; font-weight: 700;
-    }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
     .badge-qty { background-color: #e0f2fe; color: #0369a1; }
-    .badge-money { background-color: #fef3c7; color: #713f12; }
-    .badge-alert { background-color: #fee2e2; color: #991b1b; }
+    .badge-alert { background-color: #ffedd5; color: #b45309; }
+    .badge-danger { background-color: #fee2e2; color: #b91c1c; }
+    .badge-money { background-color: #f0fdf4; color: #166534; font-weight: bold; }
+    .badge-location { background-color: #f3f4f6; color: #1f2937; border: 1px solid #e5e7eb; font-weight: 600; cursor: pointer; }
+    .badge-location:hover { background-color: #e5e7eb; }
 
-    /* Empty states */
-    .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
-    .empty-icon { font-size: 40px; margin-bottom: 10px; }
-    
-    .message {
-      padding: 12px 15px; border-radius: 6px; margin-bottom: 15px;
-      font-size: 13px; font-weight: 600; display: none;
+    /* Buttons */
+    .button {
+      padding: 10px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; gap: 8px;
     }
-    .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    .message.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .message.info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-
-    /* Modals */
+    .button-primary { background-color: #0891b2; color: white; }
+    .button-primary:hover { background-color: #0e7490; }
+    .button-secondary { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #e2e8f0; }
+    .button-action { padding: 4px 8px; font-size: 11px; font-weight: 700; }
+    
+    /* Modales */
     .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); align-items: center; justify-content: center;
     }
     .modal-content {
-      background-color: #ffffff; margin: 5% auto; padding: 20px;
-      border: 1px solid #e5e7eb; border-radius: 8px; width: 480px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      background-color: white; margin: auto; padding: 25px; border: 1px solid #cbd5e1; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: scaleUp 0.2s ease-out;
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; }
-    .modal-title { margin: 0; font-size: 16px; font-weight: 700; color: #111827; }
-    .close-btn { font-size: 20px; font-weight: bold; color: #9ca3af; cursor: pointer; }
-    .close-btn:hover { color: #111827; }
-    .modal-body { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
-    .modal-body .field { display: flex; flex-direction: column; gap: 4px; }
-    .modal-body label { font-size: 11px; font-weight: 700; color: #4b5563; }
-    .modal-body .input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
-    .modal-body .input:focus { border-color: #0891b2; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+    @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #0891b2; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; transition: color 0.2s; }
+    .close-btn:hover { color: #0f172a; }
+    .modal-body { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+
+    /* Layout Kardex PEPS */
+    .kardex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 1024px) { .kardex-grid { grid-template-columns: 1fr; } }
+    
+    .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #0891b2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .empty-state { text-align: center; padding: 40px; color: #64748b; }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -125,108 +134,236 @@
   <header class="header">
     <div class="header-icon">🗃️</div>
     <div>
-      <h1>Saldos y Existencias de Inventario</h1>
-      <p>ERP Operativo · Control asíncrono y costeo promedio ponderado de stock</p>
+      <h1>Saldos, Kardex y Costos PEPS</h1>
+      <p>ERP Operativo · Control asíncrono, ubicación editable y capas de costos FIFO (PEPS)</p>
     </div>
   </header>
 
   <div id="INV_ALERT" class="message"></div>
 
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">Existencias Disponibles en Bodega</h2>
-      <div style="display: flex; gap: 8px;">
-        <button class="button button-primary" onclick="abrirModalAjuste()">🔧 Registrar Ajuste</button>
-        <button class="button button-secondary" onclick="invCargarSaldos()">↻ Actualizar</button>
+  <!-- Navegación por pestañas unificadas (SPA) -->
+  <div class="tabs-container">
+    <button class="tab-btn active" id="btn-tab-saldos" onclick="usrCambiarPestana('saldos')">📦 Existencias en Bodega</button>
+    <button class="tab-btn" id="btn-tab-ajustes" onclick="usrCambiarPestana('ajustes')">🔧 Registrar Ajuste</button>
+    <button class="tab-btn" id="btn-tab-peps" onclick="usrCambiarPestana('peps')">📈 Kardex Físico y PEPS (FIFO)</button>
+  </div>
+
+  <!-- Pestaña 1: Saldos / Existencias -->
+  <div id="panel-saldos" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Existencias Disponibles en Bodega</h2>
+        <div style="display: flex; gap: 8px;">
+          <button class="button button-primary" onclick="usrCambiarPestana('ajustes')">🔧 Registrar Ajuste</button>
+          <button class="button button-secondary" onclick="invCargarSaldos()">↻ Actualizar</button>
+        </div>
+      </div>
+      
+      <div class="search-container">
+        <input type="text" id="INV_BUSCADOR" class="input" placeholder="Buscar por código, descripción o ID de producto..." oninput="invFiltrar()">
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Saldo</th>
+              <th style="text-align: center;">Imagen</th>
+              <th>ID Producto</th>
+              <th>Código</th>
+              <th>Descripción del Producto</th>
+              <th style="text-align: center;">Ubicación</th>
+              <th>Entradas</th>
+              <th>Salidas</th>
+              <th>Stock Disponible</th>
+              <th>Costo Promedio</th>
+              <th>Valor del Inventario</th>
+            </tr>
+          </thead>
+          <tbody id="INV_TABLA">
+            <tr>
+              <td colspan="11">
+                <div class="empty-state">
+                  <div class="spinner"></div>
+                  <strong>Cargando existencias actuales desde Sheets...</strong>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
 
-    <div class="search-container">
-      <input type="text" id="INV_BUSCADOR" class="input" placeholder="Buscar por código, descripción o ID de producto..." oninput="invFiltrar()">
+  <!-- Pestaña 2: Formulario de Ajuste -->
+  <div id="panel-ajustes" class="tab-panel">
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <div class="card-header">
+        <h2 class="card-title">🔧 Formulario de Ajuste de Inventario</h2>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+        <div class="field">
+          <label for="aju_id_producto">Seleccione el Producto *</label>
+          <select id="aju_id_producto" class="input"></select>
+        </div>
+        
+        <div class="field">
+          <label for="aju_tipo_movimiento">Tipo de Movimiento *</label>
+          <select id="aju_tipo_movimiento" class="input">
+            <option value="ENTRADA">ENTRADA (Incrementa Stock)</option>
+            <option value="SALIDA">SALIDA (Disminuye Stock)</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="field">
+            <label for="aju_cantidad">Cantidad *</label>
+            <input type="number" id="aju_cantidad" class="input" min="1" value="1">
+          </div>
+          <div class="field">
+            <label for="aju_costo_unitario">Costo Unitario (COP) *</label>
+            <input type="number" id="aju_costo_unitario" class="input" min="0" value="0">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="aju_observacion">Observación / Motivo *</label>
+          <input type="text" id="aju_observacion" class="input" placeholder="Ej: Ajuste físico de inventario por rotura">
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+          <button class="button button-primary" onclick="guardarAjuste()">Registrar Ajuste en Sheets</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>ID Saldo</th>
-            <th>ID Producto</th>
-            <th>Código de Referencia</th>
-            <th>Descripción del Producto</th>
-            <th>Entradas Registradas</th>
-            <th>Salidas Registradas</th>
-            <th>Stock Final Disponible</th>
-            <th>Costo Promedio</th>
-            <th>Valor Total del Inventario</th>
-          </tr>
-        </thead>
-        <tbody id="INV_TABLA">
-          <tr>
-            <td colspan="9">
-              <div class="empty-state">
-                <div class="empty-icon">🗃️</div>
-                <strong>Cargando existencias actuales...</strong>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Pestaña 3: Kardex y PEPS -->
+  <div id="panel-peps" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📈 Consulta de Kardex y Capas PEPS (First In, First Out)</h2>
+      </div>
+      
+      <div class="field" style="max-width: 500px; margin-bottom: 25px;">
+        <label for="peps_id_producto" style="font-weight: bold; color: #0891b2;">Seleccione el Producto / Insumo para Consultar:</label>
+        <select id="peps_id_producto" class="input" onchange="cargarKardexPEPS()"></select>
+      </div>
+
+      <div class="kardex-grid" id="peps_resultados_panel" style="display: none;">
+        <!-- Lado Izquierdo: Kardex Chronológico -->
+        <div class="card" style="box-shadow: none; border: 1px solid #e2e8f0; margin: 0; padding: 15px;">
+          <h3 style="margin-top:0; margin-bottom: 12px; font-size:14px; font-weight:800; color:#475569; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📦 Historial de Movimientos (Kardex Físico)</h3>
+          <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table>
+              <thead style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                  <th>ID</th>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Entrada</th>
+                  <th>Salida</th>
+                  <th>Saldo Qty</th>
+                  <th>Costo Unit.</th>
+                  <th>Observaciones</th>
+                </tr>
+              </thead>
+              <tbody id="peps_kardex_tabla"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lado Derecho: Capas de Costos Activas (PEPS) -->
+        <div class="card" style="box-shadow: none; border: 1px solid #e2e8f0; margin: 0; padding: 15px; background-color: #faf5ff;">
+          <h3 style="margin-top:0; margin-bottom: 12px; font-size:14px; font-weight:800; color:#6b21a8; border-bottom:1px solid #f3e8ff; padding-bottom:8px;">📈 Capas de Costo Activas (FIFO / PEPS)</h3>
+          <p style="font-size:11px; color:#475569; margin-top:0; margin-bottom:12px; line-height:1.4;">
+            El método <strong>PEPS (Primeras en Entrar, Primeras en Salir)</strong> asume que las unidades de Guadua o insumos más antiguos son los primeros en venderse o consumirse. A continuación se desglosan las compras que aún tienen saldo disponible:
+          </p>
+          <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table>
+              <thead style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                  <th>ID Entrada</th>
+                  <th>Fecha Entrada</th>
+                  <th>Origen</th>
+                  <th>Cant. Orig.</th>
+                  <th>Disponible (PEPS)</th>
+                  <th>Costo Unitario</th>
+                  <th>Valor Capa</th>
+                </tr>
+              </thead>
+              <tbody id="peps_capas_tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado inicial de selección vacía -->
+      <div id="peps_empty_state" class="empty-state">
+        <div class="empty-icon">📈</div>
+        <strong>Selecciona un producto arriba para calcular sus capas contables PEPS</strong>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Modal: Registro de Ajuste de Inventario -->
-<div id="modal_ajuste" class="modal">
-  <div class="modal-content">
+<!-- Modal: Editar Ubicación -->
+<div id="modal_ubicacion" class="modal">
+  <div class="modal-content" style="max-width: 400px;">
     <div class="modal-header">
-      <h3 class="modal-title">🔧 Registrar Ajuste de Inventario</h3>
-      <span class="close-btn" onclick="cerrarModalAjuste()">&times;</span>
+      <h3 class="modal-title">📍 Cambiar Ubicación del Producto</h3>
+      <span class="close-btn" onclick="cerrarModalUbicacion()">&times;</span>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="ubi_id_producto">
       <div class="field">
-        <label for="aju_id_producto">Seleccione el Producto *</label>
-        <select id="aju_id_producto" class="input"></select>
+        <label for="ubi_nombre_producto">Producto seleccionado</label>
+        <input type="text" id="ubi_nombre_producto" class="input" readonly>
       </div>
       <div class="field">
-        <label for="aju_tipo_movimiento">Tipo de Movimiento *</label>
-        <select id="aju_tipo_movimiento" class="input">
-          <option value="ENTRADA">ENTRADA (Incrementa Stock)</option>
-          <option value="SALIDA">SALIDA (Disminuye Stock)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="aju_cantidad">Cantidad *</label>
-        <input type="number" id="aju_cantidad" class="input" min="1" value="1">
-      </div>
-      <div class="field">
-        <label for="aju_costo_unitario">Costo Unitario (COP) *</label>
-        <input type="number" id="aju_costo_unitario" class="input" min="0" value="0">
-      </div>
-      <div class="field">
-        <label for="aju_observacion">Observación / Motivo *</label>
-        <input type="text" id="aju_observacion" class="input" placeholder="Ej: Ajuste físico de inventario">
+        <label for="ubi_valor">Ubicación / Bodega / Estante *</label>
+        <input type="text" id="ubi_valor" class="input" placeholder="Ej: BODEGA_A_SECTOR_3 o ESTANTE_12">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="button button-secondary" onclick="cerrarModalAjuste()">Cancelar</button>
-      <button class="button button-primary" onclick="guardarAjuste()">Registrar Ajuste</button>
+      <button class="button button-secondary" onclick="cerrarModalUbicacion()">Cancelar</button>
+      <button class="button button-primary" onclick="guardarUbicacion()">Actualizar Ubicación</button>
     </div>
   </div>
 </div>
 
 <script>
-  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
+  const TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
   let LISTA_SALDOS = [];
   let AJUSTE_PROCESANDO = false;
 
   document.addEventListener("DOMContentLoaded", function() {
     invCargarSaldos();
+    cargarListaProductosParaFormularios();
   });
+
+  function usrCambiarPestana(pestana) {
+    document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    
+    if (pestana === 'saldos') {
+      document.getElementById("panel-saldos").classList.add("active");
+      document.getElementById("btn-tab-saldos").classList.add("active");
+      invCargarSaldos();
+    } else if (pestana === 'ajustes') {
+      document.getElementById("panel-ajustes").classList.add("active");
+      document.getElementById("btn-tab-ajustes").classList.add("active");
+    } else if (pestana === 'peps') {
+      document.getElementById("panel-peps").classList.add("active");
+      document.getElementById("btn-tab-peps").classList.add("active");
+    }
+  }
 
   function mostrarAlerta(msg, tipo) {
     const el = document.getElementById("INV_ALERT");
     el.textContent = msg;
-    el.className = "message " + tipo;
+    el.className = "message message-" + tipo;
     el.style.display = "block";
     setTimeout(() => {
       if (el.textContent === msg) {
@@ -237,106 +374,123 @@
 
   function invCargarSaldos() {
     const tbody = document.getElementById("INV_TABLA");
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🗃️</div><strong>Cargando existencias actuales...</strong></div></td></tr>`;
-
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="spinner"></div><strong>Consultando base de datos de saldos de Sheets...</strong></div></td></tr>`;
+    
     google.script.run
       .withSuccessHandler(function(res) {
         if (!res) {
-          mostrarAlerta("Respuesta nula del servidor de inventarios.", "error");
-          tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Error de red: Respuesta vacía del servidor.</td></tr>`;
+          mostrarAlerta("Respuesta vacía del servidor de inventario.", "error");
+          tbody.innerHTML = `<tr><td colspan="11" class="empty-state">Error: Respuesta nula del servidor.</td></tr>`;
           return;
         }
         if (res.EXITO) {
           LISTA_SALDOS = res.DATOS || [];
           invMostrar(LISTA_SALDOS);
         } else {
-          mostrarAlerta(res.MENSAJE || "No se pudieron obtener las existencias.", "error");
-          tbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="color: #dc2626;"><strong>Error de acceso:</strong> ` + (res.MENSAJE || "Acceso denegado") + `</td></tr>`;
+          mostrarAlerta(res.MENSAJE || "No se pudieron obtener existencias.", "error");
+          tbody.innerHTML = `<tr><td colspan="11" class="empty-state" style="color:#b91c1c;"><strong>Error de acceso:</strong> ${res.MENSAJE || "Acceso denegado"}</td></tr>`;
         }
       })
       .withFailureHandler(function(err) {
-        mostrarAlerta("Error de sistema: " + err.message, "error");
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="color: #dc2626;"><strong>Fallo crítico:</strong> ` + err.message + `</td></tr>`;
+        mostrarAlerta("Fallo crítico de red: " + err.message, "error");
+        tbody.innerHTML = `<tr><td colspan="11" class="empty-state" style="color:#b91c1c;"><strong>Fallo crítico:</strong> ${err.message}</td></tr>`;
       })
-      .INV_LISTAR_SALDOS_WEB(TOKEN_SESION);
+      .INV_LISTAR_SALDOS_WEB(TOKEN_SESION_PROY);
   }
 
   function invMostrar(datos) {
     const tbody = document.getElementById("INV_TABLA");
     tbody.innerHTML = "";
-
+    
     if (!datos || datos.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">No hay registros de existencias físicas de inventario.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" class="empty-state"><div class="empty-icon">🗃️</div>No se registran existencias físicas de inventario.</td></tr>`;
       return;
     }
 
     datos.forEach(item => {
       if (!item.ID_PRODUCTO) return;
+      
       const tr = document.createElement("tr");
+      const qty = Number(item.SALDO_FINAL || 0);
       
-      const stockVal = Number(item.SALDO_FINAL || 0);
-      const stockClass = stockVal <= 10 ? "badge badge-alert" : "badge badge-qty";
+      let badgeClass = "badge-qty";
+      if (qty <= 0) {
+        badgeClass = "badge-danger";
+      } else if (qty <= 15) {
+        badgeClass = "badge-alert";
+      }
       
-      tr.innerHTML = 
-        `<td><strong>` + (item.ID_SALDO || "N/A") + `</strong></td>` +
-        `<td>` + item.ID_PRODUCTO + `</td>` +
-        `<td><code>` + (item.CODIGO_PRODUCTO || "N/A") + `</code></td>` +
-        `<td>` + (item.DESCRIPCION_PRODUCTO || "") + `</td>` +
-        `<td>` + Number(item.ENTRADAS || 0) + `</td>` +
-        `<td>` + Number(item.SALIDAS || 0) + `</td>` +
-        `<td><span class="` + stockClass + `">` + stockVal + `</span></td>` +
-        `<td>$` + Number(item.COSTO_PROMEDIO || 0).toLocaleString('es-CO') + ` COP</td>` +
-        `<td><span class="badge badge-money">$` + Number(item.VALOR_INVENTARIO || 0).toLocaleString('es-CO') + ` COP</span></td>`;
+      const imgHtml = item.IMAGEN_URL ? `<img src="${item.IMAGEN_URL}" class="product-img" onerror="this.src='https://placehold.co/100x100?text=No+Img'">` : '<span style="font-size:24px; display:block; text-align:center;">🪵</span>';
+      
+      tr.innerHTML = `
+        <td><strong>${item.ID_SALDO || "N/A"}</strong></td>
+        <td style="text-align:center; vertical-align:middle;">${imgHtml}</td>
+        <td><code>${item.ID_PRODUCTO}</code></td>
+        <td><code>${item.CODIGO_PRODUCTO || "N/A"}</code></td>
+        <td>
+          <strong>${item.DESCRIPCION_PRODUCTO || "Producto Desconocido"}</strong>
+          ${item.OBSERVACIONES_PRODUCTO ? `<span class="product-obs" style="font-size:11px; color:#64748b; font-style:italic; display:block;" title="${item.OBSERVACIONES_PRODUCTO}">${item.OBSERVACIONES_PRODUCTO}</span>` : ""}
+        </td>
+        <td style="text-align:center; vertical-align:middle;">
+          <span class="badge badge-location" onclick="abrirModalUbicacion('${item.ID_PRODUCTO}', '${item.DESCRIPCION_PRODUCTO.replace(/'/g, "\'")}', '${item.UBICACION || "BODEGA_PRINCIPAL"}')">📍 ${item.UBICACION || "BODEGA_PRINCIPAL"}</span>
+        </td>
+        <td>${Number(item.ENTRADAS || 0)}</td>
+        <td>${Number(item.SALIDAS || 0)}</td>
+        <td><span class="badge ${badgeClass}">${qty}</span></td>
+        <td>$${Number(item.COSTO_PROMEDIO || 0).toLocaleString('es-CO')} COP</td>
+        <td><span class="badge badge-money">$${Number(item.VALOR_INVENTARIO || 0).toLocaleString('es-CO')} COP</span></td>
+      `;
       tbody.appendChild(tr);
     });
   }
 
   function invFiltrar() {
-    const criterio = document.getElementById("INV_BUSCADOR").value.trim().toUpperCase();
-    if (!criterio) {
+    const query = document.getElementById("INV_BUSCADOR").value.trim().toUpperCase();
+    if (!query) {
       invMostrar(LISTA_SALDOS);
       return;
     }
-
     const filtrados = LISTA_SALDOS.filter(item => {
       return (
-        String(item.ID_SALDO).toUpperCase().includes(criterio) ||
-        String(item.ID_PRODUCTO).toUpperCase().includes(criterio) ||
-        String(item.CODIGO_PRODUCTO).toUpperCase().includes(criterio) ||
-        String(item.DESCRIPCION_PRODUCTO).toUpperCase().includes(criterio)
+        String(item.ID_SALDO).toUpperCase().includes(query) ||
+        String(item.ID_PRODUCTO).toUpperCase().includes(query) ||
+        String(item.CODIGO_PRODUCTO).toUpperCase().includes(query) ||
+        String(item.DESCRIPCION_PRODUCTO).toUpperCase().includes(query)
       );
     });
     invMostrar(filtrados);
   }
 
-  function abrirModalAjuste() {
-    const select = document.getElementById("aju_id_producto");
-    select.innerHTML = "<option value=''>Cargando catálogo...</option>";
+  function cargarListaProductosParaFormularios() {
+    const selectAjustes = document.getElementById("aju_id_producto");
+    const selectPeps = document.getElementById("peps_id_producto");
+    
+    selectAjustes.innerHTML = "<option value=''>Cargando catálogo...</option>";
+    selectPeps.innerHTML = "<option value=''>Cargando catálogo...</option>";
     
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
-          select.innerHTML = "<option value=''>Seleccione un producto...</option>";
+          selectAjustes.innerHTML = "<option value=''>Seleccione un producto...</option>";
+          selectPeps.innerHTML = "<option value=''>Seleccione un producto para ver capas...</option>";
+          
           res.DATOS.forEach(p => {
-            const opt = document.createElement("option");
-            opt.value = p.ID_PRODUCTO;
-            opt.text = p.DESCRIPCION + " (" + p.CODIGO + ")";
-            select.add(opt);
+            const opt1 = document.createElement("option");
+            opt1.value = p.ID_PRODUCTO;
+            opt1.text = `${p.DESCRIPCION} (${p.CODIGO})`;
+            selectAjustes.add(opt1);
+            
+            const opt2 = document.createElement("option");
+            opt2.value = p.ID_PRODUCTO;
+            opt2.text = `${p.DESCRIPCION} (${p.CODIGO})`;
+            selectPeps.add(opt2);
           });
         } else {
-          select.innerHTML = "<option value=''>Error al cargar productos</option>";
+          selectAjustes.innerHTML = "<option value=''>Error al cargar</option>";
+          selectPeps.innerHTML = "<option value=''>Error al cargar</option>";
         }
       })
-      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION);
-      
-    document.getElementById("aju_cantidad").value = 1;
-    document.getElementById("aju_costo_unitario").value = 0;
-    document.getElementById("aju_observacion").value = "";
-    document.getElementById("modal_ajuste").style.display = "block";
-  }
-
-  function cerrarModalAjuste() {
-    document.getElementById("modal_ajuste").style.display = "none";
+      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION_PROY);
   }
 
   function guardarAjuste() {
@@ -349,31 +503,143 @@
       COSTO_UNITARIO: Number(document.getElementById("aju_costo_unitario").value || 0),
       OBSERVACION: document.getElementById("aju_observacion").value.trim()
     };
-    
+
     if (!datos.ID_PRODUCTO || datos.CANTIDAD <= 0 || !datos.OBSERVACION) {
-      alert("Por favor diligencie todos los campos obligatorios (*).");
+      alert("Por favor diligencie todos los campos obligatorios marcados con (*).");
       return;
     }
-    
+
     AJUSTE_PROCESANDO = true;
-    mostrarAlerta("Registrando ajuste de inventario en Sheets...", "info");
-    cerrarModalAjuste();
+    mostrarAlerta("Registrando ajuste físico de inventario en Sheets...", "info");
     
     google.script.run
       .withSuccessHandler(function(res) {
         AJUSTE_PROCESANDO = false;
         if (res && res.EXITO) {
-          mostrarAlerta(res.mensaje, "success");
-          invCargarSaldos();
+          mostrarAlerta("¡Ajuste de inventario aplicado con éxito!", "success");
+          document.getElementById("aju_cantidad").value = 1;
+          document.getElementById("aju_costo_unitario").value = 0;
+          document.getElementById("aju_observacion").value = "";
+          usrCambiarPestana('saldos');
         } else {
-          mostrarAlerta("Error: " + (res ? res.mensaje : "Intente nuevamente"), "error");
+          mostrarAlerta("Error al guardar: " + (res ? res.mensaje : "Intente de nuevo"), "error");
         }
       })
       .withFailureHandler(function(err) {
         AJUSTE_PROCESANDO = false;
-        mostrarAlerta("Fallo crítico: " + err.message, "error");
+        mostrarAlerta("Fallo en la comunicación con Sheets: " + err.message, "error");
       })
-      .INV_GUARDAR_AJUSTE(datos, TOKEN_SESION);
+      .INV_GUARDAR_AJUSTE(datos, TOKEN_SESION_PROY);
+  }
+
+  // --- MODAL DE UBICACIÓN ---
+  function abrirModalUbicacion(idProducto, nombreProducto, ubiActual) {
+    document.getElementById("ubi_id_producto").value = idProducto;
+    document.getElementById("ubi_nombre_producto").value = nombreProducto;
+    document.getElementById("ubi_valor").value = ubiActual === "BODEGA_PRINCIPAL" ? "" : ubiActual;
+    document.getElementById("modal_ubicacion").style.display = "flex";
+  }
+  
+  function cerrarModalUbicacion() {
+    document.getElementById("modal_ubicacion").style.display = "none";
+  }
+  
+  function guardarUbicacion() {
+    const idProducto = document.getElementById("ubi_id_producto").value;
+    const ubi = document.getElementById("ubi_valor").value.trim() || "BODEGA_PRINCIPAL";
+    
+    mostrarAlerta("Actualizando ubicación en base de datos...", "info");
+    cerrarModalUbicacion();
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarAlerta(res.MENSAJE, "success");
+          invCargarSaldos();
+        } else {
+          mostrarAlerta("Error: " + (res ? res.MENSAJE : "No se pudo actualizar"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Fallo crítico de red: " + err.message, "error");
+      })
+      .INV_ACTUALIZAR_UBICACION_WEB(idProducto, ubi, TOKEN_SESION_PROY);
+  }
+
+  // --- CONSULTA KARDEX PEPS ---
+  function cargarKardexPEPS() {
+    const idProducto = document.getElementById("peps_id_producto").value;
+    const emptyState = document.getElementById("peps_empty_state");
+    const resultsPanel = document.getElementById("peps_resultados_panel");
+    const kardexTabla = document.getElementById("peps_kardex_tabla");
+    const capasTabla = document.getElementById("peps_capas_tabla");
+    
+    if (!idProducto) {
+      emptyState.style.display = "block";
+      resultsPanel.style.display = "none";
+      return;
+    }
+    
+    emptyState.style.display = "none";
+    resultsPanel.style.display = "grid";
+    
+    kardexTabla.innerHTML = `<tr><td colspan="8" style="text-align:center;">Consultando movimientos contables en Sheets...</td></tr>`;
+    capasTabla.innerHTML = `<tr><td colspan="7" style="text-align:center;">Calculando capas PEPS (FIFO) en caliente...</td></tr>`;
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          // 1. Renderizar Kardex (Movimientos)
+          kardexTabla.innerHTML = "";
+          if (res.KARDEX.length === 0) {
+            kardexTabla.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#64748b;">No hay movimientos registrados para este producto.</td></tr>`;
+          } else {
+            res.KARDEX.reverse().forEach(function(m) {
+              const tr = document.createElement("tr");
+              const fechaFormateada = m.FECHA ? m.FECHA.substring(0, 10) : "N/A";
+              const isEntrada = m.TIPO_MOVIMIENTO === "ENTRADA";
+              tr.innerHTML = `
+                <td><strong>${m.ID_MOVIMIENTO}</strong></td>
+                <td>${fechaFormateada}</td>
+                <td><span class="badge ${isEntrada ? 'badge-qty' : 'badge-danger'}">${m.TIPO_MOVIMIENTO}</span></td>
+                <td>${m.ENTRADA ? `+${m.ENTRADA}` : "-"}</td>
+                <td>${m.SALIDA ? `-${m.SALIDA}` : "-"}</td>
+                <td><strong style="color:#0f172a;">${m.SALDO}</strong></td>
+                <td>$${Number(m.COSTO_UNITARIO || 0).toLocaleString('es-CO')}</td>
+                <td style="font-size:11px; color:#64748b;" title="${m.OBSERVACION || ''}">${m.OBSERVACION ? (m.OBSERVACION.length > 25 ? m.OBSERVACION.substring(0, 25) + "..." : m.OBSERVACION) : "-"}</td>
+              `;
+              kardexTabla.appendChild(tr);
+            });
+          }
+          
+          // 2. Renderizar Capas PEPS
+          capasTabla.innerHTML = "";
+          if (res.CAPAS_PEPS.length === 0) {
+            capasTabla.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b;">No hay capas activas (Stock disponible: 0).</td></tr>`;
+          } else {
+            res.CAPAS_PEPS.forEach(function(c) {
+              const tr = document.createElement("tr");
+              const fechaFormateada = c.fecha ? c.fecha.substring(0, 10) : "N/A";
+              tr.innerHTML = `
+                <td><code>${c.idMovimiento}</code></td>
+                <td>${fechaFormateada}</td>
+                <td><span class="badge badge-qty" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">${c.origen}</span></td>
+                <td>${c.cantidadOriginal}</td>
+                <td><strong style="color: #6b21a8; font-size:14px;">${c.cantidadRestante}</strong></td>
+                <td>$${Number(c.costoUnitario || 0).toLocaleString('es-CO')}</td>
+                <td><span class="badge badge-money" style="background:#faf5ff; color:#6b21a8; border:1px solid #ebd5ff;">$${Number(c.cantidadRestante * c.costoUnitario).toLocaleString('es-CO')} COP</span></td>
+              `;
+              capasTabla.appendChild(tr);
+            });
+          }
+        } else {
+          mostrarAlerta("Error al cargar Kardex PEPS: " + res.MENSAJE, "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Error de comunicación: " + err.message, "error");
+      })
+      .INV_OBTENER_KARDEX_PEPS_WEB(idProducto, TOKEN_SESION_PROY);
   }
 </script>
 </body>

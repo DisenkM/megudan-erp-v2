@@ -1,5 +1,6 @@
+// (VERSIÓN 25.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 11.0 - V2 ERP - LIBRO 1)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 25.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -84,7 +85,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "PASS", detalle: "Inyección segura de variables de sesión, WEB_APP_URL y control de viewport-frame exitoso." });
   } catch (errDash) {
     console.error("   [FAIL] Error en Render de Dashboard: " + errDash.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F4_WEB_DASHBOARD' y pega allí todo el contenido del artefacto 'F4_WEB_DASHBOARD_HTML-v11.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F4_WEB_DASHBOARD' y pega allí todo el contenido del artefacto 'F4_WEB_DASHBOARD_HTML-v13.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "FAIL", detalle: errDash.message });
   }
 
@@ -168,7 +169,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F5_PROD_VIEW." });
   } catch (errProd) {
     console.error("   [FAIL] Error en Render de Productos: " + errProd.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F5_PROD_VIEW' y pega allí todo el contenido del artefacto 'F5_PROD_VIEW_HTML-v2.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F5_PROD_VIEW' y pega allí todo el contenido del artefacto 'F5_PROD_VIEW_HTML-v5.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "FAIL", detalle: errProd.message });
   }
 
@@ -196,8 +197,89 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F6_INV_VIEW." });
   } catch (errInv) {
     console.error("   [FAIL] Error en Render de Inventarios: " + errInv.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F6_INV_VIEW' y pega allí todo el contenido del artefacto 'F6_INV_VIEW_HTML-v2.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F6_INV_VIEW' y pega allí todo el contenido del artefacto 'F6_INV_VIEW_HTML-v4.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "FAIL", detalle: errInv.message });
+  }
+
+  
+  // ==========================================================
+  // TEST 6.1: COMPILACIÓN DE EMISIÓN DE VENTAS (F7_VEN_VIEW)
+  // ==========================================================
+  console.log("\n💰 [TEST 6.1] Evaluando compilación de F7_VEN_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F7_VEN_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("ven_tipo_documento")) {
+      throw new Error("El módulo Javascript asíncrono de ventas no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("VEN_GUARDAR_VENTA_WEB")) {
+      throw new Error("La llamada RPC de ventas VEN_GUARDAR_VENTA_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F7_VEN_VIEW compiled correctly.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono con AIU Colombia en F7_VEN_VIEW." });
+  } catch (errVen) {
+    console.error("   [FAIL] Error en Render de Ventas: " + errVen.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F7_VEN_VIEW' y pega allí todo el contenido del artefacto 'F7_VEN_VIEW_HTML-v9.txt'.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "FAIL", detalle: errVen.message });
+  }
+
+
+  
+  // ==========================================================
+  // TEST 6.2: COMPILACIÓN DE EMISIÓN DE COMPRAS (F8_COM_VIEW)
+  // ==========================================================
+  console.log("\n🛒 [TEST 6.2] Evaluando compilación de F8_COM_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F8_COM_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("com_tipo_documento")) {
+      throw new Error("El módulo Javascript asíncrono de compras no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("COM_GUARDAR_COMPRA_WEB")) {
+      throw new Error("La llamada RPC de compras COM_GUARDAR_COMPRA_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F8_COM_VIEW compiled correctly.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_COMPRAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono de CxP en F8_COM_VIEW." });
+  } catch (errCom) {
+    console.error("   [FAIL] Error en Render de Compras: " + errCom.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F8_COM_VIEW' y pega allí todo el contenido del artefacto 'F8_COM_VIEW_HTML-v1.txt'.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_COMPRAS", estado: "FAIL", detalle: errCom.message });
+  }
+
+  // ==========================================================
+  // TEST 6.3: COMPILACIÓN DE FINANZAS Y CONTABILIDAD (F9_FIN_VIEW)
+  // ==========================================================
+  console.log("\n📊 [TEST 6.3] Evaluando compilación de F9_FIN_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F9_FIN_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("ing_tipo")) {
+      throw new Error("El módulo Javascript de finanzas no se compiló en la sección de script.");
+    }
+    if (!contenidoHtml.includes("FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB")) {
+      throw new Error("La llamada RPC de finanzas FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F9_FIN_VIEW compiled correctly.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC de estados financieros en F9_FIN_VIEW." });
+  } catch (errFin) {
+    console.error("   [FAIL] Error en Render de Finanzas: " + errFin.message);
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F9_FIN_VIEW' y pega allí todo el contenido del artefacto 'F9_FIN_VIEW_HTML-v2.txt'.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "FAIL", detalle: errFin.message });
   }
 
   // ==========================================================
@@ -238,7 +320,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "PASS", detalle: "Enrutador doGet validado ante cargas por defecto, intentos de bypass sin token y desvíos de seguridad." });
   } catch (errRouting) {
     console.error("   [FAIL] Error en Módulo de Enrutamiento: " + errRouting.message);
-    console.error("   💡 SOLUCIÓN: Asegúrate de que el archivo '25_WEB.gs' contenga el código completo de la versión '25_WEB-v9.gs' de Studio.");
+    console.error("   💡 SOLUCIÓN: Asegúrate de que el archivo '25_WEB.gs' contenga el código completo de la versión '25_WEB-v13.gs' de Studio.");
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "FAIL", detalle: errRouting.message });
   }
 

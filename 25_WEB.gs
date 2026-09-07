@@ -1,5 +1,6 @@
+// (VERSIÓN 14.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 25_WEB.gs (VERSIÓN 10.0 - ARQUITECTURA HÍBRIDA Standalone & RPC)
+* 25_WEB.gs (VERSIÓN 14.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
 * - Servir la compilación asíncrona de sub-vistas del iFrame en memoria.
@@ -9,17 +10,25 @@
 const WEB_CONFIG = {
   LOGIN: "F3_WEB_LOGIN",
   DASHBOARD: "F4_WEB_DASHBOARD",
-  CLIENTES_FORM: "F1_CLI_FORM",
+  CLIENTES_FORM: "F1_CLI_FORM", 
+  COMPRAS_FORM: "F8_COM_VIEW", 
+  VENTAS_FORM: "F7_VEN_VIEW",
+  
   SEGURIDAD_FORM: "F2_USR_GESTION",
   PRODUCTOS_FORM: "F5_PROD_VIEW",
   INVENTARIO_FORM: "F6_INV_VIEW",
+  FINANZAS_FORM: "F9_FIN_VIEW",
   
   RUTA_LOGIN: "login",
   RUTA_DASHBOARD: "dashboard",
-  RUTA_CLIENTES: "clientes_form",
+  RUTA_CLIENTES: "clientes_form", 
+  RUTA_COMPRAS: "compras_form", 
+  RUTA_VENTAS: "ventas_form",
+  
   RUTA_SEGURIDAD: "seguridad_form",
   RUTA_PRODUCTOS: "productos_form",
   RUTA_INVENTARIO: "inventario_form",
+  RUTA_FINANZAS: "finanzas_form",
   
   TITULO_ERP: "MEGUDAN ERP"
 };
@@ -37,8 +46,15 @@ function WEB_doGet(e) {
         return WEB_MOSTRAR_LOGIN();
       case WEB_CONFIG.RUTA_DASHBOARD:
         return WEB_MOSTRAR_DASHBOARD(parametros);
+      
+      case WEB_CONFIG.RUTA_VENTAS:
+        return WEB_MOSTRAR_VENTAS_FORM(parametros);
       case WEB_CONFIG.RUTA_CLIENTES:
         return WEB_MOSTRAR_CLIENTES_FORM(parametros);
+      case WEB_CONFIG.RUTA_FINANZAS:
+        return WEB_MOSTRAR_FINANZAS_FORM(parametros);
+      case WEB_CONFIG.RUTA_COMPRAS:
+        return WEB_MOSTRAR_COMPRAS_FORM(parametros);
       case WEB_CONFIG.RUTA_SEGURIDAD:
         return WEB_MOSTRAR_SEGURIDAD_FORM(parametros);
       case WEB_CONFIG.RUTA_PRODUCTOS:
@@ -299,8 +315,18 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
     const rutaNormalizada = String(ruta).trim().toLowerCase();
     
     switch (rutaNormalizada) {
+      
+      case "ventas":
+        archivoHtml = WEB_CONFIG.VENTAS_FORM;
+        break;
+      case "compras":
+        archivoHtml = WEB_CONFIG.COMPRAS_FORM;
+        break;
       case "clientes":
         archivoHtml = WEB_CONFIG.CLIENTES_FORM;
+        break;
+      case "finanzas":
+        archivoHtml = WEB_CONFIG.FINANZAS_FORM;
         break;
       case "seguridad":
         const acceso = SEG_VALIDAR_ACCESO(tokenSesion, "SEGURIDAD", "VER");
@@ -379,4 +405,77 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
  */
 function OBTENER_VISTA_HTML(nombreVista, tokenSesion) {
   return WEB_OBTENER_COMPILACION_VISTA(nombreVista, tokenSesion);
+}
+
+function WEB_MOSTRAR_VENTAS_FORM(parametros) {
+  parametros = parametros || {};
+  try {
+    const token = String(parametros.token || "").trim();
+    const validacion = SEG_VALIDAR_SESION(token);
+    if (!validacion || validacion.VALIDA !== true) {
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.VENTAS_FORM);
+    plantilla.TOKEN_SESION = token;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    return plantilla.evaluate()
+      .setTitle("Emisión de Ventas | ERP")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_MOSTRAR_VENTAS_FORM", "WEB", error);
+    }
+    return WEB_MOSTRAR_ERROR("Error de sistema al cargar formulario de ventas: " + error.toString());
+  }
+}
+
+function WEB_MOSTRAR_COMPRAS_FORM(parametros) {
+  parametros = parametros || {};
+  try {
+    const token = String(parametros.token || "").trim();
+    const validacion = SEG_VALIDAR_SESION(token);
+    if (!validacion || validacion.VALIDA !== true) {
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.COMPRAS_FORM);
+    plantilla.TOKEN_SESION = token;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    return plantilla.evaluate()
+      .setTitle("Compras y CxP | ERP")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_MOSTRAR_COMPRAS_FORM", "WEB", error);
+    }
+    return WEB_MOSTRAR_ERROR("Error de sistema al cargar formulario de compras: " + error.toString());
+  }
+}
+
+
+function WEB_MOSTRAR_FINANZAS_FORM(parametros) {
+  parametros = parametros || {};
+  try {
+    const token = String(parametros.token || "").trim();
+    const validacion = SEG_VALIDAR_SESION(token);
+    if (!token || !validacion || validacion.VALIDA !== true) {
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.FINANZAS_FORM);
+    plantilla.TOKEN_SESION = token;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    return plantilla.evaluate()
+      .setTitle("Finanzas y Contabilidad | ERP")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_MOSTRAR_FINANZAS_FORM", "WEB", error);
+    }
+    return WEB_MOSTRAR_ERROR("Error de sistema al cargar finanzas y contabilidad: " + error.toString());
+  }
 }

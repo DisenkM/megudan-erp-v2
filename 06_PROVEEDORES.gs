@@ -1,5 +1,5 @@
 /**************************************************************
-* 06_PROVEEDORES.gs (VERSIÓN 1.0 - V2 ERP - LIBRO 1)
+* 06_PROVEEDORES.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el catálogo y operaciones (CRUD) de Proveedores (PROV_MAESTRO).
 * - Control de NITs colombianos y cálculo de DV reutilizando clientes.
@@ -185,7 +185,7 @@ function PROV_GUARDAR_PROVEEDOR(datos, tokenSesion) {
     RESULTADO: "EXITOSO"
   });
   
-  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_PROVEEDOR: idProveedor, PROVEEDOR: datos });
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_PROVEEDOR: idProveedor, idProveedor: idProveedor, PROVEEDOR: datos });
 }
 
 /**
@@ -406,4 +406,12 @@ function PROV_DEBE_APLICAR_RETENCION(idProveedor) {
     RETENCION_IVA: esSimplificado, // Si es simplificado, podemos tener retención de IVA según normativas (Régimen Simple / No responsable)
     MOTIVO: "Evaluado según responsabilidades fiscales del proveedor: " + responsabilidades
   };
+}
+
+
+/**
+ * Wrapper de compatibilidad para la Web App (SPA)
+ */
+function PROV_LISTAR_PROVEEDORES_WEB(tokenSesion) {
+  return PROV_LISTAR_PROVEEDORES(tokenSesion);
 }

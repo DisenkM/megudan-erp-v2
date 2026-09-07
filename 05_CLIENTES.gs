@@ -1,5 +1,5 @@
 /**************************************************************
-* 05_CLIENTES.gs (VERSIÓN 1.0 - V2 ERP - LIBRO 1)
+* 05_CLIENTES.gs (VERSIÓN 2.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida (CRUD) de Clientes (CLI_MAESTRO).
 * - Proteger accesos bajo la arquitectura de seguridad dual.
@@ -204,7 +204,7 @@ function CLI_GUARDAR_CLIENTE(datos, tokenSesion) {
     RESULTADO: "EXITOSO"
   });
   
-  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_CLIENTE: idCliente, CLIENTE: datos });
+  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_CLIENTE: idCliente, idCliente: idCliente, CLIENTE: datos });
 }
 
 /**
