@@ -1,9 +1,9 @@
 <!-- ============================================================
-* INTERFAZ: F4_WEB_DASHBOARD (VERSIÓN 16.0 - V2 ERP - LIBRO 1)
+* INTERFAZ: F4_WEB_DASHBOARD (VERSIÓN 17.0 - V2 ERP - LIBRO 1)
 * MODULO: PANEL DE CONTROL GENERAL DE LA WEB APP
 * RESPONSABILIDAD: Menú dinámico, visualización asíncrona de módulos y vigilancia de sesión
 * CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-<!-- (VERSIÓN 14.0 - V2 ERP - LIBRO 1) 
+<!-- (VERSIÓN 14.0 - V2 ERP - LIBRO 1)
 * ARQUITECTURA: Acceso multinivel dinámico por roles, ocultando/mostrando módulos, Gestión de Usuarios y Autocierre de 30 Minutos.
 ============================================================ -->
 <!DOCTYPE html>
@@ -193,6 +193,7 @@
       "PRODUCTOS": { icon: "📦", label: "Productos / Servicios", route: "productos" },
       "INVENTARIO": { icon: "🗃️", label: "Inventario / Existencias", route: "inventario" },
       "FINANZAS": { icon: "📊", label: "Finanzas / Contabilidad", route: "finanzas" },
+      "PLANEACION": { icon: "🗓️", label: "Planeación & Noticias", route: "planeacion" },
       "SEGURIDAD": { icon: "🔐", label: "Gestión Seguridad", route: "seguridad" }
     };
 
@@ -333,6 +334,8 @@
       title.textContent = "🗃️ Inventarios / Existencias";
     } else if (modulo === "finanzas") {
       title.textContent = "📊 Finanzas, Contabilidad y Reportes";
+    } else if (modulo === "planeacion") {
+      title.textContent = "🗓️ Planeación Estratégica, Presupuestos y Noticias";
     }
 
     // Inyección Directa vía RPC con HTML Injection (SPA)

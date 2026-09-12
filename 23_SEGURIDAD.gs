@@ -1,5 +1,5 @@
 /**************************************************************
-* 23_SEGURIDAD.gs (VERSIÓN 19.0 - V2 ERP - LIBRO 1)
+* 23_SEGURIDAD.gs (VERSIÓN 16.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida de Usuarios, Roles, Permisos, Sesiones y Auditoría.
 * - Proteger las macros y Web Apps mediante un Sistema de Control de Acceso Dual.
@@ -1075,7 +1075,7 @@ function SEG_OBTENER_MENU_NIVEL(tokenSesion) {
         EXITO: true,
         ES_ADMIN: true,
         ROL: rol.NOMBRE_ROL,
-        MODULOS: ["CLIENTES", "VENTAS", "COMPRAS", "PRODUCTOS", "INVENTARIO", "FINANZAS", "SEGURIDAD"]
+        MODULOS: ["CLIENTES", "VENTAS", "COMPRAS", "PRODUCTOS", "INVENTARIO", "FINANZAS", "PLANEACION", "SEGURIDAD"]
       };
     }
     

@@ -1,6 +1,6 @@
-// (VERSIÓN 14.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 15.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 25_WEB.gs (VERSIÓN 14.0 - V2 ERP - LIBRO 1)
+* 25_WEB.gs (VERSIÓN 15.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Enrutar de forma segura peticiones HTTP delegadas desde 22_TRIGGERS.gs.
 * - Servir la compilación asíncrona de sub-vistas del iFrame en memoria.
@@ -18,6 +18,7 @@ const WEB_CONFIG = {
   PRODUCTOS_FORM: "F5_PROD_VIEW",
   INVENTARIO_FORM: "F6_INV_VIEW",
   FINANZAS_FORM: "F9_FIN_VIEW",
+  PLANEACION_FORM: "F11_PLA_VIEW",
   
   RUTA_LOGIN: "login",
   RUTA_DASHBOARD: "dashboard",
@@ -29,6 +30,7 @@ const WEB_CONFIG = {
   RUTA_PRODUCTOS: "productos_form",
   RUTA_INVENTARIO: "inventario_form",
   RUTA_FINANZAS: "finanzas_form",
+  RUTA_PLANEACION: "planeacion_form",
   
   TITULO_ERP: "MEGUDAN ERP"
 };
@@ -53,6 +55,8 @@ function WEB_doGet(e) {
         return WEB_MOSTRAR_CLIENTES_FORM(parametros);
       case WEB_CONFIG.RUTA_FINANZAS:
         return WEB_MOSTRAR_FINANZAS_FORM(parametros);
+      case WEB_CONFIG.RUTA_PLANEACION:
+        return WEB_MOSTRAR_PLANEACION_FORM(parametros);
       case WEB_CONFIG.RUTA_COMPRAS:
         return WEB_MOSTRAR_COMPRAS_FORM(parametros);
       case WEB_CONFIG.RUTA_SEGURIDAD:
@@ -328,6 +332,9 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
       case "finanzas":
         archivoHtml = WEB_CONFIG.FINANZAS_FORM;
         break;
+      case "planeacion":
+        archivoHtml = WEB_CONFIG.PLANEACION_FORM;
+        break;
       case "seguridad":
         const acceso = SEG_VALIDAR_ACCESO(tokenSesion, "SEGURIDAD", "VER");
         if (!acceso || acceso.AUTORIZADO !== true) {
@@ -477,5 +484,28 @@ function WEB_MOSTRAR_FINANZAS_FORM(parametros) {
       LOG_REGISTRAR_ERROR("WEB_MOSTRAR_FINANZAS_FORM", "WEB", error);
     }
     return WEB_MOSTRAR_ERROR("Error de sistema al cargar finanzas y contabilidad: " + error.toString());
+  }
+}
+function WEB_MOSTRAR_PLANEACION_FORM(parametros) {
+  parametros = parametros || {};
+  try {
+    const token = String(parametros.token || "").trim();
+    const validacion = SEG_VALIDAR_SESION(token);
+    if (!token || !validacion || validacion.VALIDA !== true) {
+      return WEB_REDIRECCION_LOGIN("Sesión inválida o expirada. Por favor inicie sesión.");
+    }
+    
+    const plantilla = HtmlService.createTemplateFromFile(WEB_CONFIG.PLANEACION_FORM);
+    plantilla.TOKEN_SESION = token;
+    plantilla.USUARIO_ACTUAL = validacion.SESION.USUARIO;
+    
+    return plantilla.evaluate()
+      .setTitle("Planeación y Noticias | ERP")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    if (typeof LOG_REGISTRAR_ERROR === "function") {
+      LOG_REGISTRAR_ERROR("WEB_MOSTRAR_PLANEACION_FORM", "WEB", error);
+    }
+    return WEB_MOSTRAR_ERROR("Error de sistema al cargar planeación: " + error.toString());
   }
 }

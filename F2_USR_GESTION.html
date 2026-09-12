@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 20.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 21.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -356,6 +356,15 @@
             </select>
             <button class="button button-danger" onclick="mntEjecutarPurgaSesiones()">Depurar</button>
           </div>
+        </div>
+
+                <!-- Fila: Limpiar Datos de Prueba (NUEVO V21) -->
+        <div class="mnt-row">
+          <div class="mnt-info">
+            <span class="mnt-title">Limpiar Datos de Pruebas (E2E)</span>
+            <span class="mnt-desc">Purga de forma recursiva y segura todos los registros transaccionales o de terceros creados durante ejecuciones de prueba.</span>
+          </div>
+          <button class="button button-danger" onclick="mntEjecutarPurgaPruebas()">Limpiar Pruebas</button>
         </div>
 
         <!-- Fila: Resetear Usuarios -->
@@ -963,6 +972,24 @@
         USR_MOSTRAR_ALERTA("Error: " + err.message, "error");
       })
       .MNT_PURGAR_SESIONES_SISTEMA(dias, TOKEN_SESION);
+  }
+
+    function mntEjecutarPurgaPruebas() {
+    if (!confirm("¿Desea eliminar todos los registros transaccionales, de cartera, existencias y terceros creados como pruebas (E2E)? Esta acción es irreversible.")) return;
+    USR_MOSTRAR_ALERTA("Purgando registros de pruebas en la base de datos...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
+        } else {
+          USR_MOSTRAR_ALERTA("Error: " + res.MENSAJE, "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        USR_MOSTRAR_ALERTA("Error de red: " + err.message, "error");
+      })
+      .MNT_LIMPIAR_DATOS_PRUEBA_WEB(TOKEN_SESION);
   }
 
   function mntEjecutarResetUsuarios() {

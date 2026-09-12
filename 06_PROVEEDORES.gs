@@ -1,5 +1,5 @@
 /**************************************************************
-* 06_PROVEEDORES.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 1)
+* 06_PROVEEDORES.gs (VERSIÓN 4.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el catálogo y operaciones (CRUD) de Proveedores (PROV_MAESTRO).
 * - Control de NITs colombianos y cálculo de DV reutilizando clientes.
@@ -304,7 +304,7 @@ function PROV_BUSCAR_PROVEEDOR(criterio) {
     
     return valId === criterioNormalizado || 
            (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) || 
-           valRazon.includes(criterioNormalized);
+           valRazon.includes(criterioNormalizado);
   });
   
   return filaEncontrada ? SEG_SANITIZAR_PARA_CLIENTE(PROV_CONVERTIR_FILA_OBJETO(encabezados, filaEncontrada)) : null;
@@ -315,6 +315,19 @@ function PROV_CONVERTIR_FILA_OBJETO(encabezados, fila) {
   encabezados.forEach((campo, indice) => {
     objeto[campo] = fila[indice] !== undefined ? fila[indice] : "";
   });
+  if (objeto.NUMERO_DOCUMENTO === undefined || objeto.NUMERO_DOCUMENTO === "") {
+    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = objeto.NIT_CC;
+    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = objeto.NUMERO;
+  }
+  if (objeto.NIT_CC === undefined || objeto.NIT_CC === "") {
+    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = objeto.NUMERO_DOCUMENTO;
+  }
+  if (objeto.DIGITO_VERIFICACION === undefined || objeto.DIGITO_VERIFICACION === "") {
+    if (objeto.DV) objeto.DIGITO_VERIFICACION = objeto.DV;
+  }
+  if (objeto.DV === undefined || objeto.DV === "") {
+    if (objeto.DIGITO_VERIFICACION) objeto.DV = objeto.DIGITO_VERIFICACION;
+  }
   return objeto;
 }
 

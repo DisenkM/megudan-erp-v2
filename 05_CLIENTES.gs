@@ -1,5 +1,5 @@
 /**************************************************************
-* 05_CLIENTES.gs (VERSIÓN 2.0 - V2 ERP - LIBRO 1)
+* 05_CLIENTES.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida (CRUD) de Clientes (CLI_MAESTRO).
 * - Proteger accesos bajo la arquitectura de seguridad dual.
@@ -75,7 +75,7 @@ function CLI_VALIDAR_DUPLICADO(tipoDoc, numDoc, idExcluir) {
   const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
   const idxId = encabezados.indexOf("ID_CLIENTE");
   const idxTipoDoc = encabezados.indexOf("TIPO_DOCUMENTO");
-  const idxNumDoc = encabezados.indexOf("NUMERO_DOCUMENTO");
+  const idxNumDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO") !== -1 ? encabezados.indexOf("NUMERO") : -1));
   
   if (idxId === -1 || idxTipoDoc === -1 || idxNumDoc === -1) return false;
   
@@ -318,7 +318,7 @@ function CLI_BUSCAR_CLIENTE(criterio) {
   const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, encabezados.length).getValues();
   
   const idxId = encabezados.indexOf("ID_CLIENTE");
-  const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO");
+  const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO") !== -1 ? encabezados.indexOf("NUMERO") : -1));
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
   
   const criterioNormalizado = String(criterio).trim().toUpperCase();
@@ -343,6 +343,19 @@ function CLI_CONVERTIR_FILA_OBJETO(encabezados, fila) {
   encabezados.forEach((campo, indice) => {
     objeto[campo] = fila[indice] !== undefined ? fila[indice] : "";
   });
+  if (objeto.NUMERO_DOCUMENTO === undefined || objeto.NUMERO_DOCUMENTO === "") {
+    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = objeto.NIT_CC;
+    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = objeto.NUMERO;
+  }
+  if (objeto.NIT_CC === undefined || objeto.NIT_CC === "") {
+    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = objeto.NUMERO_DOCUMENTO;
+  }
+  if (objeto.DIGITO_VERIFICACION === undefined || objeto.DIGITO_VERIFICACION === "") {
+    if (objeto.DV) objeto.DIGITO_VERIFICACION = objeto.DV;
+  }
+  if (objeto.DV === undefined || objeto.DV === "") {
+    if (objeto.DIGITO_VERIFICACION) objeto.DV = objeto.DIGITO_VERIFICACION;
+  }
   return objeto;
 }
 

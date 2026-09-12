@@ -1,6 +1,6 @@
-// (VERSIÓN 25.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 26.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 25.0 - V2 ERP - LIBRO 1)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 30.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -113,7 +113,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "PASS", detalle: "Compilación limpia de pestañas, tablas modales y JS modular defensivo en F2_USR_GESTION." });
   } catch (errGestion) {
     console.error("   [FAIL] Error en Render de Seguridad: " + errGestion.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F2_USR_GESTION' y pega allí todo el contenido del artefacto 'F2_USR_GESTION_HTML-v19.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F2_USR_GESTION' y pega allí todo el contenido del artefacto 'F2_USR_GESTION_HTML-v21.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "FAIL", detalle: errGestion.message });
   }
 
@@ -224,7 +224,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono con AIU Colombia en F7_VEN_VIEW." });
   } catch (errVen) {
     console.error("   [FAIL] Error en Render de Ventas: " + errVen.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F7_VEN_VIEW' y pega allí todo el contenido del artefacto 'F7_VEN_VIEW_HTML-v9.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F7_VEN_VIEW' y pega allí todo el contenido del artefacto 'F7_VEN_VIEW_HTML-v10.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "FAIL", detalle: errVen.message });
   }
 
@@ -272,14 +272,40 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     if (!contenidoHtml.includes("FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB")) {
       throw new Error("La llamada RPC de finanzas FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB no se encuentra en el script del cliente.");
     }
+    if (!contenidoHtml.includes("TAX_CALCULAR_RESUMEN_TRIBUTARIO_WEB")) {
+      throw new Error("La llamada RPC tributaria TAX_CALCULAR_RESUMEN_TRIBUTARIO_WEB no se encuentra en el script del cliente.");
+    }
     
     console.log("   [PASS] F9_FIN_VIEW compiled correctly.");
     console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC de estados financieros en F9_FIN_VIEW." });
   } catch (errFin) {
     console.error("   [FAIL] Error en Render de Finanzas: " + errFin.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F9_FIN_VIEW' y pega allí todo el contenido del artefacto 'F9_FIN_VIEW_HTML-v2.txt'.");
+    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F9_FIN_VIEW' y pega allí todo el contenido del artefacto 'F9_FIN_VIEW_HTML-v3.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "FAIL", detalle: errFin.message });
+  }
+
+  
+  // ==========================================================
+  // TEST 6.4: COMPILACIÓN DE PLANEACIÓN Y NOTICIAS (F11_PLA_VIEW)
+  // ==========================================================
+  console.log("\n🗓️ [TEST 6.4] Evaluando compilación de F11_PLA_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F11_PLA_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("PLA_OBTENER_NOTICIAS_GLOBALES_WEB")) {
+      throw new Error("La llamada RPC PLA_OBTENER_NOTICIAS_GLOBALES_WEB no se encuentra en el script del cliente.");
+    }
+    
+    console.log("   [PASS] F11_PLA_VIEW compiled correctly.");
+    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PLANEACION", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC en F11_PLA_VIEW." });
+  } catch (errPla) {
+    console.error("   [FAIL] Error en Render de Planeación: " + errPla.message);
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PLANEACION", estado: "FAIL", detalle: errPla.message });
   }
 
   // ==========================================================

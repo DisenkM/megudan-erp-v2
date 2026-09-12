@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 1.0 - V2 ERP - LIBRO 2) -->
+<!-- (VERSIÓN 4.0 - V2 ERP - LIBRO 2) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -147,6 +147,7 @@
     <button class="tab-btn" id="btn-tab-tesoreria" onclick="cambiarFinPestana('tesoreria')">🏦 Tesorería y Bancos</button>
     <button class="tab-btn" id="btn-tab-puc" onclick="cambiarFinPestana('puc')">📚 Cuentas / PUC</button>
     <button class="tab-btn" id="btn-tab-estados" onclick="cambiarFinPestana('estados')">📈 Estados Financieros</button>
+    <button class="tab-btn" id="btn-tab-impuestos" onclick="cambiarFinPestana('impuestos')">🏛️ Impuestos y Calendario</button>
   </div>
 
   <!-- Panel 1: Ingresos -->
@@ -544,9 +545,81 @@
       </div>
     </div>
   </div>
-</div>
 
-<!-- Modal: Traslado Interno de Fondos -->
+
+  <!-- Panel 7: Impuestos y Calendario -->
+  <div id="panel-impuestos" class="tab-panel">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+      <!-- Card: Resumen Tributario Bimestral/Cuatrimestral -->
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-header">
+          <h2 class="card-title">🏛️ Pre-liquidación y Auditoría Fiscal</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <label style="font-size:12px; font-weight:700; color:#475569;">Periodo:</label>
+            <select id="tax_periodo_filtro" class="input" style="width:140px;" onchange="cargarPreliquidacionTributaria()">
+              <option value="2026-09" selected>Septiembre 2026</option>
+              <option value="2026-08">Agosto 2026</option>
+            </select>
+          </div>
+        </div>
+        <p style="font-size:12px; color:#4b5563; margin-top:0; line-height:1.5;">
+          Estimaciones y depuración tributaria calculadas en caliente desde la base de datos operativa de Sheets.
+        </p>
+        <div class="table-container" style="border:none;">
+          <table class="report-table">
+            <tbody>
+              <tr class="report-header-row"><td colspan="2">Impuesto sobre las Ventas (IVA)</td></tr>
+              <tr><td>(+) Total IVA Generado (19% en Ventas)</td><td style="text-align:right; font-weight:600; color:#1e3a8a;" id="tax_iva_gen">$0 COP</td></tr>
+              <tr><td>(-) Total IVA Descontable (Compras y Gastos)</td><td style="text-align:right; font-weight:600; color:#dc2626;" id="tax_iva_desc">-$0 COP</td></tr>
+              <tr style="font-weight:700; background-color: #f8fafc;"><td>(=) IVA Neto por Pagar (Sujeto a AIU de Obras):</td><td style="text-align:right;" id="tax_iva_neto">$0 COP</td></tr>
+              
+              <tr class="report-header-row"><td colspan="2">Retenciones en la Fuente</td></tr>
+              <tr><td>(-) Retenciones que le practicaron a MEGUDAN (Activo)</td><td style="text-align:right; font-weight:600; color:#16a34a;" id="tax_reten_favor">-$0 COP</td></tr>
+              <tr><td>(+) Retenciones que MEGUDAN practicó a terceros (Pasivo - Form 350)</td><td style="text-align:right; font-weight:600; color:#b91c1c;" id="tax_reten_prac">$0 COP</td></tr>
+              
+              <tr class="report-header-row"><td colspan="2">Impuestos Municipales (Pitalito, Huila)</td></tr>
+              <tr><td>Impuesto de Industria y Comercio (ICA Base 0.5%)</td><td style="text-align:right; font-weight:600;" id="tax_ica_base">$0 COP</td></tr>
+              <tr><td>Impuesto de Avisos y Tableros (15% del ICA)</td><td style="text-align:right; font-weight:600;" id="tax_ica_avisos">$0 COP</td></tr>
+              <tr><td>Sobretasa Bomberil (4% del ICA)</td><td style="text-align:right; font-weight:600;" id="tax_ica_bomberos">$0 COP</td></tr>
+              <tr style="font-weight:700; background-color: #f1f5f9;"><td>(=) Total ICA Consolidado Municipal:</td><td style="text-align:right; color:#ca8a04;" id="tax_ica_total">$0 COP</td></tr>
+              
+              <tr class="report-header-row"><td colspan="2">Provisión de Renta Nacional</td></tr>
+              <tr><td>Utilidad Operativa Estimada del Periodo</td><td style="text-align:right; font-weight:600;" id="tax_util_est">$0 COP</td></tr>
+              <tr style="font-weight:800; background-color: #fee2e2; color: #991b1b;"><td>Provisión Impuesto de Renta Estimado (35%):</td><td style="text-align:right;" id="tax_renta_est">$0 COP</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Card: Calendario Tributario 2026 -->
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-header">
+          <h2 class="card-title">📅 Calendario Tributario 2026 (MEGUDAN SAS)</h2>
+        </div>
+        <p style="font-size:12px; color:#4b5563; margin-top:0; line-height:1.5;">
+          Cronograma fiscal unificado nacional y distrital para el año 2026 bajo NIT terminado en 23.
+        </p>
+        <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+          <table style="font-size: 11.5px;">
+            <thead style="position: sticky; top:0; z-index:1;">
+              <tr>
+                <th>Impuesto / Obligación</th>
+                <th>Periodo</th>
+                <th>Vence</th>
+                <th>Formulario</th>
+                <th>Entidad</th>
+              </tr>
+            </thead>
+            <tbody id="tabla_calendario_tributario_body">
+              <!-- Carga dinámica del calendario -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Traslado Interno de Fondos -->
 <div id="modal_traslado" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -617,6 +690,7 @@
   </div>
 </div>
 
+</div> <!-- Closes .app wrapper -->
 <script>
   const TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
   let CONFIG_CUENTAS_CACHE = [];
@@ -656,6 +730,9 @@
       mostrarPUC(PUC_COMPLETO_CACHE);
     } else if (target === "estados") {
       cargarEstadosFinancieros();
+    } else if (target === "impuestos") {
+      cargarPreliquidacionTributaria();
+      cargarCalendarioTributario();
     }
   }
 
@@ -1252,6 +1329,72 @@
         mostrarFinAlerta("Error de red: " + err.message, "error");
       })
       .FIN_GUARDAR_NOTA_ESTADO_WEB(datos, TOKEN_SESION_PROY);
+  }
+
+  function cargarPreliquidacionTributaria() {
+    const periodo = document.getElementById("tax_periodo_filtro").value;
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          const d = res.DATOS;
+          document.getElementById("tax_iva_gen").textContent = "$" + d.ivaGenerado.toLocaleString('es-CO') + " COP";
+          document.getElementById("tax_iva_desc").textContent = "-$" + d.ivaDescontable.toLocaleString('es-CO') + " COP";
+          
+          const ivaNetoEl = document.getElementById("tax_iva_neto");
+          ivaNetoEl.textContent = "$" + d.ivaNetoPagar.toLocaleString('es-CO') + " COP";
+          ivaNetoEl.style.color = d.ivaNetoPagar >= 0 ? "#16a34a" : "#dc2626";
+          
+          document.getElementById("tax_reten_favor").textContent = "-$" + d.retencionesAFavor.toLocaleString('es-CO') + " COP";
+          document.getElementById("tax_reten_prac").textContent = "$" + d.retencionesPracticadas.toLocaleString('es-CO') + " COP";
+          
+          document.getElementById("tax_ica_base").textContent = "$" + d.icaBase.toLocaleString('es-CO') + " COP";
+          document.getElementById("tax_ica_avisos").textContent = "$" + d.icaAvisos.toLocaleString('es-CO') + " COP";
+          document.getElementById("tax_ica_bomberos").textContent = "$" + d.icaBomberos.toLocaleString('es-CO') + " COP";
+          document.getElementById("tax_ica_total").textContent = "$" + d.icaTotalPagar.toLocaleString('es-CO') + " COP";
+          
+          document.getElementById("tax_util_est").textContent = "$" + d.utilidadOperativa.toLocaleString('es-CO') + " COP";
+          document.getElementById("tax_renta_est").textContent = "$" + d.rentaProvision.toLocaleString('es-CO') + " COP";
+        }
+      })
+      .TAX_CALCULAR_RESUMEN_TRIBUTARIO_WEB(periodo, TOKEN_SESION_PROY);
+  }
+
+  function cargarCalendarioTributario() {
+    const tbody = document.getElementById("tabla_calendario_tributario_body");
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Cargando calendario...</td></tr>`;
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          tbody.innerHTML = "";
+          res.DATOS.forEach(function(c) {
+            const tr = document.createElement("tr");
+            
+            // Highlight close dates
+            const venceDate = new Date(c.vencimiento);
+            const hoy = new Date();
+            const esCerca = (venceDate - hoy) > 0 && (venceDate - hoy) < (15 * 24 * 60 * 60 * 1000); // within 15 days
+            const vencido = venceDate < hoy;
+            
+            let venceHtml = `<code>${c.vencimiento}</code>`;
+            if (vencido) {
+              venceHtml = `<span class="badge badge-overdue" style="font-size:10px;">Vencido</span> <br><code>${c.vencimiento}</code>`;
+            } else if (esCerca) {
+              venceHtml = `<span class="badge badge-pending" style="font-size:10px;">Próximo</span> <br><code>${c.vencimiento}</code>`;
+            }
+            
+            tr.innerHTML = `
+              <td><strong>${c.impuesto}</strong><br><span style="font-size:10px; color:#64748b;">${c.descripcion}</span></td>
+              <td>${c.periodo}</td>
+              <td style="white-space:nowrap;">${venceHtml}</td>
+              <td><code>${c.formulario}</code></td>
+              <td><span class="badge ${c.entidad === 'DIAN' ? 'badge-active' : 'badge-pending'}">${c.entidad}</span></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      })
+      .TAX_OBTENER_CALENDARIO_TRIBUTARIO_WEB(TOKEN_SESION_PROY);
   }
 </script>
 </body>
