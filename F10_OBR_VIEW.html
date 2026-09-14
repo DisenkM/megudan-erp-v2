@@ -1,0 +1,434 @@
+<!-- (VERSIÓN 1.0 - V2 ERP - LIBRO 1) -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obras y Proyectos | MEGUDAN ERP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f8fafc; color: #1e293b;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
+    
+    .header {
+      background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+      color: white; padding: 24px; border-radius: 12px; margin-bottom: 25px;
+      display: flex; align-items: center; gap: 18px;
+      box-shadow: 0 10px 15px -3px rgba(180, 83, 9, 0.15);
+    }
+    .header-icon { font-size: 36px; }
+    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+    
+    .tabs-container {
+      display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 0px; overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 12px 22px; border: none; background: none; font-size: 13px; font-weight: 700;
+      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
+    }
+    .tab-btn:hover { color: #b45309; }
+    .tab-btn.active { color: #b45309; border-bottom-color: #b45309; }
+    
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .message {
+      padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;
+    }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .card {
+      background-color: white; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+    }
+    .card-title { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input {
+      width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border 0.2s;
+    }
+    .input:focus { border-color: #b45309; box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15); }
+    
+    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background-color: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
+    .badge-activa { background-color: #dcfce7; color: #15803d; }
+    .badge-finalizada { background-color: #e0f2fe; color: #0369a1; }
+    .badge-suspendida { background-color: #fee2e2; color: #dc2626; }
+
+    .button {
+      padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .button-primary { background-color: #b45309; color: white; }
+    .button-primary:hover { background-color: #78350f; }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background-color: white; margin: auto; padding: 25px; border: 1px solid #cbd5e1; border-radius: 16px; width: 90%; max-width: 650px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-icon">🏗️</div>
+    <div>
+      <h1>Gestión de Obras, Proyectos y Rentabilidad</h1>
+      <p>ERP Operativo · Control de Presupuestos, Materiales de Guadua, Mano de Obra y Análisis de Margen</p>
+    </div>
+  </header>
+
+  <div id="OBR_ALERT" class="message"></div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-container">
+    <button class="tab-btn active" id="btn-tab-maestro" onclick="cambiarObrPestana('maestro')">🏗️ Maestro de Obras</button>
+    <button class="tab-btn" id="btn-tab-rentabilidad" onclick="cambiarObrPestana('rentabilidad')">📊 Presupuesto vs. Rentabilidad</button>
+  </div>
+
+  <!-- Panel 1: Maestro de Obras -->
+  <div id="panel-maestro" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🏗️ Obras y Proyectos de Construcción Sostenible</h2>
+        <div style="display:flex; gap:8px;">
+          <button class="button button-primary" onclick="abrirModalNuevaObra()">+ Nueva Obra</button>
+          <button class="button button-secondary" onclick="obrCargarObras()">↻ Actualizar</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Obra</th>
+              <th>Código</th>
+              <th>Nombre de Obra / Proyecto</th>
+              <th>Cliente / Tercero</th>
+              <th>Ubicación</th>
+              <th>Presupuesto Meta</th>
+              <th>Responsable</th>
+              <th>Estado</th>
+              <th style="text-align: center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla_obras_body">
+            <tr><td colspan="9" style="text-align:center; padding:25px; color:#64748b;">Cargando catálogo de obras desde Sheets...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Rentabilidad por Obra -->
+  <div id="panel-rentabilidad" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📊 Análisis de Rentabilidad y Margen Real por Obra</h2>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <label style="font-size:12px; font-weight:700; color:#475569;">Seleccionar Obra:</label>
+          <select id="obr_select_rentabilidad" class="input" style="width:250px;" onchange="consultarRentabilidadObra()">
+            <option value="">Seleccione una obra...</option>
+          </select>
+        </div>
+      </div>
+      <div id="obr_resumen_rentabilidad" style="display:none; margin-bottom:20px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:10px;">
+            <span style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;">Facturado / Ingresos</span>
+            <h3 style="margin:5px 0 0; color:#15803d; font-size:18px;" id="ren_ingresos">$0 COP</h3>
+          </div>
+          <div style="background:#fef2f2; border:1px solid #fecaca; padding:15px; border-radius:10px;">
+            <span style="font-size:11px; font-weight:800; color:#991b1b; text-transform:uppercase;">Costos y Gastos Reales</span>
+            <h3 style="margin:5px 0 0; color:#dc2626; font-size:18px;" id="ren_costos">-$0 COP</h3>
+          </div>
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:15px; border-radius:10px;">
+            <span style="font-size:11px; font-weight:800; color:#1e40af; text-transform:uppercase;">Utilidad Real Estimada</span>
+            <h3 style="margin:5px 0 0; color:#1d4ed8; font-size:18px;" id="ren_utilidad">$0 COP</h3>
+          </div>
+          <div style="background:#faf5ff; border:1px solid #e9d5ff; padding:15px; border-radius:10px;">
+            <span style="font-size:11px; font-weight:800; color:#6b21a8; text-transform:uppercase;">Margen Real (%)</span>
+            <h3 style="margin:5px 0 0; color:#7c3aed; font-size:18px;" id="ren_margen">0%</h3>
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Costo</th>
+              <th>Fecha</th>
+              <th>Tipo Costo</th>
+              <th>Categoría</th>
+              <th>Proveedor</th>
+              <th style="text-align:right;">Valor COP</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="tabla_obras_costos_body">
+            <tr><td colspan="7" style="text-align:center; padding:25px; color:#64748b;">Seleccione una obra para auditar sus costos ejecutados.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva Obra -->
+<div id="modal_obra" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">🏗️ Registrar Nueva Obra / Proyecto</h3>
+      <span class="close-btn" onclick="cerrarModalObra()">&times;</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div class="form-row">
+        <div class="field">
+          <label>Nombre del Proyecto / Obra *</label>
+          <input type="text" id="obr_nombre" class="input" placeholder="Ej: Finca La Garra - Cubierta Guadua">
+        </div>
+        <div class="field">
+          <label>Cliente Propietario *</label>
+          <select id="obr_id_cliente" class="input"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Ubicación / Dirección</label>
+          <input type="text" id="obr_ubicacion" class="input" placeholder="Ej: Vereda Regueros, Pitalito">
+        </div>
+        <div class="field">
+          <label>Presupuesto Contratado (COP) *</label>
+          <input type="number" id="obr_presupuesto" class="input" min="0" value="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Fecha Inicio</label>
+          <input type="date" id="obr_fecha_inicio" class="input">
+        </div>
+        <div class="field">
+          <label>Fecha Fin Estimada</label>
+          <input type="date" id="obr_fecha_fin" class="input">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descripción / Alcance Técnico</label>
+        <textarea id="obr_descripcion" class="input" style="height:70px; resize:none;" placeholder="Escriba los detalles estructurales del proyecto..."></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button class="button button-secondary" onclick="cerrarModalObra()">Cancelar</button>
+        <button class="button button-primary" onclick="guardarNuevaObra()">💾 Guardar Obra</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
+  let OBRAS_CACHE = [];
+
+  document.addEventListener("DOMContentLoaded", function() {
+    obrCargarObras();
+    cargarClientesSelector();
+  });
+
+  function cambiarObrPestana(target) {
+    document.querySelectorAll(".tab-panel").forEach(panel => { panel.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(btn => { btn.classList.remove("active"); });
+    
+    document.getElementById(`panel-${target}`).classList.add("active");
+    document.getElementById(`btn-tab-${target}`).classList.add("active");
+    
+    if (target === "maestro") {
+      obrCargarObras();
+    }
+  }
+
+  function mostrarObrAlerta(msg, tipo) {
+    const el = document.getElementById("OBR_ALERT");
+    el.textContent = msg;
+    el.className = "message message-" + tipo;
+    el.style.display = "block";
+    setTimeout(() => {
+      if (el.textContent === msg) el.style.display = "none";
+    }, 6000);
+  }
+
+  function cargarClientesSelector() {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          const select = document.getElementById("obr_id_cliente");
+          select.innerHTML = "<option value=''>Seleccione un cliente...</option>";
+          res.DATOS.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.ID_CLIENTE;
+            opt.text = (c.RAZON_SOCIAL || (c.PRIMER_NOMBRE + " " + c.PRIMER_APELLIDO)) + " (" + c.ID_CLIENTE + ")";
+            select.add(opt);
+          });
+        }
+      })
+      .CLI_LISTAR_CLIENTES(TOKEN_SESION_PROY);
+  }
+
+  function obrCargarObras() {
+    const tbody = document.getElementById("tabla_obras_body");
+    const selectRen = document.getElementById("obr_select_rentabilidad");
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px;">Cargando obras...</td></tr>`;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          OBRAS_CACHE = res.DATOS;
+          tbody.innerHTML = "";
+          selectRen.innerHTML = "<option value=''>Seleccione una obra...</option>";
+          
+          if (res.DATOS.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b; padding:20px;">No hay obras registradas.</td></tr>`;
+            return;
+          }
+
+          res.DATOS.forEach(o => {
+            const tr = document.createElement("tr");
+            const badgeEst = o.ESTADO === "ACTIVA" ? "badge-activa" : "badge-finalizada";
+            
+            tr.innerHTML = `
+              <td><strong>${o.ID_OBRA}</strong></td>
+              <td><code>${o.CODIGO_OBRA || 'S/D'}</code></td>
+              <td><strong>${o.NOMBRE_OBRA}</strong></td>
+              <td>${o.RAZON_SOCIAL_CLIENTE || o.ID_CLIENTE}</td>
+              <td>${o.UBICACION || 'Pitalito'}</td>
+              <td style="color:#b45309; font-weight:700;">$${Number(o.PRESUPUESTO || 0).toLocaleString('es-CO')} COP</td>
+              <td>${o.RESPONSABLE || 'SISTEMA'}</td>
+              <td><span class="badge ${badgeEst}">${o.ESTADO || 'ACTIVA'}</span></td>
+              <td style="text-align:center;">
+                <button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="verRentabilidadDirecta('${o.ID_OBRA}')">📊 Auditar Costs</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+
+            const opt = document.createElement("option");
+            opt.value = o.ID_OBRA;
+            opt.text = `${o.NOMBRE_OBRA} (${o.ID_OBRA})`;
+            selectRen.add(opt);
+          });
+        }
+      })
+      .OBR_LISTAR_OBRAS_WEB(TOKEN_SESION_PROY);
+  }
+
+  function abrirModalNuevaObra() {
+    document.getElementById("obr_nombre").value = "";
+    document.getElementById("obr_presupuesto").value = 0;
+    document.getElementById("obr_descripcion").value = "";
+    document.getElementById("modal_obra").style.display = "flex";
+  }
+
+  function cerrarModalObra() {
+    document.getElementById("modal_obra").style.display = "none";
+  }
+
+  function guardarNuevaObra() {
+    const datos = {
+      NOMBRE_OBRA: document.getElementById("obr_nombre").value.trim(),
+      ID_CLIENTE: document.getElementById("obr_id_cliente").value,
+      UBICACION: document.getElementById("obr_ubicacion").value.trim(),
+      PRESUPUESTO: Number(document.getElementById("obr_presupuesto").value || 0),
+      FECHA_INICIO: document.getElementById("obr_fecha_inicio").value,
+      FECHA_FIN_ESTIMADA: document.getElementById("obr_fecha_fin").value,
+      DESCRIPCION: document.getElementById("obr_descripcion").value.trim()
+    };
+
+    if (!datos.NOMBRE_OBRA || !datos.ID_CLIENTE) {
+      alert("Por favor diligencie el nombre de la obra y el cliente.");
+      return;
+    }
+
+    mostrarObrAlerta("Registrando obra en Sheets...", "info");
+    cerrarModalObra();
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarObrAlerta(res.MENSAJE, "success");
+          obrCargarObras();
+        } else mostrarObrAlerta("Error: " + res.MENSAJE, "error");
+      })
+      .OBR_GUARDAR_OBRA_WEB(datos, TOKEN_SESION_PROY);
+  }
+
+  function verRentabilidadDirecta(idObra) {
+    document.getElementById("obr_select_rentabilidad").value = idObra;
+    cambiarObrPestana("rentabilidad");
+    consultarRentabilidadObra();
+  }
+
+  function consultarRentabilidadObra() {
+    const idObra = document.getElementById("obr_select_rentabilidad").value;
+    if (!idObra) return;
+
+    const tbody = document.getElementById("tabla_obras_costos_body");
+    const box = document.getElementById("obr_resumen_rentabilidad");
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">Calculando rentabilidad en caliente desde Sheets...</td></tr>`;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          const d = res.DATOS;
+          document.getElementById("ren_ingresos").textContent = "$" + d.TOTAL_INGRESOS.toLocaleString('es-CO') + " COP";
+          document.getElementById("ren_costos").textContent = "-$" + d.COSTO_TOTAL.toLocaleString('es-CO') + " COP";
+          document.getElementById("ren_utilidad").textContent = "$" + d.UTILIDAD_ESTIMADA.toLocaleString('es-CO') + " COP";
+          document.getElementById("ren_margen").textContent = d.MARGEN_PORCENTAJE + "%";
+          box.style.display = "block";
+
+          tbody.innerHTML = "";
+          if (d.HISTORIAL_COSTOS.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b; padding:20px;">No se registran costos cargados a esta obra.</td></tr>`;
+            return;
+          }
+
+          d.HISTORIAL_COSTOS.forEach(c => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><strong>${c.ID_COSTO}</strong></td>
+              <td>${c.FECHA ? String(c.FECHA).substring(0,10) : 'N/A'}</td>
+              <td>${c.TIPO_COSTO}</td>
+              <td><span class="badge badge-activa">${c.CATEGORIA}</span></td>
+              <td>${c.RAZON_SOCIAL_PROVEEDOR || c.ID_PROVEEDOR}</td>
+              <td style="text-align:right; color:#dc2626; font-weight:700;">$${Number(c.VALOR || 0).toLocaleString('es-CO')} COP</td>
+              <td>${c.OBSERVACION || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      })
+      .OBR_OBTENER_DETALLE_OBRA_WEB(idObra, TOKEN_SESION_PROY);
+  }
+</script>
+</body>
+</html>

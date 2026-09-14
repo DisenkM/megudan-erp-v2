@@ -194,6 +194,8 @@
       "INVENTARIO": { icon: "🗃️", label: "Inventario / Existencias", route: "inventario" },
       "FINANZAS": { icon: "📊", label: "Finanzas / Contabilidad", route: "finanzas" },
       "PLANEACION": { icon: "🗓️", label: "Planeación & Noticias", route: "planeacion" },
+      "OBRAS": { icon: "🏗️", label: "Obras / Proyectos", route: "obras" },
+      "NOMINA": { icon: "👥", label: "Nómina Operativa", route: "nomina" },
       "SEGURIDAD": { icon: "🔐", label: "Gestión Seguridad", route: "seguridad" }
     };
 
@@ -336,6 +338,10 @@
       title.textContent = "📊 Finanzas, Contabilidad y Reportes";
     } else if (modulo === "planeacion") {
       title.textContent = "🗓️ Planeación Estratégica, Presupuestos y Noticias";
+    } else if (modulo === "obras") {
+      title.textContent = "🏗️ Gestión de Obras y Proyectos";
+    } else if (modulo === "nomina") {
+      title.textContent = "👥 Nómina Básica Operativa";
     }
 
     // Inyección Directa vía RPC con HTML Injection (SPA)

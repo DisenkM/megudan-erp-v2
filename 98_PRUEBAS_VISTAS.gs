@@ -1,6 +1,6 @@
 // (VERSIÓN 26.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 30.0 - V2 ERP - LIBRO 1)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 31.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -379,5 +379,32 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
   } else {
     console.warn("⚠️ SE DETECTARON INCONSISTENCIAS EN LA COMPILACIÓN DE ALGUNAS PLANTILLAS.");
     console.warn("   Por favor revise los mensajes de solución (💡) impresos arriba para cada fallo.");
+  }
+
+
+  // TEST DE OBRAS Y PROYECTOS (F10_OBR_VIEW)
+  console.log("\n🏗️ [TEST OBRAS] Evaluando compilación de F10_OBR_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F10_OBR_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    if (!contenidoHtml.includes("OBR_LISTAR_OBRAS_WEB")) throw new Error("RPC de Obras no encontrado.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_OBRAS", estado: "PASS", detalle: "F10_OBR_VIEW v1 compilado correctamente." });
+  } catch (errObr) {
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_OBRAS", estado: "FAIL", detalle: errObr.message });
+  }
+
+  // TEST DE NOMINA BASICA (F12_NOM_VIEW)
+  console.log("\n👥 [TEST NOMINA] Evaluando compilación de F12_NOM_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F12_NOM_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    if (!contenidoHtml.includes("NOM_LISTAR_EMPLEADOS_WEB")) throw new Error("RPC de Nómina no encontrado.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_NOMINA", estado: "PASS", detalle: "F12_NOM_VIEW v1 compilado correctamente." });
+  } catch (errNom) {
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_NOMINA", estado: "FAIL", detalle: errNom.message });
   }
 }

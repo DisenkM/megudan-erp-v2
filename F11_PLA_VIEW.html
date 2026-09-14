@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 1.0 - V2 ERP - LIBRO 2) -->
+<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 2) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,7 +15,6 @@
     }
     .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
     
-    /* Header corporativo */
     .header {
       background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
       color: white; padding: 24px; border-radius: 12px; margin-bottom: 25px;
@@ -26,7 +25,6 @@
     .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
     .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
     
-    /* Tabs Navigation */
     .tabs-container {
       display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 0px; overflow-x: auto;
     }
@@ -40,7 +38,6 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* Alerts */
     .message {
       padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;
     }
@@ -48,7 +45,6 @@
     .message-success { background-color: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
     .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
-    /* Cards */
     .card {
       background-color: white; border: 1px solid #e2e8f0; border-radius: 12px;
       padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
@@ -59,7 +55,6 @@
     }
     .card-title { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
 
-    /* Forms */
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
     @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
     .field { display: flex; flex-direction: column; gap: 5px; }
@@ -69,14 +64,12 @@
     }
     .input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); }
     
-    /* Tables */
     .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background-color: white; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { background-color: #f8fafc; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
     td { padding: 12px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
     tr:hover td { background-color: #f8fafc; }
 
-    /* Badges */
     .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
     .badge-alta { background-color: #fee2e2; color: #dc2626; }
     .badge-media { background-color: #fef3c7; color: #d97706; }
@@ -85,7 +78,6 @@
     .badge-en-proceso { background-color: #fef3c7; color: #b45309; }
     .badge-pendiente { background-color: #f1f5f9; color: #475569; }
 
-    /* Buttons */
     .button {
       padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     }
@@ -93,8 +85,9 @@
     .button-primary:hover { background-color: #6d28d9; }
     .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
     .button-secondary:hover { background-color: #f8fafc; }
+    .button-danger { background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+    .button-danger:hover { background-color: #fee2e2; }
 
-    /* Modals */
     .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); align-items: center; justify-content: center;
     }
@@ -104,7 +97,6 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
     .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
 
-    /* News Cards */
     .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 15px; }
     .news-card {
       background: white; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between;
@@ -132,6 +124,7 @@
   <div class="tabs-container">
     <button class="tab-btn active" id="btn-tab-cronograma" onclick="cambiarPlaPestana('cronograma')">🗓️ Cronograma & Tareas</button>
     <button class="tab-btn" id="btn-tab-presupuesto" onclick="cambiarPlaPestana('presupuesto')">📊 Presupuesto vs. Real</button>
+    <button class="tab-btn" id="btn-tab-crear-presupuesto" onclick="cambiarPlaPestana('crear-presupuesto')">💵 Presupuestador Manual</button>
     <button class="tab-btn" id="btn-tab-proyecciones" onclick="cambiarPlaPestana('proyecciones')">📈 Proyecciones Financieras</button>
     <button class="tab-btn" id="btn-tab-noticias" onclick="cambiarPlaPestana('noticias')">🌍 Radar de Noticias Globales</button>
   </div>
@@ -178,7 +171,10 @@
           <label style="font-size:12px; font-weight:700; color:#475569;">Periodo:</label>
           <select id="pla_periodo_filtro" class="input" style="width:140px;" onchange="plaCargarPresupuestos()">
             <option value="2026-09" selected>Septiembre 2026</option>
-            <option value="2026-08">Agosto 2026</option>
+            <option value="2026-10">Octubre 2026</option>
+            <option value="2026-11">Noviembre 2026</option>
+            <option value="2026-12">Diciembre 2026</option>
+            <option value="2026-ANUAL">Año 2026 Completo</option>
           </select>
         </div>
       </div>
@@ -201,7 +197,102 @@
     </div>
   </div>
 
-  <!-- Panel 3: Proyecciones Financieras -->
+  <!-- Panel 3: PRESUPUESTADOR MANUAL (APARTADO DE CREACIÓN MANUAL DE PRESUPUESTOS) -->
+  <div id="panel-crear-presupuesto" class="tab-panel">
+    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+      <!-- Formulario Manual de Presupuestación -->
+      <div class="card">
+        <h3 class="card-title">💵 Asignar Presupuesto Manual</h3>
+        <p style="font-size:12px; color:#64748b; margin-top:0; margin-bottom:15px; line-height:1.4;">
+          Establece metas presupuestales por período y categoría para comparar en tiempo real contra los registros reales del ERP.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <input type="hidden" id="pre_id_presupuesto" value="">
+          
+          <div class="field">
+            <label>Período Contable / Mes *</label>
+            <select id="pre_periodo" class="input">
+              <option value="2026-09" selected>Septiembre 2026</option>
+              <option value="2026-10">Octubre 2026</option>
+              <option value="2026-11">Noviembre 2026</option>
+              <option value="2026-12">Diciembre 2026</option>
+              <option value="2026-ANUAL">Año 2026 Completo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Rubro Principal *</label>
+            <select id="pre_rubro" class="input" onchange="actualizarSugerenciaCategorias()">
+              <option value="VENTAS" selected>VENTAS (Ingresos Facturados / Obras)</option>
+              <option value="COSTOS">COSTOS (Materiales, Mano de Obra, Fletes)</option>
+              <option value="GASTOS">GASTOS (Administrativos, Arrendamiento, Servicios)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Categoría / Concepto Específico *</label>
+            <input type="text" id="pre_categoria" class="input" list="lista_sugerencia_categorias" placeholder="Ej: Venta Obras Guadua, Materia Prima, Arriendo Bodega...">
+            <datalist id="lista_sugerencia_categorias">
+              <option value="GENERAL">GENERAL</option>
+              <option value="VENTAS_OBRAS">Venta Obras de Guadua</option>
+              <option value="VENTAS_FABRICA">Venta Productos Fábrica</option>
+              <option value="MATERIA_PRIMA">Materia Prima / Guadua</option>
+              <option value="MANO_DE_OBRA">Mano de Obra Directa</option>
+              <option value="FLETES_TRANSPORTES">Fletes y Transportes</option>
+              <option value="ARRENDAMIENTO">Arrendamiento Bodega</option>
+              <option value="SERVICIOS_PUBLICOS">Servicios Públicos (Luz/Agua)</option>
+              <option value="HONORARIOS">Honorarios / Asesorías</option>
+              <option value="MARKETING">Marketing y Publicidad</option>
+            </datalist>
+          </div>
+
+          <div class="field">
+            <label>Monto Presupuestado COP *</label>
+            <input type="number" id="pre_monto" class="input" min="1" value="0" placeholder="Ej: 50000000">
+          </div>
+
+          <div class="field">
+            <label>Justificación / Observaciones Gerenciales</label>
+            <textarea id="pre_justificacion" class="input" style="height:80px; resize:none;" placeholder="Escriba el objetivo comercial, meta de producción o sustento del presupuesto..."></textarea>
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <button class="button button-primary" style="flex:1;" onclick="guardarMetaPresupuestal()">💾 Guardar Presupuesto Manual</button>
+            <button class="button button-secondary" onclick="limpiarFormularioPresupuesto()">🧹 Limpiar</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tabla de Presupuestos Creados Manualmente -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📋 Presupuestos Manuales Registrados en Sheets</h2>
+          <button class="button button-secondary" onclick="plaCargarPresupuestos()">↻ Actualizar Lista</button>
+        </div>
+        <div class="table-container" style="max-height:480px; overflow-y:auto;">
+          <table>
+            <thead style="position:sticky; top:0; z-index:1;">
+              <tr>
+                <th>ID</th>
+                <th>Período</th>
+                <th>Rubro</th>
+                <th>Categoría</th>
+                <th style="text-align:right;">Monto Meta COP</th>
+                <th>Justificación</th>
+                <th>Usuario</th>
+                <th style="text-align:center;">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla_presupuestos_definidos_body">
+              <tr><td colspan="8" style="text-align:center; padding:25px; color:#64748b;">Cargando presupuestos creados...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 4: Proyecciones Financieras -->
   <div id="panel-proyecciones" class="tab-panel">
     <div class="card">
       <div class="card-header">
@@ -228,7 +319,7 @@
     </div>
   </div>
 
-  <!-- Panel 4: Radar de Noticias Globales -->
+  <!-- Panel 5: Radar de Noticias Globales -->
   <div id="panel-noticias" class="tab-panel">
     <div class="card">
       <div class="card-header">
@@ -238,9 +329,7 @@
       <p style="font-size:12px; color:#4b5563; margin-top:0; line-height:1.5;">
         Mantente al tanto de la actualidad macroeconómica, cambios tributarios de la DIAN y tendencias del sector construcción e insumos en Colombia y el mundo.
       </p>
-      <div class="news-grid" id="noticias_container">
-        <!-- Renderizado de tarjetas de noticias -->
-      </div>
+      <div class="news-grid" id="noticias_container"></div>
     </div>
   </div>
 </div>
@@ -307,10 +396,15 @@
     document.getElementById(`panel-${target}`).classList.add("active");
     document.getElementById(`btn-tab-${target}`).classList.add("active");
     
-    if (target === "cronograma") plaCargarTareas();
-    else if (target === "presupuesto") plaCargarPresupuestos();
-    else if (target === "proyecciones") plaCargarProyecciones();
-    else if (target === "noticias") plaCargarNoticias();
+    if (target === "cronograma") {
+      plaCargarTareas();
+    } else if (target === "presupuesto" || target === "crear-presupuesto") {
+      plaCargarPresupuestos();
+    } else if (target === "proyecciones") {
+      cargarProyeccionesSimulador();
+    } else if (target === "noticias") {
+      plaCargarNoticias();
+    }
   }
 
   function mostrarPlaAlerta(msg, tipo) {
@@ -318,37 +412,44 @@
     el.textContent = msg;
     el.className = "message message-" + tipo;
     el.style.display = "block";
-    setTimeout(() => { if (el.textContent === msg) el.style.display = "none"; }, 6000);
+    setTimeout(() => {
+      if (el.textContent === msg) el.style.display = "none";
+    }, 6000);
   }
 
   function plaCargarTareas() {
     const tbody = document.getElementById("tabla_cronograma_body");
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Cargando cronograma desde Sheets...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px;">Cargando cronograma...</td></tr>`;
     
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
           tbody.innerHTML = "";
           if (res.DATOS.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b;">No hay actividades registradas en el cronograma.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b; padding:20px;">No hay actividades asignadas.</td></tr>`;
             return;
           }
-          res.DATOS.forEach(function(t) {
+          res.DATOS.reverse().forEach(function(t) {
             const tr = document.createElement("tr");
-            const badgePrio = t.PRIORIDAD === "ALTA" ? "badge-alta" : (t.PRIORIDAD === "MEDIA" ? "badge-media" : "badge-baja");
-            const badgeEst = t.ESTADO === "COMPLETADA" ? "badge-completada" : (t.ESTADO === "EN_PROCESO" ? "badge-en-proceso" : "badge-pendiente");
+            let badgePrio = "badge-media";
+            if (t.PRIORIDAD === "ALTA") badgePrio = "badge-alta";
+            if (t.PRIORIDAD === "BAJA") badgePrio = "badge-baja";
             
+            let badgeEst = "badge-pendiente";
+            if (t.ESTADO === "COMPLETADA") badgeEst = "badge-completada";
+            if (t.ESTADO === "EN_PROCESO") badgeEst = "badge-en-proceso";
+
             tr.innerHTML = `
               <td><strong>${t.ID_TAREA}</strong></td>
-              <td><strong>${t.TITULO}</strong><br><span style="font-size:11px; color:#64748b;">${t.DESCRIPCION || ""}</span></td>
-              <td>👤 ${t.RESPONSABLE}</td>
-              <td>${t.FECHA_INICIO ? String(t.FECHA_INICIO).substring(0,10) : "N/A"}</td>
-              <td>${t.FECHA_FIN ? String(t.FECHA_FIN).substring(0,10) : "N/A"}</td>
+              <td><strong>${t.TITULO}</strong><br><span style="font-size:11px; color:#64748b;">${t.DESCRIPCION || ''}</span></td>
+              <td>${t.RESPONSABLE}</td>
+              <td>${t.FECHA_INICIO ? String(t.FECHA_INICIO).substring(0,10) : 'N/A'}</td>
+              <td>${t.FECHA_FIN ? String(t.FECHA_FIN).substring(0,10) : 'N/A'}</td>
               <td><span class="badge ${badgePrio}">${t.PRIORIDAD}</span></td>
-              <td style="font-weight:700;">${t.PORCENTAJE || 0}%</td>
+              <td><strong>${t.PORCENTAJE || 0}%</strong></td>
               <td><span class="badge ${badgeEst}">${t.ESTADO}</span></td>
               <td style="text-align:center;">
-                ${t.ESTADO !== "COMPLETADA" ? `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="marcarTareaCompletada('${t.ID_TAREA}')">✓ Finalizar</button>` : "✅"}
+                ${t.ESTADO !== 'COMPLETADA' ? `<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="completarTarea('${t.ID_TAREA}')">✓ Finalizar</button>` : '✅ Ok'}
               </td>
             `;
             tbody.appendChild(tr);
@@ -378,15 +479,15 @@
       FECHA_FIN: document.getElementById("tar_fecha_fin").value,
       DESCRIPCION: document.getElementById("tar_descripcion").value.trim()
     };
-    
+
     if (!datos.TITULO || !datos.RESPONSABLE) {
-      alert("Por favor diligencie los campos obligatorios (*).");
+      alert("El título y responsable son obligatorios.");
       return;
     }
-    
-    mostrarPlaAlerta("Registrando actividad en el cronograma...", "info");
+
+    mostrarPlaAlerta("Asignando tarea al equipo...", "info");
     cerrarModalTarea();
-    
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
@@ -397,8 +498,7 @@
       .PLA_GUARDAR_TAREA_WEB(datos, TOKEN_SESION_PROY);
   }
 
-  function marcarTareaCompletada(idTarea) {
-    mostrarPlaAlerta("Actualizando estado de la actividad...", "info");
+  function completarTarea(idTarea) {
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
@@ -409,100 +509,174 @@
       .PLA_ACTUALIZAR_ESTADO_TAREA_WEB(idTarea, "COMPLETADA", 100, TOKEN_SESION_PROY);
   }
 
+  function actualizarSugerenciaCategorias() {
+    const rubro = document.getElementById("pre_rubro").value;
+    const catInput = document.getElementById("pre_categoria");
+    if (rubro === "VENTAS") catInput.value = "VENTAS_OBRAS";
+    else if (rubro === "COSTOS") catInput.value = "MATERIA_PRIMA";
+    else if (rubro === "GASTOS") catInput.value = "ARRENDAMIENTO";
+  }
+
   function plaCargarPresupuestos() {
     const periodo = document.getElementById("pla_periodo_filtro").value;
     const tbody = document.getElementById("tabla_presupuesto_body");
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Calculando presupuestos...</td></tr>`;
+    const tbodyDef = document.getElementById("tabla_presupuestos_definidos_body");
     
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">Calculando ejecución real...</td></tr>`;
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
           const d = res.DATOS;
-          tbody.innerHTML = `
-            <tr>
-              <td><strong>💰 Ventas & Facturación</strong></td>
-              <td style="text-align:right;">$${d.VENTAS.PRESUPUESTADO.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; font-weight:700; color:#16a34a;">$${d.VENTAS.REAL.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; font-weight:700; color:${d.VENTAS.DESVIACION >= 0 ? '#16a34a' : '#dc2626'};">$${d.VENTAS.DESVIACION.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:center;"><span class="badge ${d.VENTAS.REAL >= d.VENTAS.PRESUPUESTADO ? 'badge-completada' : 'badge-en-proceso'}">${((d.VENTAS.REAL / d.VENTAS.PRESUPUESTADO)*100).toFixed(0)}%</span></td>
-            </tr>
-            <tr>
-              <td><strong>🧾 Costos Directos (Obras)</strong></td>
-              <td style="text-align:right;">$${d.COSTOS.PRESUPUESTADO.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; font-weight:700; color:#b91c1c;">$${d.COSTOS.REAL.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; font-weight:700; color:${d.COSTOS.DESVIACION <= 0 ? '#16a34a' : '#dc2626'};">$${d.COSTOS.DESVIACION.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:center;"><span class="badge ${d.COSTOS.REAL <= d.COSTOS.PRESUPUESTADO ? 'badge-completada' : 'badge-alta'}">${((d.COSTOS.REAL / d.COSTOS.PRESUPUESTADO)*100).toFixed(0)}%</span></td>
-            </tr>
-            <tr>
-              <td><strong>💸 Gastos Operativos</strong></td>
-              <td style="text-align:right;">$${d.GASTOS.PRESUPUESTADO.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; font-weight:700; color:#b91c1c;">$${d.GASTOS.REAL.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; font-weight:700; color:${d.GASTOS.DESVIACION <= 0 ? '#16a34a' : '#dc2626'};">$${d.GASTOS.DESVIACION.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:center;"><span class="badge ${d.GASTOS.REAL <= d.GASTOS.PRESUPUESTADO ? 'badge-completada' : 'badge-alta'}">${((d.GASTOS.REAL / d.GASTOS.PRESUPUESTADO)*100).toFixed(0)}%</span></td>
-            </tr>
-            <tr style="background:#f1f5f9; font-weight:800;">
-              <td>(=) UTILIDAD OPERATIVA NETO:</td>
-              <td style="text-align:right;">$${d.UTILIDAD_PRESUPUESTADA.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; color:#1d4ed8;">$${d.UTILIDAD_REAL.toLocaleString('es-CO')} COP</td>
-              <td style="text-align:right; color:${d.UTILIDAD_REAL >= d.UTILIDAD_PRESUPUESTADA ? '#16a34a' : '#dc2626'};">$${(d.UTILIDAD_REAL - d.UTILIDAD_PRESUPUESTADA).toLocaleString('es-CO')} COP</td>
-              <td style="text-align:center;">-</td>
-            </tr>
-          `;
+          tbody.innerHTML = "";
+          
+          const rubros = [
+            { nombre: "VENTAS (INGRESOS FACTURADOS)", p: d.VENTAS.PRESUPUESTADO, r: d.VENTAS.REAL, dev: d.VENTAS.DESVIACION, tipo: "ingreso" },
+            { nombre: "COSTOS DIRECTOS DE OBRAS", p: d.COSTOS.PRESUPUESTADO, r: d.COSTOS.REAL, dev: d.COSTOS.DESVIACION, tipo: "gasto" },
+            { nombre: "GASTOS OPERATIVOS / ADMIN", p: d.GASTOS.PRESUPUESTADO, r: d.GASTOS.REAL, dev: d.GASTOS.DESVIACION, tipo: "gasto" }
+          ];
+
+          rubros.forEach(r => {
+            const tr = document.createElement("tr");
+            const pct = r.p > 0 ? ((r.r / r.p) * 100).toFixed(1) : 0;
+            const colorDev = r.tipo === "ingreso" ? (r.dev >= 0 ? "#16a34a" : "#dc2626") : (r.dev <= 0 ? "#16a34a" : "#dc2626");
+            
+            tr.innerHTML = `
+              <td><strong>${r.nombre}</strong></td>
+              <td style="text-align:right;">$${r.p.toLocaleString('es-CO')} COP</td>
+              <td style="text-align:right; font-weight:700;">$${r.r.toLocaleString('es-CO')} COP</td>
+              <td style="text-align:right; font-weight:700; color:${colorDev};">$${r.dev.toLocaleString('es-CO')} COP</td>
+              <td style="text-align:center;"><span class="badge ${pct >= 100 ? 'badge-completada' : 'badge-en-proceso'}">${pct}%</span></td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          if (tbodyDef && d.LISTA_DEFINIDA) {
+            tbodyDef.innerHTML = "";
+            if (d.LISTA_DEFINIDA.length === 0) {
+              tbodyDef.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#64748b; padding:20px;">No hay presupuestos manuales guardados.</td></tr>`;
+            } else {
+              d.LISTA_DEFINIDA.forEach(p => {
+                const tr = document.createElement("tr");
+                const idP = p.ID_PRESUPUESTO || '-';
+                tr.innerHTML = `
+                  <td><code>${idP}</code></td>
+                  <td><strong>${p.PERIODO || '-'}</strong></td>
+                  <td><span class="badge badge-pendiente">${p.RUBRO || '-'}</span></td>
+                  <td><strong>${p.CATEGORIA || 'GENERAL'}</strong></td>
+                  <td style="text-align:right; font-weight:700; color:#7c3aed;">$${Number(p.MONTO_PRESUPUESTADO || 0).toLocaleString('es-CO')} COP</td>
+                  <td style="font-size:12px; color:#475569;">${p.JUSTIFICACION || '-'}</td>
+                  <td><code style="font-size:11px;">${p.USUARIO || 'SISTEMA'}</code></td>
+                  <td style="text-align:center;">
+                    <button class="button button-danger" style="padding:3px 8px; font-size:11px;" onclick="eliminarPresupuestoManual('${idP}')">🗑️</button>
+                  </td>
+                `;
+                tbodyDef.appendChild(tr);
+              });
+            }
+          }
         }
       })
       .PLA_OBTENER_PRESUPUESTOS_WEB(periodo, TOKEN_SESION_PROY);
   }
 
-  function plaCargarProyecciones() {
+  function limpiarFormularioPresupuesto() {
+    document.getElementById("pre_id_presupuesto").value = "";
+    document.getElementById("pre_monto").value = 0;
+    document.getElementById("pre_categoria").value = "";
+    document.getElementById("pre_justificacion").value = "";
+  }
+
+  function guardarMetaPresupuestal() {
+    const datos = {
+      ID_PRESUPUESTO: document.getElementById("pre_id_presupuesto").value,
+      PERIODO: document.getElementById("pre_periodo").value,
+      RUBRO: document.getElementById("pre_rubro").value,
+      CATEGORIA: document.getElementById("pre_categoria").value.trim() || "GENERAL",
+      MONTO: Number(document.getElementById("pre_monto").value || 0),
+      JUSTIFICACION: document.getElementById("pre_justificacion").value.trim()
+    };
+
+    if (datos.MONTO <= 0) {
+      alert("Debe ingresar un monto presupuestado mayor a cero.");
+      return;
+    }
+
+    mostrarPlaAlerta("Guardando presupuesto manual en Sheets...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarPlaAlerta(res.MENSAJE, "success");
+          limpiarFormularioPresupuesto();
+          plaCargarPresupuestos();
+        } else mostrarPlaAlerta("Error: " + res.MENSAJE, "error");
+      })
+      .PLA_GUARDAR_PRESUPUESTO_WEB(datos, TOKEN_SESION_PROY);
+  }
+
+  function eliminarPresupuestoManual(idPresupuesto) {
+    if (!confirm("¿Está seguro de eliminar este ítem presupuestal?")) return;
+    mostrarPlaAlerta("Eliminando ítem presupuestal...", "info");
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarPlaAlerta(res.MENSAJE, "success");
+          plaCargarPresupuestos();
+        } else mostrarPlaAlerta("Error: " + res.MENSAJE, "error");
+      })
+      .PLA_ELIMINAR_PRESUPUESTO_WEB(idPresupuesto, TOKEN_SESION_PROY);
+  }
+
+  function cargarProyeccionesSimulador() {
     const tbody = document.getElementById("tabla_proyecciones_body");
-    tbody.innerHTML = `
-      <tr>
-        <td><strong>Flujo de Caja Proyectado a 3 Meses</strong></td>
-        <td style="text-align:right; color:#dc2626; font-weight:600;">$125.000.000 COP</td>
-        <td style="text-align:right; color:#1d4ed8; font-weight:800;">$147.000.000 COP</td>
-        <td style="text-align:right; color:#16a34a; font-weight:600;">$176.400.000 COP</td>
-      </tr>
-      <tr>
-        <td><strong>Proyección de Rentabilidad Neta (Semestre)</strong></td>
-        <td style="text-align:right; color:#dc2626; font-weight:600;">$210.000.000 COP</td>
-        <td style="text-align:right; color:#1d4ed8; font-weight:800;">$247.000.000 COP</td>
-        <td style="text-align:right; color:#16a34a; font-weight:600;">$296.400.000 COP</td>
-      </tr>
-      <tr>
-        <td><strong>Capacidad de Inversión Fija (12 Meses)</strong></td>
-        <td style="text-align:right; color:#dc2626; font-weight:600;">$420.000.000 COP</td>
-        <td style="text-align:right; color:#1d4ed8; font-weight:800;">$494.000.000 COP</td>
-        <td style="text-align:right; color:#16a34a; font-weight:600;">$592.800.000 COP</td>
-      </tr>
-    `;
+    tbody.innerHTML = "";
+    
+    const simulaciones = [
+      { mes: "Proyección Proximo Trimestre (3 Meses)", pes: 250000000, mod: 300000000, opt: 360000000 },
+      { mes: "Proyección Semestral (6 Meses)", pes: 510000000, mod: 600000000, opt: 720000000 },
+      { mes: "Proyección Anual Cierre 2026 (12 Meses)", pes: 1020000000, mod: 1200000000, opt: 1440000000 }
+    ];
+
+    simulaciones.forEach(s => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${s.mes}</strong></td>
+        <td style="text-align:right; color:#dc2626; font-weight:600;">$${s.pes.toLocaleString('es-CO')} COP</td>
+        <td style="text-align:right; color:#0f172a; font-weight:800;">$${s.mod.toLocaleString('es-CO')} COP</td>
+        <td style="text-align:right; color:#16a34a; font-weight:700;">$${s.opt.toLocaleString('es-CO')} COP</td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
   function plaCargarNoticias() {
     const container = document.getElementById("noticias_container");
-    container.innerHTML = `<div style="text-align:center; padding:30px; grid-column: 1/-1;"><div class="spinner"></div><strong>Conectando con el radar de noticias globales...</strong></div>`;
-    
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:#64748b;">Sintonizando canal de noticias globales vía RSS...</div>`;
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
           container.innerHTML = "";
-          res.DATOS.forEach(function(n) {
-            const card = document.createElement("div");
-            card.className = "news-card";
-            card.innerHTML = `
+          res.DATOS.forEach(n => {
+            const div = document.createElement("div");
+            div.className = "news-card";
+            div.innerHTML = `
               <div>
-                <h4 class="news-title">${n.TITULO}</h4>
                 <div class="news-meta">
                   <span>📰 ${n.FUENTE}</span>
-                  <span>📅 ${n.FECHA}</span>
+                  <span>⏱️ ${n.FECHA}</span>
                 </div>
+                <h4 class="news-title">${n.TITULO}</h4>
               </div>
-              <a href="${n.LINK}" target="_blank" class="news-link">Leer Noticia Completa ➔</a>
+              <a href="${n.LINK}" target="_blank" class="news-link">🔗 Leer Noticia Completa ➔</a>
             `;
-            container.appendChild(card);
+            container.appendChild(div);
           });
         }
       })
-      .PLA_OBTENER_NOTICIAS_GLOBALES_WEB("TODAS", TOKEN_SESION_PROY);
+      .PLA_OBTENER_NOTICIAS_GLOBALES_WEB("CONSTRUCCION", TOKEN_SESION_PROY);
   }
 </script>
 </body>

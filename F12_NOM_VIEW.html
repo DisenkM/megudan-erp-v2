@@ -1,0 +1,375 @@
+<!-- (VERSIÓN 1.0 - V2 ERP - LIBRO 1) -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nómina Básica Operativa | MEGUDAN ERP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f8fafc; color: #1e293b;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
+    
+    .header {
+      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+      color: white; padding: 24px; border-radius: 12px; margin-bottom: 25px;
+      display: flex; align-items: center; gap: 18px;
+      box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.15);
+    }
+    .header-icon { font-size: 36px; }
+    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+    
+    .tabs-container {
+      display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 0px; overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 12px 22px; border: none; background: none; font-size: 13px; font-weight: 700;
+      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
+    }
+    .tab-btn:hover { color: #10b981; }
+    .tab-btn.active { color: #10b981; border-bottom-color: #10b981; }
+    
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .message {
+      padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;
+    }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .card {
+      background-color: white; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+    }
+    .card-title { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input {
+      width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border 0.2s;
+    }
+    .input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+    
+    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background-color: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
+    .badge-activo { background-color: #dcfce7; color: #15803d; }
+
+    .button {
+      padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .button-primary { background-color: #10b981; color: white; }
+    .button-primary:hover { background-color: #047857; }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background-color: white; margin: auto; padding: 25px; border: 1px solid #cbd5e1; border-radius: 16px; width: 90%; max-width: 580px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-icon">👥</div>
+    <div>
+      <h1>Nómina Básica & Control de Personal Operativo</h1>
+      <p>ERP Operativo · Gestión de Operarios, Liquidación de Salarios y Afectación Contable</p>
+    </div>
+  </header>
+
+  <div id="NOM_ALERT" class="message"></div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-container">
+    <button class="tab-btn active" id="btn-tab-empleados" onclick="cambiarNomPestana('empleados')">👥 Registro de Empleados</button>
+    <button class="tab-btn" id="btn-tab-liquidar" onclick="cambiarNomPestana('liquidar')">🧮 Liquidación de Nómina</button>
+  </div>
+
+  <!-- Panel 1: Registro de Empleados -->
+  <div id="panel-empleados" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">👥 Registro de Personal y Operarios de Planta</h2>
+        <div style="display:flex; gap:8px;">
+          <button class="button button-primary" onclick="abrirModalEmpleado()">+ Nuevo Empleado</button>
+          <button class="button button-secondary" onclick="nomCargarEmpleados()">↻ Actualizar</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Empleado</th>
+              <th>Documento CC</th>
+              <th>Nombres y Apellidos</th>
+              <th>Cargo</th>
+              <th>Salario Base (COP)</th>
+              <th>Tipo Contrato</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tabla_empleados_body">
+            <tr><td colspan="7" style="text-align:center; padding:25px; color:#64748b;">Cargando lista de empleados...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Liquidación de Nómina -->
+  <div id="panel-liquidar" class="tab-panel">
+    <div class="card">
+      <h3 class="card-title">🧮 Procesar Liquidación de Nómina</h3>
+      <div style="display:flex; flex-direction:column; gap:14px; margin-top:15px; max-width:600px;">
+        <div class="field">
+          <label>Seleccionar Empleado *</label>
+          <select id="nom_id_empleado" class="input" onchange="actualizarSalarioBaseEmpleado()"></select>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Período de Pago *</label>
+            <select id="nom_periodo" class="input">
+              <option value="2026-09" selected>Septiembre 2026</option>
+              <option value="2026-10">Octubre 2026</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Salario Devengado Base (COP)</label>
+            <input type="number" id="nom_devengado" class="input" min="0" value="0" oninput="calcularNetoNomina()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Auxilio de Transporte (COP)</label>
+            <input type="number" id="nom_aux_transporte" class="input" min="0" value="162000" oninput="calcularNetoNomina()">
+          </div>
+          <div class="field">
+            <label>Deducciones / Salud / Pensión (COP)</label>
+            <input type="number" id="nom_deducciones" class="input" min="0" value="0" oninput="calcularNetoNomina()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Total Neto Pagado (COP) *</label>
+          <input type="text" id="nom_neto_display" class="input" readonly style="background:#f1f5f9; font-weight:800; color:#10b981; font-size:16px;" value="$0 COP">
+        </div>
+        <button class="button button-primary" onclick="guardarLiquidacionNomina()">💾 Liquidar y Procesar Pago</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nuevo Empleado -->
+<div id="modal_empleado" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">👥 Registrar Empleado / Operario</h3>
+      <span class="close-btn" onclick="cerrarModalEmpleado()">&times;</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="form-row">
+        <div class="field">
+          <label>Documento C.C. *</label>
+          <input type="text" id="emp_documento" class="input" placeholder="Ej: 1018457298">
+        </div>
+        <div class="field">
+          <label>Nombres y Apellidos *</label>
+          <input type="text" id="emp_nombres" class="input" placeholder="Ej: Pedro Pablo Pérez">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Cargo / Función *</label>
+          <input type="text" id="emp_cargo" class="input" placeholder="Ej: Cortador de Guadua / Operario">
+        </div>
+        <div class="field">
+          <label>Salario Base Mensual (COP) *</label>
+          <input type="number" id="emp_salario" class="input" min="0" value="1300000">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button class="button button-secondary" onclick="cerrarModalEmpleado()">Cancelar</button>
+        <button class="button button-primary" onclick="guardarNuevoEmpleado()">💾 Guardar Empleado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
+  let EMPLEADOS_CACHE = {};
+
+  document.addEventListener("DOMContentLoaded", function() {
+    nomCargarEmpleados();
+  });
+
+  function cambiarNomPestana(target) {
+    document.querySelectorAll(".tab-panel").forEach(panel => { panel.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(btn => { btn.classList.remove("active"); });
+    
+    document.getElementById(`panel-${target}`).classList.add("active");
+    document.getElementById(`btn-tab-${target}`).classList.add("active");
+  }
+
+  function mostrarNomAlerta(msg, tipo) {
+    const el = document.getElementById("NOM_ALERT");
+    el.textContent = msg;
+    el.className = "message message-" + tipo;
+    el.style.display = "block";
+    setTimeout(() => {
+      if (el.textContent === msg) el.style.display = "none";
+    }, 6000);
+  }
+
+  function nomCargarEmpleados() {
+    const tbody = document.getElementById("tabla_empleados_body");
+    const select = document.getElementById("nom_id_empleado");
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">Cargando empleados...</td></tr>`;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          tbody.innerHTML = "";
+          select.innerHTML = "<option value=''>Seleccione un empleado...</option>";
+          
+          if (res.DATOS.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b; padding:20px;">No hay empleados registrados.</td></tr>`;
+            return;
+          }
+
+          res.DATOS.forEach(e => {
+            EMPLEADOS_CACHE[e.ID_EMPLEADO] = e;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><strong>${e.ID_EMPLEADO}</strong></td>
+              <td><code>${e.DOCUMENTO}</code></td>
+              <td><strong>${e.NOMBRES_APELLIDOS}</strong></td>
+              <td>${e.CARGO}</td>
+              <td style="color:#10b981; font-weight:700;">$${Number(e.SALARIO_BASE || 0).toLocaleString('es-CO')} COP</td>
+              <td>${e.TIPO_CONTRATO || 'INDEFINIDO'}</td>
+              <td><span class="badge badge-activo">${e.ESTADO || 'ACTIVO'}</span></td>
+            `;
+            tbody.appendChild(tr);
+
+            const opt = document.createElement("option");
+            opt.value = e.ID_EMPLEADO;
+            opt.text = `${e.NOMBRES_APELLIDOS} (${e.CARGO})`;
+            select.add(opt);
+          });
+        }
+      })
+      .NOM_LISTAR_EMPLEADOS_WEB(TOKEN_SESION_PROY);
+  }
+
+  function abrirModalEmpleado() {
+    document.getElementById("emp_documento").value = "";
+    document.getElementById("emp_nombres").value = "";
+    document.getElementById("emp_cargo").value = "";
+    document.getElementById("modal_empleado").style.display = "flex";
+  }
+
+  function cerrarModalEmpleado() {
+    document.getElementById("modal_empleado").style.display = "none";
+  }
+
+  function guardarNuevoEmpleado() {
+    const datos = {
+      DOCUMENTO: document.getElementById("emp_documento").value.trim(),
+      NOMBRES_APELLIDOS: document.getElementById("emp_nombres").value.trim(),
+      CARGO: document.getElementById("emp_cargo").value.trim(),
+      SALARIO_BASE: Number(document.getElementById("emp_salario").value || 0)
+    };
+
+    if (!datos.DOCUMENTO || !datos.NOMBRES_APELLIDOS) {
+      alert("Por favor ingrese el documento y el nombre completo.");
+      return;
+    }
+
+    mostrarNomAlerta("Guardando empleado en Sheets...", "info");
+    cerrarModalEmpleado();
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarNomAlerta(res.MENSAJE, "success");
+          nomCargarEmpleados();
+        } else mostrarNomAlerta("Error: " + res.MENSAJE, "error");
+      })
+      .NOM_GUARDAR_EMPLEADO_WEB(datos, TOKEN_SESION_PROY);
+  }
+
+  function actualizarSalarioBaseEmpleado() {
+    const idEmp = document.getElementById("nom_id_empleado").value;
+    if (!idEmp || !EMPLEADOS_CACHE[idEmp]) return;
+    
+    const e = EMPLEADOS_CACHE[idEmp];
+    document.getElementById("nom_devengado").value = e.SALARIO_BASE || 1300000;
+    calcularNetoNomina();
+  }
+
+  function calcularNetoNomina() {
+    const dev = Number(document.getElementById("nom_devengado").value || 0);
+    const aux = Number(document.getElementById("nom_aux_transporte").value || 0);
+    const ded = Number(document.getElementById("nom_deducciones").value || 0);
+    const neto = dev + aux - ded;
+    
+    document.getElementById("nom_neto_display").value = "$" + neto.toLocaleString('es-CO') + " COP";
+  }
+
+  function guardarLiquidacionNomina() {
+    const idEmp = document.getElementById("nom_id_empleado").value;
+    if (!idEmp) {
+      alert("Por favor seleccione un empleado.");
+      return;
+    }
+
+    const dev = Number(document.getElementById("nom_devengado").value || 0);
+    const aux = Number(document.getElementById("nom_aux_transporte").value || 0);
+    const ded = Number(document.getElementById("nom_deducciones").value || 0);
+    const neto = dev + aux - ded;
+
+    const datos = {
+      ID_EMPLEADO: idEmp,
+      PERIODO: document.getElementById("nom_periodo").value,
+      DEVENGADO_BASE: dev,
+      AUX_TRANSPORTE: aux,
+      DEDUCCIONES: ded,
+      VALOR_NETO: neto
+    };
+
+    mostrarNomAlerta("Procesando liquidación de nómina...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarNomAlerta(res.MENSAJE, "success");
+        } else mostrarNomAlerta("Error: " + res.MENSAJE, "error");
+      })
+      .NOM_LIQUIDAR_NOMINA_WEB(datos, TOKEN_SESION_PROY);
+  }
+</script>
+</body>
+</html>

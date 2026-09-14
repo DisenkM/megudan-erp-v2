@@ -1,34 +1,13 @@
-// (VERSIÓN 1.0 - V2 ERP - LIBRO 2)
+// (VERSIÓN 3.0 - V2 ERP - LIBRO 2)
 /**************************************************************
-* 20_PLANEACION.gs (VERSIÓN 1.0 - V2 ERP - LIBRO 2)
+* 20_PLANEACION.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 2)
 * RESPONSABILIDAD:
-* - Administrar Planes de Trabajo, Tareas del Equipo y Cronograma de Actividades.
+* - Administrar Planes de Trabajo, Tareas del Equipo y Cronograma.
 * - Controlar Presupuestos Proyectados vs. Ejecución Real (Ingresos, Costos, Gastos).
+* - Soportar la creación, listado y eliminación MANUAL de presupuestos (PLA_PRESUPUESTOS).
 * - Generar Proyecciones Financieras a corto y mediano plazo.
-* - Consultar e integrar Noticias Globales y Sectoriales vía RSS / UrlFetchApp.
+* - Consultar e integrar Noticias Globales y Sectoriales vía UrlFetchApp / RSS.
 **************************************************************/
-
-const CONS_CONFIG = {
-  HOJA_CONSECUTIVOS: "CFG_DOCUMENTOS"
-};
-
-function CONS_OBTENER_SIGUIENTE_CONSECUTIVO(tipoDocumento) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(CONS_CONFIG.HOJA_CONSECUTIVOS);
-  if (!hoja) throw new Error("Hoja CFG_DOCUMENTOS no encontrada.");
-
-  const datos = hoja.getRange(2, 2, hoja.getLastRow() - 1, 4).getValues();
-  for (let i = 0; i < datos.length; i++) {
-    if (datos[i][0].toString().trim().toUpperCase() === tipoDocumento.toUpperCase()) {
-      const prefijo = datos[i][1].toString();
-      const actual = parseInt(datos[i][2], 10);
-      const proximo = actual + 1;
-      hoja.getRange(i + 2, 4).setValue(proximo);
-      return prefijo + String(proximo);
-    }
-  }
-  throw new Error("Rango de numeración no configurado para: " + tipoDocumento);
-}
 
 const PLA_CONFIG_CORE = {
   HOJA_TAREAS: "PLA_CRONOGRAMA",
@@ -165,14 +144,13 @@ function PLA_ACTUALIZAR_ESTADO_TAREA_WEB(idTarea, nuevoEstado, porcentaje, token
 }
 
 /**
- * RPC: Comparativa Presupuestal vs. Real
+ * RPC: Comparativa Presupuestal vs. Real y Listado de Presupuestos Manuales
  */
 function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
   try {
     SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "TESORERIA", "VER");
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Obtener datos reales de ventas, costos y gastos
     let ventasReal = 0;
     let costosReal = 0;
     let gastosReal = 0;
@@ -181,7 +159,7 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
     if (hojaVentas && hojaVentas.getLastRow() > 1) {
       const vData = hojaVentas.getRange(2, 1, hojaVentas.getLastRow() - 1, 15).getValues();
       vData.forEach(v => {
-        if (v[12] !== "ANULADA") ventasReal += Number(v[11] || 0); // TOTAL
+        if (v[12] !== "ANULADA") ventasReal += Number(v[11] || 0);
       });
     }
     
@@ -189,7 +167,7 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
     if (hojaCostos && hojaCostos.getLastRow() > 1) {
       const cData = hojaCostos.getRange(2, 1, hojaCostos.getLastRow() - 1, 15).getValues();
       cData.forEach(c => {
-        if (c[13] !== "ANULADO") costosReal += Number(c[9] || 0); // VALOR
+        if (c[13] !== "ANULADO") costosReal += Number(c[9] || 0);
       });
     }
     
@@ -197,25 +175,51 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
     if (hojaGastos && hojaGastos.getLastRow() > 1) {
       const gData = hojaGastos.getRange(2, 1, hojaGastos.getLastRow() - 1, 16).getValues();
       gData.forEach(g => {
-        if (g[14] !== "ANULADO") gastosReal += Number(g[7] || 0); // VALOR
+        if (g[14] !== "ANULADO") gastosReal += Number(g[7] || 0);
       });
     }
     
-    // Presupuestos meta por defecto si no están definidos
     let ventasPresupuesto = 100000000;
     let costosPresupuesto = 60000000;
     let gastosPresupuesto = 15000000;
     
     let hojaPres = ss.getSheetByName(PLA_CONFIG_CORE.HOJA_PRESUPUESTOS);
+    let listaPresupuestosGuardados = [];
+    
     if (hojaPres && hojaPres.getLastRow() > 1) {
-      const pData = hojaPres.getRange(2, 1, hojaPres.getLastRow() - 1, 5).getValues();
+      const encPres = hojaPres.getRange(1, 1, 1, hojaPres.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+      const pData = hojaPres.getRange(2, 1, hojaPres.getLastRow() - 1, hojaPres.getLastColumn()).getValues();
+      
+      listaPresupuestosGuardados = pData.map(f => SEG_CONVERTIR_FILA_OBJETO(encPres, f));
+      
+      let sumaVentasPeriodo = 0;
+      let sumaCostosPeriodo = 0;
+      let sumaGastosPeriodo = 0;
+      let tieneVentasP = false;
+      let tieneCostosP = false;
+      let tieneGastosP = false;
+
       pData.forEach(p => {
-        if (String(p[0]).trim() === String(periodo).trim()) {
-          if (p[1] === "VENTAS") ventasPresupuesto = Number(p[2] || ventasPresupuesto);
-          if (p[1] === "COSTOS") costosPresupuesto = Number(p[2] || costosPresupuesto);
-          if (p[1] === "GASTOS") gastosPresupuesto = Number(p[2] || gastosPresupuesto);
+        const itemObj = SEG_CONVERTIR_FILA_OBJETO(encPres, p);
+        if (String(itemObj.PERIODO || "").trim() === String(periodo).trim()) {
+          const rubro = String(itemObj.RUBRO || "").toUpperCase().trim();
+          const monto = Number(itemObj.MONTO_PRESUPUESTADO || 0);
+          if (rubro === "VENTAS") {
+            sumaVentasPeriodo += monto;
+            tieneVentasP = true;
+          } else if (rubro === "COSTOS") {
+            sumaCostosPeriodo += monto;
+            tieneCostosP = true;
+          } else if (rubro === "GASTOS") {
+            sumaGastosPeriodo += monto;
+            tieneGastosP = true;
+          }
         }
       });
+
+      if (tieneVentasP) ventasPresupuesto = sumaVentasPeriodo;
+      if (tieneCostosP) costosPresupuesto = sumaCostosPeriodo;
+      if (tieneGastosP) gastosPresupuesto = sumaGastosPeriodo;
     }
     
     return {
@@ -226,7 +230,8 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
         COSTOS: { PRESUPUESTADO: costosPresupuesto, REAL: costosReal, DESVIACION: costosReal - costosPresupuesto },
         GASTOS: { PRESUPUESTADO: gastosPresupuesto, REAL: gastosReal, DESVIACION: gastosReal - gastosPresupuesto },
         UTILIDAD_PRESUPUESTADA: ventasPresupuesto - costosPresupuesto - gastosPresupuesto,
-        UTILIDAD_REAL: ventasReal - costosReal - gastosReal
+        UTILIDAD_REAL: ventasReal - costosReal - gastosReal,
+        LISTA_DEFINIDA: SEG_SANITIZAR_PARA_CLIENTE(listaPresupuestosGuardados)
       },
       MENSAJE: "Presupuestos y ejecuciones reales calculados exitosamente."
     };
@@ -236,7 +241,7 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
 }
 
 /**
- * RPC: Guardar/Actualizar meta presupuestal
+ * RPC: Guardar/Crear de forma MANUAL un ítem presupuestal en PLA_PRESUPUESTOS
  */
 function PLA_GUARDAR_PRESUPUESTO_WEB(datos, tokenSesion) {
   try {
@@ -246,34 +251,117 @@ function PLA_GUARDAR_PRESUPUESTO_WEB(datos, tokenSesion) {
     if (!hoja) {
       hoja = ss.insertSheet(PLA_CONFIG_CORE.HOJA_PRESUPUESTOS);
       hoja.setTabColor("#8b5cf6");
-      hoja.appendRow(["PERIODO", "RUBRO", "MONTO_PRESUPUESTADO", "FECHA_ACTUALIZACION", "USUARIO"]);
+      hoja.appendRow(["ID_PRESUPUESTO", "PERIODO", "RUBRO", "CATEGORIA", "MONTO_PRESUPUESTADO", "JUSTIFICACION", "FECHA_ACTUALIZACION", "USUARIO"]);
     }
     
+    const ultimaFila = hoja.getLastRow();
     const ahora = new Date();
-    hoja.appendRow([
-      datos.PERIODO,
-      datos.RUBRO,
-      Number(datos.MONTO || 0),
-      ahora,
-      auth.USUARIO || "SISTEMA"
-    ]);
+    const usuario = auth.USUARIO || "SISTEMA";
+    const idPresupuesto = datos.ID_PRESUPUESTO || (PLA_CONFIG_CORE.PREFIJO_PRESUPUESTO + "-" + String(Math.max(1, ultimaFila)).padStart(PLA_CONFIG_CORE.DIGITOS_ID, "0"));
     
-    return { EXITO: true, MENSAJE: "Meta presupuestal guardada en Sheets." };
+    let filaIndex = -1;
+    if (ultimaFila >= 2) {
+      const encPres = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+      const idxId = encPres.indexOf("ID_PRESUPUESTO");
+      const idxPeriodo = encPres.indexOf("PERIODO");
+      const idxRubro = encPres.indexOf("RUBRO");
+      const idxCat = encPres.indexOf("CATEGORIA");
+
+      const pData = hoja.getRange(2, 1, ultimaFila - 1, hoja.getLastColumn()).getValues();
+      for (let i = 0; i < pData.length; i++) {
+        const rowId = idxId !== -1 ? String(pData[i][idxId]).trim() : "";
+        const rowPer = idxPeriodo !== -1 ? String(pData[i][idxPeriodo]).trim() : "";
+        const rowRub = idxRubro !== -1 ? String(pData[i][idxRubro]).trim().toUpperCase() : "";
+        const rowCat = idxCat !== -1 ? String(pData[i][idxCat]).trim().toUpperCase() : "";
+
+        if ((datos.ID_PRESUPUESTO && rowId === String(datos.ID_PRESUPUESTO).trim()) ||
+            (!datos.ID_PRESUPUESTO && rowPer === String(datos.PERIODO).trim() && rowRub === String(datos.RUBRO).trim().toUpperCase() && rowCat === String(datos.CATEGORIA || "GENERAL").trim().toUpperCase())) {
+          filaIndex = i + 2;
+          break;
+        }
+      }
+    }
+    
+    if (filaIndex !== -1) {
+      const encPres = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+      hoja.getRange(filaIndex, encPres.indexOf("MONTO_PRESUPUESTADO") + 1).setValue(Number(datos.MONTO || 0));
+      hoja.getRange(filaIndex, encPres.indexOf("JUSTIFICACION") + 1).setValue(datos.JUSTIFICACION || "");
+      hoja.getRange(filaIndex, encPres.indexOf("FECHA_ACTUALIZACION") + 1).setValue(ahora);
+      hoja.getRange(filaIndex, encPres.indexOf("USUARIO") + 1).setValue(usuario);
+    } else {
+      hoja.appendRow([
+        idPresupuesto,
+        datos.PERIODO,
+        String(datos.RUBRO || "GASTOS").toUpperCase(),
+        String(datos.CATEGORIA || "GENERAL").toUpperCase(),
+        Number(datos.MONTO || 0),
+        datos.JUSTIFICACION || "",
+        ahora,
+        usuario
+      ]);
+    }
+
+    SEG_REGISTRAR_AUDITORIA({
+      ID_USUARIO: auth.SESION ? auth.SESION.ID_USUARIO : "USR-000001",
+      USUARIO: usuario,
+      MODULO: "TESORERIA",
+      SUBMODULO: "PLANEACION",
+      ACCION: "CREAR",
+      TIPO_REGISTRO: "PLA_PRESUPUESTOS",
+      ID_REGISTRO: idPresupuesto,
+      DESCRIPCION: "Presupuesto manual registrado: " + datos.RUBRO + " / " + datos.CATEGORIA + " por $" + datos.MONTO,
+      RESULTADO: "EXITOSO"
+    });
+    
+    return { EXITO: true, ID_PRESUPUESTO: idPresupuesto, MENSAJE: "¡Presupuesto manual guardado exitosamente en Google Sheets!" };
   } catch (error) {
-    return { EXITO: false, MENSAJE: "Error al guardar presupuesto: " + error.toString() };
+    return { EXITO: false, MENSAJE: "Error al guardar presupuesto manual: " + error.toString() };
   }
 }
 
 /**
- * RPC: Consultar Noticias Globales y Sectoriales vía UrlFetchApp
+ * RPC: Eliminar de forma MANUAL un ítem presupuestal en PLA_PRESUPUESTOS
+ */
+function PLA_ELIMINAR_PRESUPUESTO_WEB(idPresupuesto, tokenSesion) {
+  try {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "TESORERIA", "ELIMINAR");
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = ss.getSheetByName(PLA_CONFIG_CORE.HOJA_PRESUPUESTOS);
+    if (!hoja) throw new Error("Hoja de presupuestos no encontrada.");
+    
+    const ultimaFila = hoja.getLastRow();
+    if (ultimaFila < 2) throw new Error("No se registran presupuestos.");
+    
+    const encPres = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const idxId = encPres.indexOf("ID_PRESUPUESTO");
+    if (idxId === -1) throw new Error("Columna ID_PRESUPUESTO no encontrada.");
+
+    const pData = hoja.getRange(2, 1, ultimaFila - 1, hoja.getLastColumn()).getValues();
+    let filaIndex = -1;
+    for (let i = 0; i < pData.length; i++) {
+      if (String(pData[i][idxId]).trim() === String(idPresupuesto).trim()) {
+        filaIndex = i + 2;
+        break;
+      }
+    }
+
+    if (filaIndex === -1) throw new Error("Ítem presupuestal no encontrado.");
+
+    hoja.deleteRow(filaIndex);
+    return { EXITO: true, MENSAJE: "¡Ítem presupuestal eliminado correctamente de Sheets!" };
+  } catch (error) {
+    return { EXITO: false, MENSAJE: "Error al eliminar presupuesto: " + error.toString() };
+  }
+}
+
+/**
+ * RPC: Consultar Noticias Globales y Sectoriales vía UrlFetchApp / RSS
  */
 function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
   try {
     SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "TESORERIA", "VER");
-    
     let noticias = [];
     
-    // Intentar consulta a servicio público de noticias / feed RSS estructurado
     try {
       const urlFeed = "https://news.google.com/rss/search?q=construccion+colombia+economia&hl=es-419&gl=CO&ceid=CO:es-419";
       const response = UrlFetchApp.fetch(urlFeed, { muteHttpExceptions: true });
@@ -297,7 +385,6 @@ function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
       console.warn("Falla de Fetch XML RSS: " + eXml.toString());
     }
     
-    // Fallback garantizado con noticias e indicadores de mercado actualizados en vivo
     if (noticias.length === 0) {
       noticias = [
         { TITULO: "Dólar TRM en Colombia mantiene estabilidad y favorece importación de insumos de construcción", LINK: "https://www.dian.gov.co", FECHA: "Hoy", FUENTE: "Mercado Financiero" },
@@ -316,3 +403,4 @@ function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
     return { EXITO: false, DATOS: [], MENSAJE: "Error al obtener noticias: " + error.toString() };
   }
 }
+
