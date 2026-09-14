@@ -1,12 +1,11 @@
-// (VERSIÓN 3.0 - V2 ERP - LIBRO 2)
+// (VERSIÓN 4.0 - V2 ERP - LIBRO 2)
 /**************************************************************
-* 20_PLANEACION.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 2)
+* 20_PLANEACION.gs (VERSIÓN 4.0 - V2 ERP - LIBRO 2)
 * RESPONSABILIDAD:
-* - Administrar Planes de Trabajo, Tareas del Equipo y Cronograma.
-* - Controlar Presupuestos Proyectados vs. Ejecución Real (Ingresos, Costos, Gastos).
-* - Soportar la creación, listado y eliminación MANUAL de presupuestos (PLA_PRESUPUESTOS).
-* - Generar Proyecciones Financieras a corto y mediano plazo.
-* - Consultar e integrar Noticias Globales y Sectoriales vía UrlFetchApp / RSS.
+* - Administrar Planes de Trabajo, Tareas del Equipo y Cronograma de Actividades.
+* - Sistema Avanzado de Presupuestación Manual Profesional por Categorías, Obras/Centros de Costo, Umbrales de Desviación y Estados.
+* - Generar Proyecciones Financieras y Simulaciones de Flujo de Caja.
+* - Consultar e integrar Radar de Noticias Globales e Indicadores Económicos con Imágenes HD vía RSS / UrlFetchApp.
 **************************************************************/
 
 const PLA_CONFIG_CORE = {
@@ -144,7 +143,7 @@ function PLA_ACTUALIZAR_ESTADO_TAREA_WEB(idTarea, nuevoEstado, porcentaje, token
 }
 
 /**
- * RPC: Comparativa Presupuestal vs. Real y Listado de Presupuestos Manuales
+ * RPC: Comparativa Presupuestal vs. Real y Listado Profesional de Presupuestos
  */
 function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
   try {
@@ -233,7 +232,7 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
         UTILIDAD_REAL: ventasReal - costosReal - gastosReal,
         LISTA_DEFINIDA: SEG_SANITIZAR_PARA_CLIENTE(listaPresupuestosGuardados)
       },
-      MENSAJE: "Presupuestos y ejecuciones reales calculados exitosamente."
+      MENSAJE: "Presupuestos profesionales y ejecuciones reales calculados exitosamente."
     };
   } catch (error) {
     return { EXITO: false, DATOS: null, MENSAJE: "Error al calcular presupuestos: " + error.toString() };
@@ -241,7 +240,7 @@ function PLA_OBTENER_PRESUPUESTOS_WEB(periodo, tokenSesion) {
 }
 
 /**
- * RPC: Guardar/Crear de forma MANUAL un ítem presupuestal en PLA_PRESUPUESTOS
+ * RPC: Guardar/Crear de forma PROFESIONAL MANUAL un ítem presupuestal en PLA_PRESUPUESTOS
  */
 function PLA_GUARDAR_PRESUPUESTO_WEB(datos, tokenSesion) {
   try {
@@ -251,17 +250,17 @@ function PLA_GUARDAR_PRESUPUESTO_WEB(datos, tokenSesion) {
     if (!hoja) {
       hoja = ss.insertSheet(PLA_CONFIG_CORE.HOJA_PRESUPUESTOS);
       hoja.setTabColor("#8b5cf6");
-      hoja.appendRow(["ID_PRESUPUESTO", "PERIODO", "RUBRO", "CATEGORIA", "MONTO_PRESUPUESTADO", "JUSTIFICACION", "FECHA_ACTUALIZACION", "USUARIO"]);
+      hoja.appendRow(["ID_PRESUPUESTO", "PERIODO", "RUBRO", "CATEGORIA", "CENTRO_COSTO", "TIPO_COSTO", "MONTO_PRESUPUESTADO", "UMBRAL_DESVIACION_PCT", "ESTADO_APROBACION", "JUSTIFICACION", "FECHA_ACTUALIZACION", "USUARIO"]);
     }
     
     const ultimaFila = hoja.getLastRow();
+    const encPres = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
     const ahora = new Date();
     const usuario = auth.USUARIO || "SISTEMA";
     const idPresupuesto = datos.ID_PRESUPUESTO || (PLA_CONFIG_CORE.PREFIJO_PRESUPUESTO + "-" + String(Math.max(1, ultimaFila)).padStart(PLA_CONFIG_CORE.DIGITOS_ID, "0"));
     
     let filaIndex = -1;
     if (ultimaFila >= 2) {
-      const encPres = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
       const idxId = encPres.indexOf("ID_PRESUPUESTO");
       const idxPeriodo = encPres.indexOf("PERIODO");
       const idxRubro = encPres.indexOf("RUBRO");
@@ -282,23 +281,27 @@ function PLA_GUARDAR_PRESUPUESTO_WEB(datos, tokenSesion) {
       }
     }
     
+    const objPres = {
+      ID_PRESUPUESTO: idPresupuesto,
+      PERIODO: datos.PERIODO,
+      RUBRO: String(datos.RUBRO || "GASTOS").toUpperCase(),
+      CATEGORIA: String(datos.CATEGORIA || "GENERAL").toUpperCase(),
+      CENTRO_COSTO: String(datos.CENTRO_COSTO || "OFICINA_PRINCIPAL").toUpperCase(),
+      TIPO_COSTO: String(datos.TIPO_COSTO || "VARIABLE").toUpperCase(),
+      MONTO_PRESUPUESTADO: Number(datos.MONTO || 0),
+      UMBRAL_DESVIACION_PCT: Number(datos.UMBRAL_DESVIACION_PCT || 5),
+      ESTADO_APROBACION: String(datos.ESTADO_APROBACION || "APROBADO").toUpperCase(),
+      JUSTIFICACION: datos.JUSTIFICACION || "",
+      FECHA_ACTUALIZACION: ahora,
+      USUARIO: usuario
+    };
+
     if (filaIndex !== -1) {
-      const encPres = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-      hoja.getRange(filaIndex, encPres.indexOf("MONTO_PRESUPUESTADO") + 1).setValue(Number(datos.MONTO || 0));
-      hoja.getRange(filaIndex, encPres.indexOf("JUSTIFICACION") + 1).setValue(datos.JUSTIFICACION || "");
-      hoja.getRange(filaIndex, encPres.indexOf("FECHA_ACTUALIZACION") + 1).setValue(ahora);
-      hoja.getRange(filaIndex, encPres.indexOf("USUARIO") + 1).setValue(usuario);
+      const filaEdit = encPres.map(c => objPres[c] !== undefined ? objPres[c] : "");
+      hoja.getRange(filaIndex, 1, 1, encPres.length).setValues([filaEdit]);
     } else {
-      hoja.appendRow([
-        idPresupuesto,
-        datos.PERIODO,
-        String(datos.RUBRO || "GASTOS").toUpperCase(),
-        String(datos.CATEGORIA || "GENERAL").toUpperCase(),
-        Number(datos.MONTO || 0),
-        datos.JUSTIFICACION || "",
-        ahora,
-        usuario
-      ]);
+      const filaNueva = encPres.map(c => objPres[c] !== undefined ? objPres[c] : "");
+      hoja.appendRow(filaNueva);
     }
 
     SEG_REGISTRAR_AUDITORIA({
@@ -309,11 +312,11 @@ function PLA_GUARDAR_PRESUPUESTO_WEB(datos, tokenSesion) {
       ACCION: "CREAR",
       TIPO_REGISTRO: "PLA_PRESUPUESTOS",
       ID_REGISTRO: idPresupuesto,
-      DESCRIPCION: "Presupuesto manual registrado: " + datos.RUBRO + " / " + datos.CATEGORIA + " por $" + datos.MONTO,
+      DESCRIPCION: "Presupuesto manual profesional guardado: " + datos.RUBRO + " / " + datos.CATEGORIA + " ($" + datos.MONTO + " COP)",
       RESULTADO: "EXITOSO"
     });
     
-    return { EXITO: true, ID_PRESUPUESTO: idPresupuesto, MENSAJE: "¡Presupuesto manual guardado exitosamente en Google Sheets!" };
+    return { EXITO: true, ID_PRESUPUESTO: idPresupuesto, MENSAJE: "¡Presupuesto profesional guardado e indexado correctamente!" };
   } catch (error) {
     return { EXITO: false, MENSAJE: "Error al guardar presupuesto manual: " + error.toString() };
   }
@@ -355,13 +358,20 @@ function PLA_ELIMINAR_PRESUPUESTO_WEB(idPresupuesto, tokenSesion) {
 }
 
 /**
- * RPC: Consultar Noticias Globales y Sectoriales vía UrlFetchApp / RSS
+ * RPC: Consultar Noticias Globales, Sectoriales y Banner con IMÁGENES HD vía UrlFetchApp / RSS
  */
 function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
   try {
     SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "TESORERIA", "VER");
     let noticias = [];
     
+    const imagenesHD = [
+      "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ];
+
     try {
       const urlFeed = "https://news.google.com/rss/search?q=construccion+colombia+economia&hl=es-419&gl=CO&ceid=CO:es-419";
       const response = UrlFetchApp.fetch(urlFeed, { muteHttpExceptions: true });
@@ -372,12 +382,14 @@ function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
         const channel = root.getChild("channel");
         const items = channel.getChildren("item");
         
-        items.slice(0, 8).forEach(item => {
+        items.slice(0, 8).forEach((item, idx) => {
+          let imgUrl = imagenesHD[idx % imagenesHD.length];
           noticias.push({
             TITULO: item.getChildText("title") || "Titular de Noticia",
             LINK: item.getChildText("link") || "#",
             FECHA: item.getChildText("pubDate") ? item.getChildText("pubDate").substring(0, 16) : "Reciente",
-            FUENTE: "Google News / Sector Construcción"
+            FUENTE: "Google News / Sector Construcción",
+            IMAGEN: imgUrl
           });
         });
       }
@@ -387,20 +399,19 @@ function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
     
     if (noticias.length === 0) {
       noticias = [
-        { TITULO: "Dólar TRM en Colombia mantiene estabilidad y favorece importación de insumos de construcción", LINK: "https://www.dian.gov.co", FECHA: "Hoy", FUENTE: "Mercado Financiero" },
-        { TITULO: "Estatuto Tributario 2026: UVT fijada en $52.374 COP dinamiza deducciones para PYMES", LINK: "https://www.dian.gov.co", FECHA: "Reciente", FUENTE: "DIAN Colombia" },
-        { TITULO: "Cámara Colombiana de la Infraestructura resalta crecimiento del 12% en bioconstrucción con Guadua", LINK: "https://camacol.co", FECHA: "Esta semana", FUENTE: "CAMACOL" },
-        { TITULO: "Nuevos incentivos tributarios para empresas con proyectos de arquitectura sostenible en el Huila", LINK: "https://www.huila.gov.co", FECHA: "Reciente", FUENTE: "Gobernación del Huila" }
+        { TITULO: "Dólar TRM en Colombia mantiene estabilidad y favorece importación de insumos de construcción", LINK: "https://www.dian.gov.co", FECHA: "Hoy", FUENTE: "Mercado Financiero", IMAGEN: imagenesHD[0] },
+        { TITULO: "Estatuto Tributario 2026: UVT fijada en $52.374 COP dinamiza deducciones para PYMES", LINK: "https://www.dian.gov.co", FECHA: "Reciente", FUENTE: "DIAN Colombia", IMAGEN: imagenesHD[1] },
+        { TITULO: "Cámara Colombiana de la Infraestructura resalta crecimiento del 12% en bioconstrucción con Guadua", LINK: "https://camacol.co", FECHA: "Esta semana", FUENTE: "CAMACOL", IMAGEN: imagenesHD[2] },
+        { TITULO: "Nuevos incentivos tributarios para empresas con proyectos de arquitectura sostenible en el Huila", LINK: "https://www.huila.gov.co", FECHA: "Reciente", FUENTE: "Gobernación del Huila", IMAGEN: imagenesHD[3] }
       ];
     }
     
     return {
       EXITO: true,
       DATOS: noticias,
-      MENSAJE: "Noticias e indicadores globales obtenidos exitosamente."
+      MENSAJE: "Noticias e indicadores globales con imágenes obtenidas exitosamente."
     };
   } catch (error) {
     return { EXITO: false, DATOS: [], MENSAJE: "Error al obtener noticias: " + error.toString() };
   }
 }
-

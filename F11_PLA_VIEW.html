@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 2) -->
+<!-- (VERSIÓN 4.0 - V2 ERP - LIBRO 2) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -97,14 +97,17 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
     .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
 
-    .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 15px; }
+    /* News Cards con Imágenes HD */
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 15px; }
     .news-card {
-      background: white; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between;
+      background: white; border: 1.5px solid #e2e8f0; border-radius: 14px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between;
     }
-    .news-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); border-color: #c4b5fd; }
-    .news-title { font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0; margin-bottom: 10px; line-height: 1.4; }
-    .news-meta { font-size: 11px; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .news-link { color: #7c3aed; font-size: 12px; font-weight: 700; text-decoration: none; align-self: flex-start; }
+    .news-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(124, 58, 237, 0.12); border-color: #c4b5fd; }
+    .news-banner-img { width: 100%; height: 160px; object-fit: cover; border-bottom: 1px solid #f1f5f9; }
+    .news-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; justify-content: space-between; }
+    .news-title { font-size: 14px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.4; }
+    .news-meta { font-size: 11px; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; }
+    .news-link { color: #7c3aed; font-size: 12px; font-weight: 800; text-decoration: none; align-self: flex-start; margin-top: 5px; }
     .news-link:hover { text-decoration: underline; }
   </style>
 </head>
@@ -114,7 +117,7 @@
     <div class="header-icon">🗓️</div>
     <div>
       <h1>Planeación Estratégica, Presupuestos & Noticiero</h1>
-      <p>ERP Operativo · Planes de Trabajo, Proyecciones Financieras, Control Presupuestal y Noticias Globales</p>
+      <p>ERP Operativo · Planes de Trabajo, Presupuestador Profesional por Categorías, Proyecciones Financieras y Radar de Noticias con Imágenes</p>
     </div>
   </header>
 
@@ -124,9 +127,9 @@
   <div class="tabs-container">
     <button class="tab-btn active" id="btn-tab-cronograma" onclick="cambiarPlaPestana('cronograma')">🗓️ Cronograma & Tareas</button>
     <button class="tab-btn" id="btn-tab-presupuesto" onclick="cambiarPlaPestana('presupuesto')">📊 Presupuesto vs. Real</button>
-    <button class="tab-btn" id="btn-tab-crear-presupuesto" onclick="cambiarPlaPestana('crear-presupuesto')">💵 Presupuestador Manual</button>
+    <button class="tab-btn" id="btn-tab-crear-presupuesto" onclick="cambiarPlaPestana('crear-presupuesto')">💵 Presupuestador Profesional</button>
     <button class="tab-btn" id="btn-tab-proyecciones" onclick="cambiarPlaPestana('proyecciones')">📈 Proyecciones Financieras</button>
-    <button class="tab-btn" id="btn-tab-noticias" onclick="cambiarPlaPestana('noticias')">🌍 Radar de Noticias Globales</button>
+    <button class="tab-btn" id="btn-tab-noticias" onclick="cambiarPlaPestana('noticias')">🌍 Radar de Noticias con Imágenes</button>
   </div>
 
   <!-- Panel 1: Cronograma & Tareas -->
@@ -197,14 +200,34 @@
     </div>
   </div>
 
-  <!-- Panel 3: PRESUPUESTADOR MANUAL (APARTADO DE CREACIÓN MANUAL DE PRESUPUESTOS) -->
+  <!-- Panel 3: PRESUPUESTADOR PROFESIONAL COMPLETO -->
   <div id="panel-crear-presupuesto" class="tab-panel">
+    <!-- Tarjetas de Resumen KPI Presupuestal -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px;">
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:12px;">
+        <span style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;">Meta Ventas</span>
+        <h3 style="margin:5px 0 0; color:#15803d; font-size:18px;" id="kpi_pres_ventas">$0 COP</h3>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #fecaca; padding:15px; border-radius:12px;">
+        <span style="font-size:11px; font-weight:800; color:#991b1b; text-transform:uppercase;">Meta Costos</span>
+        <h3 style="margin:5px 0 0; color:#dc2626; font-size:18px;" id="kpi_pres_costos">-$0 COP</h3>
+      </div>
+      <div style="background:#fefce8; border:1px solid #fef08a; padding:15px; border-radius:12px;">
+        <span style="font-size:11px; font-weight:800; color:#854d0e; text-transform:uppercase;">Meta Gastos</span>
+        <h3 style="margin:5px 0 0; color:#ca8a04; font-size:18px;" id="kpi_pres_gastos">-$0 COP</h3>
+      </div>
+      <div style="background:#faf5ff; border:1px solid #e9d5ff; padding:15px; border-radius:12px;">
+        <span style="font-size:11px; font-weight:800; color:#6b21a8; text-transform:uppercase;">Utilidad Esperada</span>
+        <h3 style="margin:5px 0 0; color:#7c3aed; font-size:18px;" id="kpi_pres_utilidad">$0 COP</h3>
+      </div>
+    </div>
+
     <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 20px;">
       <!-- Formulario Manual de Presupuestación -->
       <div class="card">
-        <h3 class="card-title">💵 Asignar Presupuesto Manual</h3>
+        <h3 class="card-title">💵 Asignar Presupuesto Profesional</h3>
         <p style="font-size:12px; color:#64748b; margin-top:0; margin-bottom:15px; line-height:1.4;">
-          Establece metas presupuestales por período y categoría para comparar en tiempo real contra los registros reales del ERP.
+          Establece metas presupuestales detalladas por período, obra/centro de costo, tipo de costo y umbral de desviación.
         </p>
         <div style="display:flex; flex-direction:column; gap:14px;">
           <input type="hidden" id="pre_id_presupuesto" value="">
@@ -246,18 +269,51 @@
             </datalist>
           </div>
 
-          <div class="field">
-            <label>Monto Presupuestado COP *</label>
-            <input type="number" id="pre_monto" class="input" min="1" value="0" placeholder="Ej: 50000000">
+          <div class="form-row">
+            <div class="field">
+              <label>Centro de Costo / Obra *</label>
+              <select id="pre_centro_costo" class="input">
+                <option value="OFICINA_PRINCIPAL" selected>Oficina Principal / Admin</option>
+                <option value="FABRICA">Planta de Producción / Fábrica</option>
+                <option value="OBRAS_CONSTRUCCION">Proyectos de Construcción</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tipo de Costo *</label>
+              <select id="pre_tipo_costo" class="input">
+                <option value="VARIABLE" selected>Variable</option>
+                <option value="FIJO">Fijo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Monto Presupuestado COP *</label>
+              <input type="number" id="pre_monto" class="input" min="1" value="0" placeholder="Ej: 50000000">
+            </div>
+            <div class="field">
+              <label>Umbral Desviación %</label>
+              <input type="number" id="pre_umbral" class="input" min="0" max="50" value="5">
+            </div>
           </div>
 
           <div class="field">
-            <label>Justificación / Observaciones Gerenciales</label>
-            <textarea id="pre_justificacion" class="input" style="height:80px; resize:none;" placeholder="Escriba el objetivo comercial, meta de producción o sustento del presupuesto..."></textarea>
+            <label>Estado de Aprobación *</label>
+            <select id="pre_estado_aprobacion" class="input">
+              <option value="APROBADO" selected>APROBADO 🟢</option>
+              <option value="EN_REVISION">EN REVISIÓN 🟡</option>
+              <option value="BORRADOR">BORRADOR ⚪</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Justificación / Objetivos Gerenciales</label>
+            <textarea id="pre_justificacion" class="input" style="height:70px; resize:none;" placeholder="Escriba el objetivo comercial, meta de producción o sustento del presupuesto..."></textarea>
           </div>
 
           <div style="display:flex; gap:8px;">
-            <button class="button button-primary" style="flex:1;" onclick="guardarMetaPresupuestal()">💾 Guardar Presupuesto Manual</button>
+            <button class="button button-primary" style="flex:1;" onclick="guardarMetaPresupuestal()">💾 Guardar Presupuesto</button>
             <button class="button button-secondary" onclick="limpiarFormularioPresupuesto()">🧹 Limpiar</button>
           </div>
         </div>
@@ -269,17 +325,17 @@
           <h2 class="card-title">📋 Presupuestos Manuales Registrados en Sheets</h2>
           <button class="button button-secondary" onclick="plaCargarPresupuestos()">↻ Actualizar Lista</button>
         </div>
-        <div class="table-container" style="max-height:480px; overflow-y:auto;">
+        <div class="table-container" style="max-height:520px; overflow-y:auto;">
           <table>
             <thead style="position:sticky; top:0; z-index:1;">
               <tr>
                 <th>ID</th>
                 <th>Período</th>
-                <th>Rubro</th>
-                <th>Categoría</th>
+                <th>Rubro / Categoría</th>
+                <th>Centro Costo</th>
                 <th style="text-align:right;">Monto Meta COP</th>
+                <th>Estado</th>
                 <th>Justificación</th>
-                <th>Usuario</th>
                 <th style="text-align:center;">Acción</th>
               </tr>
             </thead>
@@ -319,15 +375,15 @@
     </div>
   </div>
 
-  <!-- Panel 5: Radar de Noticias Globales -->
+  <!-- Panel 5: Radar de Noticias Globales con Imágenes HD -->
   <div id="panel-noticias" class="tab-panel">
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">🌍 Radar de Noticias Globales, Tributarias y de Mercado</h2>
+        <h2 class="card-title">🌍 Radar de Noticias Globales, Tributarias y de Mercado con Imágenes HD</h2>
         <button class="button button-secondary" onclick="plaCargarNoticias()">↻ Actualizar Radar</button>
       </div>
       <p style="font-size:12px; color:#4b5563; margin-top:0; line-height:1.5;">
-        Mantente al tanto de la actualidad macroeconómica, cambios tributarios de la DIAN y tendencias del sector construcción e insumos en Colombia y el mundo.
+        Noticias actualizadas con imágenes de alta definición sobre macroeconomía, resoluciones de la DIAN y tendencias del sector construcción sostenible.
       </p>
       <div class="news-grid" id="noticias_container"></div>
     </div>
@@ -551,6 +607,14 @@
             tbody.appendChild(tr);
           });
 
+          // Actualizar KPI Cards
+          document.getElementById("kpi_pres_ventas").textContent = "$" + d.VENTAS.PRESUPUESTADO.toLocaleString('es-CO') + " COP";
+          document.getElementById("kpi_pres_costos").textContent = "-$" + d.COSTOS.PRESUPUESTADO.toLocaleString('es-CO') + " COP";
+          document.getElementById("kpi_pres_gastos").textContent = "-$" + d.GASTOS.PRESUPUESTADO.toLocaleString('es-CO') + " COP";
+          
+          const utilEsperada = d.UTILIDAD_PRESUPUESTADA || (d.VENTAS.PRESUPUESTADO - d.COSTOS.PRESUPUESTADO - d.GASTOS.PRESUPUESTADO);
+          document.getElementById("kpi_pres_utilidad").textContent = "$" + utilEsperada.toLocaleString('es-CO') + " COP";
+
           if (tbodyDef && d.LISTA_DEFINIDA) {
             tbodyDef.innerHTML = "";
             if (d.LISTA_DEFINIDA.length === 0) {
@@ -559,14 +623,16 @@
               d.LISTA_DEFINIDA.forEach(p => {
                 const tr = document.createElement("tr");
                 const idP = p.ID_PRESUPUESTO || '-';
+                const estAprob = p.ESTADO_APROBACION || 'APROBADO';
+                
                 tr.innerHTML = `
                   <td><code>${idP}</code></td>
                   <td><strong>${p.PERIODO || '-'}</strong></td>
-                  <td><span class="badge badge-pendiente">${p.RUBRO || '-'}</span></td>
-                  <td><strong>${p.CATEGORIA || 'GENERAL'}</strong></td>
+                  <td><span class="badge badge-pendiente">${p.RUBRO || '-'}</span><br><span style="font-size:11px; font-weight:700;">${p.CATEGORIA || 'GENERAL'}</span></td>
+                  <td><small>${p.CENTRO_COSTO || 'OFICINA_PRINCIPAL'}</small></td>
                   <td style="text-align:right; font-weight:700; color:#7c3aed;">$${Number(p.MONTO_PRESUPUESTADO || 0).toLocaleString('es-CO')} COP</td>
+                  <td><span class="badge ${estAprob === 'APROBADO' ? 'badge-completada' : 'badge-en-proceso'}">${estAprob}</span></td>
                   <td style="font-size:12px; color:#475569;">${p.JUSTIFICACION || '-'}</td>
-                  <td><code style="font-size:11px;">${p.USUARIO || 'SISTEMA'}</code></td>
                   <td style="text-align:center;">
                     <button class="button button-danger" style="padding:3px 8px; font-size:11px;" onclick="eliminarPresupuestoManual('${idP}')">🗑️</button>
                   </td>
@@ -593,7 +659,11 @@
       PERIODO: document.getElementById("pre_periodo").value,
       RUBRO: document.getElementById("pre_rubro").value,
       CATEGORIA: document.getElementById("pre_categoria").value.trim() || "GENERAL",
+      CENTRO_COSTO: document.getElementById("pre_centro_costo").value,
+      TIPO_COSTO: document.getElementById("pre_tipo_costo").value,
       MONTO: Number(document.getElementById("pre_monto").value || 0),
+      UMBRAL_DESVIACION_PCT: Number(document.getElementById("pre_umbral").value || 5),
+      ESTADO_APROBACION: document.getElementById("pre_estado_aprobacion").value,
       JUSTIFICACION: document.getElementById("pre_justificacion").value.trim()
     };
 
@@ -602,7 +672,7 @@
       return;
     }
 
-    mostrarPlaAlerta("Guardando presupuesto manual en Sheets...", "info");
+    mostrarPlaAlerta("Guardando presupuesto manual profesional en Sheets...", "info");
 
     google.script.run
       .withSuccessHandler(function(res) {
@@ -663,14 +733,17 @@
             const div = document.createElement("div");
             div.className = "news-card";
             div.innerHTML = `
-              <div>
-                <div class="news-meta">
-                  <span>📰 ${n.FUENTE}</span>
-                  <span>⏱️ ${n.FECHA}</span>
+              <img src="${n.IMAGEN}" class="news-banner-img" alt="Imagen Noticia" onerror="this.src='https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=800&q=80'">
+              <div class="news-body">
+                <div>
+                  <div class="news-meta">
+                    <span>📰 ${n.FUENTE}</span>
+                    <span>⏱️ ${n.FECHA}</span>
+                  </div>
+                  <h4 class="news-title">${n.TITULO}</h4>
                 </div>
-                <h4 class="news-title">${n.TITULO}</h4>
+                <a href="${n.LINK}" target="_blank" class="news-link">🔗 Leer Noticia Completa ➔</a>
               </div>
-              <a href="${n.LINK}" target="_blank" class="news-link">🔗 Leer Noticia Completa ➔</a>
             `;
             container.appendChild(div);
           });

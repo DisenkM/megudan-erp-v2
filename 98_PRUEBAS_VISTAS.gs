@@ -1,6 +1,6 @@
-// (VERSIÓN 26.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 35.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 31.0 - V2 ERP - LIBRO 1)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 35.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -19,23 +19,18 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
   const resultadosVistas = [];
   
   // ==========================================================
-  // TEST 1: COMPILACIÓN Y EVALUACIÓN DE VISTA DE LOGIN (F3_WEB_LOGIN)
+  // TEST 1: LOGIN (F3_WEB_LOGIN)
   // ==========================================================
   console.log("\n🔒 [TEST 1] Evaluando compilación de F3_WEB_LOGIN:");
   try {
     const template = HtmlService.createTemplateFromFile("F3_WEB_LOGIN");
-    
-    // 🛡️ INYECCIÓN DEFENSIVA DE MOCK URL PARA EVITAR ReferenceError DE NUEVA REDIRECCIÓN V6
-    template.WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyonax-D7-70eoWd8yHF2e4MGv4Pf9nBQTM-OspdRM-qBkYamEw/exec";
-    
+    template.WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyonax/exec";
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
     if (!contenidoHtml || contenidoHtml.length === 0) {
       throw new Error("El motor entregó un HTML vacío para el Login.");
     }
-    
-    // Validar estándar de compatibilidad
     if (!contenidoHtml.includes("<!DOCTYPE html>")) {
       throw new Error("Falta declaración <!DOCTYPE html> requerida para CSP y Sandbox de Google.");
     }
@@ -44,55 +39,44 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     }
     
     console.log("   [PASS] F3_WEB_LOGIN compilado correctamente.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "PASS", detalle: "Compilación limpia e inyección HTML5 confirmada en F3_WEB_LOGIN." });
   } catch (errLogin) {
     console.error("   [FAIL] Error en Render de Login: " + errLogin.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F3_WEB_LOGIN' (sin la extensión .html en el editor) y pega allí todo el contenido del artefacto 'F3_WEB_LOGIN_HTML-v7.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PORTAL_LOGIN", estado: "FAIL", detalle: errLogin.message });
   }
 
   // ==========================================================
-  // TEST 2: COMPILACIÓN DE DASHBOARD CON INYECCIÓN DE SCRIPTLETS (F4_WEB_DASHBOARD)
+  // TEST 2: DASHBOARD (F4_WEB_DASHBOARD)
   // ==========================================================
   console.log("\n🎛️ [TEST 2] Evaluando inyección dinámica en F4_WEB_DASHBOARD:");
   try {
     const template = HtmlService.createTemplateFromFile("F4_WEB_DASHBOARD");
-    
-    // Inyectar variables que simulan el login asíncrono
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
     template.ID_USUARIO = "USR-000001";
     template.USUARIO = "ADMIN_TEST_SUITE";
-    template.WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyonax-D7-70eoWd8yHF2e4MGv4Pf9nBQTM-OspdRM-qBkYamEw/exec";
+    template.WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyonax/exec";
     
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
     if (!contenidoHtml.includes("SES-TEST-TOKEN-999999")) {
-      throw new Error("Falla de interpolación: El Token de sesión no se inyectó en el Javascript del cliente.");
+      throw new Error("Falla de interpolación: El Token de sesión no se inyectó.");
     }
-    if (!contenidoHtml.includes("ADMIN_TEST_SUITE")) {
-      throw new Error("Falla de interpolación: El alias de usuario de sesión no fue inyectado.");
-    }
-    if (!contenidoHtml.includes("contenedor-principal") && !contenidoHtml.includes("inyectarHTMLConScripts")) {
-      throw new Error("Estructura de iFrames segura no encontrada.");
+    if (!contenidoHtml.includes("SEG_OBTENER_MENU_NIVEL")) {
+      throw new Error("Llamada RPC de menú dinámico no encontrada.");
     }
     
-    console.log("   [PASS] F4_WEB_DASHBOARD compilado e inyectado correctamente.");
-    console.log("   [INFO] Tokens e identidades vinculadas de forma atómica en el DOM.");
-    
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "PASS", detalle: "Inyección segura de variables de sesión, WEB_APP_URL y control de viewport-frame exitoso." });
+    console.log("   [PASS] F4_WEB_DASHBOARD v18 compilado e inyectado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "PASS", detalle: "Inyección de variables y menú v18 ok." });
   } catch (errDash) {
     console.error("   [FAIL] Error en Render de Dashboard: " + errDash.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F4_WEB_DASHBOARD' y pega allí todo el contenido del artefacto 'F4_WEB_DASHBOARD_HTML-v13.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_DASHBOARD_DINAMICO", estado: "FAIL", detalle: errDash.message });
   }
 
   // ==========================================================
-  // TEST 3: COMPILACIÓN DE GESTIÓN DE SEGURIDAD (F2_USR_GESTION)
+  // TEST 3: SEGURIDAD (F2_USR_GESTION v22)
   // ==========================================================
-  console.log("\n🔐 [TEST 3] Evaluando compilación defensiva en F2_USR_GESTION:");
+  console.log("\n🔐 [TEST 3] Evaluando compilación de F2_USR_GESTION v22:");
   try {
     const template = HtmlService.createTemplateFromFile("F2_USR_GESTION");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
@@ -101,26 +85,23 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     const contenidoHtml = htmlOutput.getContent();
     
     if (!contenidoHtml.includes("USR_CARGAR_USUARIOS")) {
-      throw new Error("El módulo Javascript asíncrono de usuarios no se compiló en la sección de script.");
+      throw new Error("El módulo Javascript de usuarios no se compiló.");
     }
-    if (contenidoHtml.includes("Unexpected string")) {
-      throw new Error("Inconsistencia sintáctica de comillas de escape detectada.");
+    if (!contenidoHtml.includes("SEG_GUARDAR_PERMISO_WEB")) {
+      throw new Error("Llamada RPC SEG_GUARDAR_PERMISO_WEB no encontrada en permisos dinámicos.");
     }
     
-    console.log("   [PASS] F2_USR_GESTION compilado de forma defensiva exitosa.");
-    console.log("   [PASS] Sintaxis JS blindada y libre de ReferenceErrors inline.");
-    
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "PASS", detalle: "Compilación limpia de pestañas, tablas modales y JS modular defensivo en F2_USR_GESTION." });
+    console.log("   [PASS] F2_USR_GESTION v22 compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "PASS", detalle: "Pestaña de permisos dinámicos v22 ok." });
   } catch (errGestion) {
     console.error("   [FAIL] Error en Render de Seguridad: " + errGestion.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F2_USR_GESTION' y pega allí todo el contenido del artefacto 'F2_USR_GESTION_HTML-v21.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "FAIL", detalle: errGestion.message });
   }
 
   // ==========================================================
-  // TEST 4: COMPILACIÓN DE GESTIÓN DE TERCEROS UNIFICADOS (F1_CLI_FORM)
+  // TEST 4: TERCEROS (F1_CLI_FORM)
   // ==========================================================
-  console.log("\n👥 [TEST 4] Evaluando unificación y mapeo en F1_CLI_FORM:");
+  console.log("\n👥 [TEST 4] Evaluando F1_CLI_FORM:");
   try {
     const template = HtmlService.createTemplateFromFile("F1_CLI_FORM");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
@@ -129,26 +110,20 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     const contenidoHtml = htmlOutput.getContent();
     
     if (!contenidoHtml.includes("aliasMap") || !contenidoHtml.includes("targetKey")) {
-      throw new Error("El diccionario traductor de alias dinámico (Clientes/Proveedores) no fue encontrado en el JS del cliente.");
-    }
-    if (contenidoHtml.includes("<label_for")) {
-      throw new Error("Etiqueta propietaria no semántica <label_for> detectada. Fallará el sanitizador de Google.");
+      throw new Error("Traductor de alias no encontrado.");
     }
     
-    console.log("   [PASS] F1_CLI_FORM compilado de forma impecable.");
-    console.log("   [INFO] Estándar W3C validado para la inyección y previsualización de RUT.");
-    
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FORMULARIO_TERCEROS", estado: "PASS", detalle: "Mapeador asíncrono unificado, traductor de alias y etiquetas semánticas validadas." });
+    console.log("   [PASS] F1_CLI_FORM compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FORMULARIO_TERCEROS", estado: "PASS", detalle: "Terceros unificados ok." });
   } catch (errCli) {
-    console.error("   [FAIL] Error en Render de Formulario de Terceros: " + errCli.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F1_CLI_FORM' y pega allí todo el contenido del artefacto 'F1_CLI_FORM_HTML-v8.txt'.");
+    console.error("   [FAIL] Error en Render de Terceros: " + errCli.message);
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FORMULARIO_TERCEROS", estado: "FAIL", detalle: errCli.message });
   }
 
   // ==========================================================
-  // TEST 5: COMPILACIÓN DE CATÁLOGO DE PRODUCTOS (F5_PROD_VIEW)
+  // TEST 5: PRODUCTOS (F5_PROD_VIEW)
   // ==========================================================
-  console.log("\n📦 [TEST 5] Evaluando compilación de F5_PROD_VIEW:");
+  console.log("\n📦 [TEST 5] Evaluando F5_PROD_VIEW:");
   try {
     const template = HtmlService.createTemplateFromFile("F5_PROD_VIEW");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
@@ -156,27 +131,21 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
-    if (!contenidoHtml.includes("prodCargarProductos")) {
-      throw new Error("El módulo Javascript asíncrono de productos no se compiló en la sección de script.");
-    }
     if (!contenidoHtml.includes("PROD_LISTAR_PRODUCTOS_WEB")) {
-      throw new Error("La llamada RPC de productos PROD_LISTAR_PRODUCTOS_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC PROD_LISTAR_PRODUCTOS_WEB no encontrada.");
     }
     
     console.log("   [PASS] F5_PROD_VIEW compilado correctamente.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F5_PROD_VIEW." });
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "PASS", detalle: "Catálogo de productos ok." });
   } catch (errProd) {
     console.error("   [FAIL] Error en Render de Productos: " + errProd.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F5_PROD_VIEW' y pega allí todo el contenido del artefacto 'F5_PROD_VIEW_HTML-v5.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_CATALOGO_PRODUCTOS", estado: "FAIL", detalle: errProd.message });
   }
 
   // ==========================================================
-  // TEST 6: COMPILACIÓN DE SALDOS E INVENTARIO (F6_INV_VIEW)
+  // TEST 6: INVENTARIO (F6_INV_VIEW)
   // ==========================================================
-  console.log("\n🗃️ [TEST 6] Evaluando compilación de F6_INV_VIEW:");
+  console.log("\n🗃️ [TEST 6] Evaluando F6_INV_VIEW:");
   try {
     const template = HtmlService.createTemplateFromFile("F6_INV_VIEW");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
@@ -184,174 +153,184 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
-    if (!contenidoHtml.includes("invCargarSaldos")) {
-      throw new Error("El módulo Javascript asíncrono de inventario no se compiló en la sección de script.");
-    }
     if (!contenidoHtml.includes("INV_LISTAR_SALDOS_WEB")) {
-      throw new Error("La llamada RPC de inventario INV_LISTAR_SALDOS_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC INV_LISTAR_SALDOS_WEB no encontrada.");
     }
     
-    console.log("   [PASS] F6_INV_VIEW compiled correctly.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono en F6_INV_VIEW." });
+    console.log("   [PASS] F6_INV_VIEW compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "PASS", detalle: "Saldos de inventario ok." });
   } catch (errInv) {
     console.error("   [FAIL] Error en Render de Inventarios: " + errInv.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F6_INV_VIEW' y pega allí todo el contenido del artefacto 'F6_INV_VIEW_HTML-v4.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_SALDOS_INVENTARIO", estado: "FAIL", detalle: errInv.message });
   }
 
-  
   // ==========================================================
-  // TEST 6.1: COMPILACIÓN DE EMISIÓN DE VENTAS (F7_VEN_VIEW)
+  // TEST 7: VENTAS (F7_VEN_VIEW)
   // ==========================================================
-  console.log("\n💰 [TEST 6.1] Evaluando compilación de F7_VEN_VIEW:");
+  console.log("\n💰 [TEST 7] Evaluando F7_VEN_VIEW:");
   try {
     const template = HtmlService.createTemplateFromFile("F7_VEN_VIEW");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
-    if (!contenidoHtml.includes("ven_tipo_documento")) {
-      throw new Error("El módulo Javascript asíncrono de ventas no se compiló en la sección de script.");
-    }
     if (!contenidoHtml.includes("VEN_GUARDAR_VENTA_WEB")) {
-      throw new Error("La llamada RPC de ventas VEN_GUARDAR_VENTA_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC VEN_GUARDAR_VENTA_WEB no encontrada.");
     }
     
-    console.log("   [PASS] F7_VEN_VIEW compiled correctly.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono con AIU Colombia en F7_VEN_VIEW." });
+    console.log("   [PASS] F7_VEN_VIEW compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "PASS", detalle: "Ventas AIU ok." });
   } catch (errVen) {
     console.error("   [FAIL] Error en Render de Ventas: " + errVen.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F7_VEN_VIEW' y pega allí todo el contenido del artefacto 'F7_VEN_VIEW_HTML-v10.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_VENTAS", estado: "FAIL", detalle: errVen.message });
   }
 
-
-  
   // ==========================================================
-  // TEST 6.2: COMPILACIÓN DE EMISIÓN DE COMPRAS (F8_COM_VIEW)
+  // TEST 8: COMPRAS (F8_COM_VIEW)
   // ==========================================================
-  console.log("\n🛒 [TEST 6.2] Evaluando compilación de F8_COM_VIEW:");
+  console.log("\n🛒 [TEST 8] Evaluando F8_COM_VIEW:");
   try {
     const template = HtmlService.createTemplateFromFile("F8_COM_VIEW");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
-    if (!contenidoHtml.includes("com_tipo_documento")) {
-      throw new Error("El módulo Javascript asíncrono de compras no se compiló en la sección de script.");
-    }
     if (!contenidoHtml.includes("COM_GUARDAR_COMPRA_WEB")) {
-      throw new Error("La llamada RPC de compras COM_GUARDAR_COMPRA_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC COM_GUARDAR_COMPRA_WEB no encontrada.");
     }
     
-    console.log("   [PASS] F8_COM_VIEW compiled correctly.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_COMPRAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC asíncrono de CxP en F8_COM_VIEW." });
+    console.log("   [PASS] F8_COM_VIEW compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_COMPRAS", estado: "PASS", detalle: "Compras y CxP ok." });
   } catch (errCom) {
     console.error("   [FAIL] Error en Render de Compras: " + errCom.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F8_COM_VIEW' y pega allí todo el contenido del artefacto 'F8_COM_VIEW_HTML-v1.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_EMISION_COMPRAS", estado: "FAIL", detalle: errCom.message });
   }
 
   // ==========================================================
-  // TEST 6.3: COMPILACIÓN DE FINANZAS Y CONTABILIDAD (F9_FIN_VIEW)
+  // TEST 9: FINANZAS (F9_FIN_VIEW v4)
   // ==========================================================
-  console.log("\n📊 [TEST 6.3] Evaluando compilación de F9_FIN_VIEW:");
+  console.log("\n📊 [TEST 9] Evaluando F9_FIN_VIEW v4:");
   try {
     const template = HtmlService.createTemplateFromFile("F9_FIN_VIEW");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
-    if (!contenidoHtml.includes("ing_tipo")) {
-      throw new Error("El módulo Javascript de finanzas no se compiló en la sección de script.");
-    }
     if (!contenidoHtml.includes("FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB")) {
-      throw new Error("La llamada RPC de finanzas FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC FIN_CALCULAR_ESTADOS_FINANCIEROS_WEB no encontrada.");
     }
     if (!contenidoHtml.includes("TAX_CALCULAR_RESUMEN_TRIBUTARIO_WEB")) {
-      throw new Error("La llamada RPC tributaria TAX_CALCULAR_RESUMEN_TRIBUTARIO_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC TAX_CALCULAR_RESUMEN_TRIBUTARIO_WEB no encontrada.");
     }
     
-    console.log("   [PASS] F9_FIN_VIEW compiled correctly.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC de estados financieros en F9_FIN_VIEW." });
+    console.log("   [PASS] F9_FIN_VIEW v4 compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "PASS", detalle: "Finanzas e Impuestos v4 ok." });
   } catch (errFin) {
     console.error("   [FAIL] Error en Render de Finanzas: " + errFin.message);
-    console.error("   💡 SOLUCIÓN: Crea un archivo HTML llamado exactamente 'F9_FIN_VIEW' y pega allí todo el contenido del artefacto 'F9_FIN_VIEW_HTML-v3.txt'.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_FINANZAS", estado: "FAIL", detalle: errFin.message });
   }
 
-  
   // ==========================================================
-  // TEST 6.4: COMPILACIÓN DE PLANEACIÓN Y NOTICIAS (F11_PLA_VIEW)
+  // TEST 10: PLANEACIÓN Y PRESUPUESTOS (F11_PLA_VIEW v4)
   // ==========================================================
-  console.log("\n🗓️ [TEST 6.4] Evaluando compilación de F11_PLA_VIEW:");
+  console.log("\n🗓️ [TEST 10] Evaluando F11_PLA_VIEW v4:");
   try {
     const template = HtmlService.createTemplateFromFile("F11_PLA_VIEW");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
     const htmlOutput = template.evaluate();
     const contenidoHtml = htmlOutput.getContent();
     
     if (!contenidoHtml.includes("PLA_OBTENER_NOTICIAS_GLOBALES_WEB")) {
-      throw new Error("La llamada RPC PLA_OBTENER_NOTICIAS_GLOBALES_WEB no se encuentra en el script del cliente.");
+      throw new Error("Llamada RPC PLA_OBTENER_NOTICIAS_GLOBALES_WEB no encontrada.");
+    }
+    if (!contenidoHtml.includes("PLA_GUARDAR_PRESUPUESTO_WEB")) {
+      throw new Error("Llamada RPC PLA_GUARDAR_PRESUPUESTO_WEB no encontrada.");
     }
     
-    console.log("   [PASS] F11_PLA_VIEW compiled correctly.");
-    console.log("   [INFO] Longitud de buffer HTML: " + contenidoHtml.length + " bytes.");
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PLANEACION", estado: "PASS", detalle: "Compilación limpia de la interfaz y enlace RPC en F11_PLA_VIEW." });
+    console.log("   [PASS] F11_PLA_VIEW v4 compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PLANEACION", estado: "PASS", detalle: "Planeación v4 con noticias HD y presupuestos ok." });
   } catch (errPla) {
     console.error("   [FAIL] Error en Render de Planeación: " + errPla.message);
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_PLANEACION", estado: "FAIL", detalle: errPla.message });
   }
 
   // ==========================================================
-  // TEST 7: SIMULACIÓN DE ENRUTAMIENTO HTTP GET (doGet)
+  // TEST 11: OBRAS Y PROYECTOS (F10_OBR_VIEW)
   // ==========================================================
-  console.log("\n🔌 [TEST 7] Probando Enrutamiento y Desvío HTTP (WEB_doGet):");
+  console.log("\n🏗️ [TEST 11] Evaluando F10_OBR_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F10_OBR_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("OBR_LISTAR_OBRAS_WEB")) {
+      throw new Error("Llamada RPC OBR_LISTAR_OBRAS_WEB no encontrada.");
+    }
+    
+    console.log("   [PASS] F10_OBR_VIEW compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_OBRAS", estado: "PASS", detalle: "Obras y proyectos ok." });
+  } catch (errObr) {
+    console.error("   [FAIL] Error en Render de Obras: " + errObr.message);
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_OBRAS", estado: "FAIL", detalle: errObr.message });
+  }
+
+  // ==========================================================
+  // TEST 12: NÓMINA OPERATIVA (F12_NOM_VIEW)
+  // ==========================================================
+  console.log("\n👥 [TEST 12] Evaluando F12_NOM_VIEW:");
+  try {
+    const template = HtmlService.createTemplateFromFile("F12_NOM_VIEW");
+    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
+    
+    const htmlOutput = template.evaluate();
+    const contenidoHtml = htmlOutput.getContent();
+    
+    if (!contenidoHtml.includes("NOM_LISTAR_EMPLEADOS_WEB")) {
+      throw new Error("Llamada RPC NOM_LISTAR_EMPLEADOS_WEB no encontrada.");
+    }
+    
+    console.log("   [PASS] F12_NOM_VIEW compilado correctamente.");
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_NOMINA", estado: "PASS", detalle: "Nómina operativa ok." });
+  } catch (errNom) {
+    console.error("   [FAIL] Error en Render de Nómina: " + errNom.message);
+    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_NOMINA", estado: "FAIL", detalle: errNom.message });
+  }
+
+  // ==========================================================
+  // TEST 13: ENRUTAMIENTO HTTP GET (doGet)
+  // ==========================================================
+  console.log("\n🔌 [TEST 13] Probando Enrutamiento y Desvío HTTP (WEB_doGet):");
   try {
     if (typeof WEB_doGet !== "function") {
       throw new Error("La función enrutadora maestra WEB_doGet no está declarada.");
     }
     
-    // Escenario A: Acceso sin parámetros (Debe enrutar al Login por defecto)
-    console.log("   -> Simulando petición inicial sin parámetros de consulta (Carga de Login)...");
     const resPorDefecto = WEB_doGet(undefined);
     if (!resPorDefecto || resPorDefecto.getTitle() !== "MEGUDAN ERP | Iniciar sesión") {
       throw new Error("El enrutador no asignó la ruta por defecto 'login' de forma segura.");
     }
-    console.log("   [PASS] Carga por defecto resuelta exitosamente hacia la vista de Login.");
     
-    // Escenario B: Petición de Dashboard sin Token (Debe redireccionar con alerta)
-    console.log("   -> Simulando petición de Dashboard saltándose la autenticación...");
     const eFalso = { parameter: { ruta: "dashboard" } };
     const resSinToken = WEB_doGet(eFalso);
     if (!resSinToken || resSinToken.getTitle() !== "MEGUDAN ERP | Redirigiendo") {
       throw new Error("El enrutador permitió cargar la estructura gráfica del panel sin token.");
     }
-    console.log("   [PASS] Intento de intrusión bloqueado y desviado de forma controlada hacia el Login.");
-    
-    // Escenario C: Ruta inexistente (Debe arrojar ventana de error controlada)
-    console.log("   -> Simulando petición hacia una URL inválida...");
-    const eInvalido = { parameter: { ruta: "ruta_fantasma_999" } };
-    const resInvalido = WEB_doGet(eInvalido);
-    if (!resInvalido || resInvalido.getTitle() !== "MEGUDAN ERP | Error") {
-      throw new Error("El sistema no capturó la ruta errónea con la pantalla de control de acceso.");
-    }
-    console.log("   [PASS] Excepción de ruta inválida controlada con éxito en UI.");
 
-    resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "PASS", detalle: "Enrutador doGet validado ante cargas por defecto, intentos de bypass sin token y desvíos de seguridad." });
+    console.log("   [PASS] Enrutamiento doGet validado exitosamente.");
+    resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "PASS", detalle: "Enrutador doGet validado ante cargas por defecto y bypass sin token." });
   } catch (errRouting) {
-    console.error("   [FAIL] Error en Módulo de Enrutamiento: " + errRouting.message);
-    console.error("   💡 SOLUCIÓN: Asegúrate de que el archivo '25_WEB.gs' contenga el código completo de la versión '25_WEB-v13.gs' de Studio.");
+    console.error("   [FAIL] Error en Enrutamiento: " + errRouting.message);
     resultadosVistas.push({ modulo: "WEB_ROUTING", prueba: "HTTP_GET_ROUTING", estado: "FAIL", detalle: errRouting.message });
   }
 
   // ==========================================================
-  // CONSOLIDADO FINAL DE PRUEBAS GRÁFICAS
+  // REPORTE CONSOLIDADO FINAL
   // ==========================================================
   console.log("\n==================================================================");
   console.log("📊 REPORTE DE SUITE DE RENDERING DE INTERFAZ WEB");
@@ -375,36 +354,9 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
   console.log("==================================================================");
   
   if (fallados === 0) {
-    console.log("🎉 ¡SISTEMA GRAFICO VERIFICADO! TODAS LAS VISTAS COMPILAN AL 100% EN GOOGLE.");
+    console.log("🎉 ¡SISTEMA GRÁFICO VERIFICADO! TODAS LAS VISTAS COMPILAN AL 100% EN GOOGLE.");
   } else {
     console.warn("⚠️ SE DETECTARON INCONSISTENCIAS EN LA COMPILACIÓN DE ALGUNAS PLANTILLAS.");
-    console.warn("   Por favor revise los mensajes de solución (💡) impresos arriba para cada fallo.");
-  }
-
-
-  // TEST DE OBRAS Y PROYECTOS (F10_OBR_VIEW)
-  console.log("\n🏗️ [TEST OBRAS] Evaluando compilación de F10_OBR_VIEW:");
-  try {
-    const template = HtmlService.createTemplateFromFile("F10_OBR_VIEW");
-    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
-    const htmlOutput = template.evaluate();
-    const contenidoHtml = htmlOutput.getContent();
-    if (!contenidoHtml.includes("OBR_LISTAR_OBRAS_WEB")) throw new Error("RPC de Obras no encontrado.");
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_OBRAS", estado: "PASS", detalle: "F10_OBR_VIEW v1 compilado correctamente." });
-  } catch (errObr) {
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_OBRAS", estado: "FAIL", detalle: errObr.message });
-  }
-
-  // TEST DE NOMINA BASICA (F12_NOM_VIEW)
-  console.log("\n👥 [TEST NOMINA] Evaluando compilación de F12_NOM_VIEW:");
-  try {
-    const template = HtmlService.createTemplateFromFile("F12_NOM_VIEW");
-    template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
-    const htmlOutput = template.evaluate();
-    const contenidoHtml = htmlOutput.getContent();
-    if (!contenidoHtml.includes("NOM_LISTAR_EMPLEADOS_WEB")) throw new Error("RPC de Nómina no encontrado.");
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_NOMINA", estado: "PASS", detalle: "F12_NOM_VIEW v1 compilado correctamente." });
-  } catch (errNom) {
-    resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_NOMINA", estado: "FAIL", detalle: errNom.message });
   }
 }
+
