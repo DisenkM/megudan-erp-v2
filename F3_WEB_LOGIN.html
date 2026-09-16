@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 8.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 10.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -72,7 +72,7 @@
       color: #ffffff; width: 100%; border: none; border-radius: 10px; padding: 12px;
       font-size: 14px; font-weight: 800; cursor: pointer;
       transition: all 0.2s; text-align: center; margin-top: 10px;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); text-decoration: none; display: inline-block;
     }
     .btn:hover { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); transform: translateY(-1px); }
     .btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
@@ -110,11 +110,11 @@
     <div id="panel-signin" class="form-panel active">
       <div class="field">
         <label for="credencial">Usuario o Correo *</label>
-        <input type="text" id="credencial" class="input" placeholder="Ej: admin o usuario@megudan.com">
+        <input type="text" id="credencial" class="input" placeholder="Ej: admin o usuario@megudan.com" onkeypress="if(event.key==='Enter') ejecutarLogin()">
       </div>
       <div class="field">
         <label for="contrasena">Contraseña *</label>
-        <input type="password" id="contrasena" class="input" placeholder="Digite su contraseña de acceso">
+        <input type="password" id="contrasena" class="input" placeholder="Digite su contraseña de acceso" onkeypress="if(event.key==='Enter') ejecutarLogin()">
       </div>
       <button id="btn-login" class="btn" onclick="ejecutarLogin()">Ingresar al ERP</button>
     </div>
@@ -221,13 +221,13 @@
         if (!autenticacion.EXITO) {
           btn.disabled = false;
           btn.textContent = "Ingresar al ERP";
-          mostrarAlerta(autenticacion.MENSAJE, "error");
+          mostrarAlerta(autenticacion.MENSAJE || "Credenciales incorrectas.", "error");
           return;
         }
 
         mostrarAlerta("Credenciales validadas. Redirigiendo...", "success");
         var sesion = autenticacion.SESION;
-        if (!sesion) {
+        if (!sesion || !sesion.TOKEN_SESION) {
           btn.disabled = false;
           btn.textContent = "Ingresar al ERP";
           mostrarAlerta("La sesión no pudo ser inicializada.", "error");
@@ -237,14 +237,7 @@
         var urlBase = WEB_APP_URL || (window.location.origin + window.location.pathname);
         var url = urlBase + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
 
-        try {
-          window.top.location.replace(url);
-          setTimeout(function() {
-            mostrarBotonRedireccionDirecta(url);
-          }, 1000);
-        } catch (e) {
-          mostrarBotonRedireccionDirecta(url);
-        }
+        mostrarBotonRedireccionDirecta(url);
       })
       .withFailureHandler(function(err) {
         btn.disabled = false;
@@ -256,7 +249,11 @@
 
   function mostrarBotonRedireccionDirecta(url) {
     var card = document.querySelector(".card");
-    card.innerHTML = '<div style="text-align:center; padding: 10px 0;"><h3 style="color:#ffffff; margin-bottom:10px;">¡Sesión Autorizada!</h3><p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Haz clic en el botón inferior para ingresar al Panel de Control:</p><button class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:800; padding:14px 20px; font-size:14px;" onclick="window.top.location.replace(\'' + url + '\')">🚀 ENTRAR AL PANEL DE CONTROL</button></div>';
+    card.innerHTML = '<div style="text-align:center; padding: 10px 0;"><h3 style="color:#ffffff; margin-bottom:10px;">¡Sesión Autorizada!</h3><p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Haz clic en el botón inferior para ingresar al Panel de Control:</p><a id="btn_redirect_top" href="' + url + '" target="_top" class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:800; padding:14px 20px; font-size:14px; text-decoration:none; display:inline-block;">🚀 ENTRAR AL PANEL DE CONTROL</a></div>';
+    
+    try {
+      document.getElementById("btn_redirect_top").click();
+    } catch (e) {}
   }
 
   function ejecutarRegistro() {

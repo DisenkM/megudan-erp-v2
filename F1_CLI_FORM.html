@@ -1,410 +1,350 @@
-<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
-<div class="form-container" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #1f2937;">
-  
-  <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 800; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-    👥 Ficha Única de Terceros (Clientes y Proveedores)
-  </h2>
+<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Clientes & Terceros | MEGUDAN ERP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+      background-color: #f8fafc; color: #1e293b;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1300px; margin: 0 auto; }
 
-  <!-- Alerta / Mensaje -->
-  <div id="CLI_ALERT" class="message-box" style="display: none; padding: 12px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 20px; line-height: 1.5;"></div>
+    .header {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+    }
+    .header-info { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+      font-size: 32px; width: 60px; height: 60px;
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
 
-  <!-- Buscador en Caliente -->
-  <div class="search-card" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 25px; display: flex; gap: 10px; align-items: center;">
-    <span style="font-size: 18px;">🔍</span>
-    <input type="text" id="buscarTercero" style="flex: 1; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" placeholder="Buscar tercero por NIT, Cédula, Razón Social o ID...">
-    <button class="btn btn-secondary" onclick="buscarTercero()" style="background-color: #475569; color: white; border: none; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;">Consultar ERP</button>
-    <button class="btn btn-primary" onclick="nuevoTercero()" style="background-color: #2563eb; color: white; border: none; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;">+ Limpiar / Nuevo</button>
-  </div>
+    .message { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
-  <!-- Tipo de Tercero Checkboxes -->
-  <div style="background-color: #f1f5f9; border-radius: 8px; padding: 18px; margin-bottom: 25px;">
-    <strong style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 12px; letter-spacing: 0.5px;">Tipo de tercero</strong>
-    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
-      <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer;">
-        <input type="checkbox" id="tipo_cliente" checked style="width: 16px; height: 16px; cursor: pointer;"> Clientes <span style="font-size: 11px; color: #64748b; font-weight: 500;">(Ventas, cartera, cotizaciones)</span>
-      </label>
-      <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer;">
-        <input type="checkbox" id="tipo_proveedor" style="width: 16px; height: 16px; cursor: pointer;"> Proveedores <span style="font-size: 11px; color: #64748b; font-weight: 500;">(Compras, costos, CxP)</span>
-      </label>
-      <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer;">
-        <input type="checkbox" id="tipo_otros" style="width: 16px; height: 16px; cursor: pointer;"> Otros <span style="font-size: 11px; color: #64748b; font-weight: 500;">(Bancos, ONGs, etc.)</span>
-      </label>
+    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
+    .input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .button-primary { background-color: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+    .button-primary:hover { background-color: #1d4ed8; }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+    .button-success { background-color: #16a34a; color: white; }
+    .button-danger { background-color: #dc2626; color: white; }
+
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+    .badge-active { background-color: #dcfce7; color: #15803d; }
+    .badge-inactive { background-color: #fee2e2; color: #dc2626; }
+
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-info">
+      <div class="header-icon">👥</div>
+      <div>
+        <h1>Ficha Única de Clientes & Terceros</h1>
+        <p>ERP Operativo · Gestión de Clientes, Proveedores, Responsabilidades RUT DIAN y Cartera Comercial</p>
+      </div>
+    </div>
+  </header>
+
+  <div id="CLI_ALERT" class="message"></div>
+
+  <!-- BUSCADOR RÁPIDO Y BARRA DE ACCIONES -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; gap:10px; flex:1; max-width:500px;">
+        <input type="text" id="buscarTercero" class="input" placeholder="Buscar por NIT, Cédula, Razón Social o ID..." onkeypress="if(event.key==='Enter') buscarTercero()">
+        <button class="button button-primary" onclick="buscarTercero()">🔍 Buscar</button>
+      </div>
+      <div class="toolbar" style="margin:0;">
+        <button class="button button-secondary" onclick="nuevoTercero()">🆕 Nuevo</button>
+        <button class="button button-primary" onclick="guardarTercero()">💾 Guardar</button>
+        <button class="button button-secondary" onclick="actualizarTercero()">🔄 Actualizar</button>
+        <button class="button button-danger" onclick="inactivarTercero()">🚫 Inactivar</button>
+      </div>
     </div>
   </div>
 
-  <!-- Form Layout -->
-  <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+  <!-- FORMULARIO PRINCIPAL DE REGISTRO -->
+  <div class="card">
+    <h3 class="card-title">🏢 Datos de Identificación del Tercero</h3>
     
-    <!-- Columna Izquierda: Datos Básicos -->
-    <div class="form-col" style="display: flex; flex-direction: column; gap: 20px;">
-      
-      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
-        <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 15px; font-weight: 800; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">📌 Datos Básicos</h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Tipo Persona *</label>
-            <select id="TIPO_PERSONA" onchange="alternarTipoPersona(this.value)" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="PERSONA_JURIDICA" selected>Jurídica</option>
-              <option value="PERSONA_NATURAL">Natural</option>
-            </select>
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Tipo Identificación *</label>
-            <select id="TIPO_DOCUMENTO" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="NIT" selected>NIT (Número Identificación Tributaria)</option>
-              <option value="CC">CC (Cédula de Ciudadanía)</option>
-              <option value="CE">CE (Cédula de Extranjería)</option>
-              <option value="PAP">Pasaporte</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 4fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Identificación / NIT *</label>
-            <input type="text" id="NUMERO_DOCUMENTO" oninput="calcularDVFrontend(this.value)" placeholder="Número sin puntos ni guiones" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; text-align: center;">Dv</label>
-            <input type="text" id="DIGITO_VERIFICACION" readonly placeholder="Dv" style="width: 100%; padding: 8px 5px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 700; text-align: center; background-color: #f1f5f9;">
-          </div>
-        </div>
-
-        <!-- Secciones Dinámicas según Tipo Persona -->
-        <div id="sec_empresa" class="dynamic-section active" style="margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Razón Social *</label>
-            <input type="text" id="RAZON_SOCIAL" placeholder="Razón social legal completa" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
-        <div id="sec_persona" class="dynamic-section" style="margin-bottom: 15px; display: none;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-            <div class="field">
-              <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Primer Nombre *</label>
-              <input type="text" id="PRIMER_NOMBRE" placeholder="Ej: Juan" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-            </div>
-            <div class="field">
-              <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Segundo Nombre</label>
-              <input type="text" id="SEGUNDO_NOMBRE" placeholder="Ej: Alejandro" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-            </div>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="field">
-              <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Primer Apellido *</label>
-              <input type="text" id="PRIMER_APELLIDO" placeholder="Ej: Megudan" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-            </div>
-            <div class="field">
-              <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Segundo Apellido</label>
-              <input type="text" id="SEGUNDO_APELLIDO" placeholder="Ej: Ruiz" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-            </div>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Nombre Comercial</label>
-            <input type="text" id="NOMBRE_COMERCIAL" placeholder="Nombre de fantasía o marca" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Clasificación Comercial *</label>
-            <select id="TIPO_CLIENTE" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="MAYORISTA" selected>Mayorista</option>
-              <option value="MINORISTA">Minorista / Detal</option>
-              <option value="EMPRESARIAL">Empresarial / Corporativo</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Ciudad</label>
-            <input type="text" id="CIUDAD" value="Pitalito" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Departamento</label>
-            <input type="text" id="DEPARTAMENTO" value="Huila" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">País *</label>
-            <input type="text" id="PAIS" value="COLOMBIA" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
-        <div class="field" style="margin-bottom: 15px;">
-          <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Dirección Principal</label>
-          <input type="text" id="DIRECCION" placeholder="Ej: Cra 4 # 3-50 Pitalito" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Teléfono Fijo</label>
-            <input type="text" id="TELEFONO" placeholder="Número fijo" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Celular / WhatsApp</label>
-            <input type="text" id="CELULAR" placeholder="Número móvil" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
-        <div class="field" style="margin-bottom: 15px;">
-          <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Correo Electrónico (Factura Electrónica) *</label>
-          <input type="email" id="CORREO" placeholder="ejemplo@correo.com" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-        </div>
-
-        <div class="field">
-          <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
-            <input type="checkbox" id="contacto_pagador" checked style="width: 14px; height: 14px;"> Marcar como contacto <strong>Pagador</strong> (Notificaciones de Cartera/Cobro)
-          </label>
-        </div>
-
+    <div class="form-row-3" style="margin-top:16px;">
+      <div class="field">
+        <label>ID Cliente / Consecutivo</label>
+        <input type="text" id="ID_CLIENTE" class="input" readonly placeholder="Automático (Ej: CLI-000001)" style="background:#f1f5f9; font-weight:800; color:#2563eb;">
       </div>
-
+      <div class="field">
+        <label>Tipo de Persona *</label>
+        <select id="TIPO_PERSONA" class="input" onchange="alternarTipoPersona(this.value)">
+          <option value="PERSONA_JURIDICA" selected>Persona Jurídica / Empresa</option>
+          <option value="PERSONA_NATURAL">Persona Natural / Individuo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tipo de Documento *</label>
+        <select id="TIPO_DOCUMENTO" class="input" onchange="alCambiarTipoDoc(this.value)">
+          <option value="NIT" selected>NIT - Número Identificación Tributaria</option>
+          <option value="CC">CC - Cédula de Ciudadanía</option>
+          <option value="CE">CE - Cédula de Extranjería</option>
+          <option value="PASAPORTE">Pasaporte</option>
+        </select>
+      </div>
     </div>
 
-    <!-- Columna Derecha: Tributaria & Comercial -->
-    <div class="form-col" style="display: flex; flex-direction: column; gap: 20px;">
-      
-      <!-- Card Tributaria (DIAN) -->
-      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
-        <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 15px; font-weight: 800; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">🧾 Datos Tributarios y DIAN</h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Régimen IVA *</label>
-            <select id="RESPONSABILIDAD_IVA" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="NO_RESPONSABLE_IVA" selected>No Responsable de IVA</option>
-              <option value="RESPONSABLE_IVA">Responsable de IVA</option>
-            </select>
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Régimen Tributario *</label>
-            <select id="REGIMEN_FISCAL" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="ORDINARIO" selected>Régimen Ordinario</option>
-              <option value="SIMPLE">Régimen Simple (RST)</option>
-              <option value="ESPECIAL">Régimen Especial</option>
-            </select>
-          </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Número de Documento / NIT *</label>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="NUMERO_DOCUMENTO" class="input" placeholder="Ej: 900123456" oninput="calcularDVFrontend(this.value)">
+          <input type="text" id="DIGITO_VERIFICACION" class="input" style="width:70px; text-align:center; font-weight:800; background:#f1f5f9;" readonly placeholder="DV">
         </div>
-
-        <div class="field" style="margin-bottom: 15px;">
-          <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Responsabilidad Fiscal (RUT) *</label>
-          <div class="rut-checklist" style="display: flex; flex-direction: column; gap: 8px; background-color: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 600;">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" name="responsabilidad_rut" value="O-13" id="resp_o13">
-              <span style="background-color: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800;">O-13</span> Gran Contribuyente
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" name="responsabilidad_rut" value="O-15" id="resp_o15">
-              <span style="background-color: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800;">O-15</span> Autorretenedor
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" name="responsabilidad_rut" value="O-23" id="resp_o23">
-              <span style="background-color: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800;">O-23</span> Agente Retención IVA
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" name="responsabilidad_rut" value="O-47" id="resp_o47">
-              <span style="background-color: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800;">O-47</span> Régimen Simple Tributación
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" name="responsabilidad_rut" value="R-99-PN" id="resp_r99" checked>
-              <span style="background-color: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800;">R-99-PN</span> No Aplica - Otros
-            </label>
-          </div>
-          <!-- Almacén oculto compilado -->
-          <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="R-99-PN">
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Mapeo ID Siigo</label>
-            <input type="text" id="ID_SIIGO" placeholder="Identificador Siigo" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Mapeo ID Alegra</label>
-            <input type="text" id="ID_ALEGRA" placeholder="Identificador Alegra" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
       </div>
-
-      <!-- Card Comercial, Obras & Cuentas -->
-      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
-        <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 15px; font-weight: 800; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">⚙️ Configuración Operativa</h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Condición Pago</label>
-            <select id="FORMA_PAGO" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="CONTADO" selected>Contado</option>
-              <option value="CREDITO">Crédito</option>
-            </select>
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Método habitual Pago</label>
-            <select id="METODO_PAGO" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-              <option value="TRANSFERENCIA" selected>Transferencia Bancaria</option>
-              <option value="EFECTIVO">Efectivo / Caja</option>
-              <option value="CHEQUE">Cheque</option>
-              <option value="TARJETA">Tarjeta Débito/Crédito</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Plazo Pago (Días)</label>
-            <input type="number" id="PLAZO_PAGO_DIAS" min="0" value="0" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Límite Crédito (COP)</label>
-            <input type="number" id="LIMITE_CREDITO" min="0" value="0" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Vendedor Operativo</label>
-            <input type="text" id="VENDEDOR_ASIGNADO" placeholder="Código de vendedor" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Centro Costo Vinculado</label>
-            <input type="text" id="CENTRO_COSTO" placeholder="Código centro de costo" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Obra / Proyecto Principal</label>
-            <input type="text" id="OBRA_PRINCIPAL" placeholder="ID Obra principal" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-          <div class="field">
-            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Auxiliar Contable</label>
-            <input type="text" id="CUENTA_CONTABLE_CLIENTE" placeholder="Ej: 130505 o 220505" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-          </div>
-        </div>
-
-        <div class="field">
-          <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px;">Estado Operación *</label>
-          <select id="ESTADO_CLIENTE" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-            <option value="ACTIVO" selected>Activo</option>
-            <option value="INACTIVO">Inactivo</option>
-            <option value="BLOQUEADO">Bloqueado</option>
-          </select>
-        </div>
-
+      <div class="field" id="sec_razon_social">
+        <label>Razón Social / Nombre Empresa *</label>
+        <input type="text" id="RAZON_SOCIAL" class="input" placeholder="Ej: CONSTRUCCIONES Y GUADUA SAS">
       </div>
-
     </div>
 
+    <!-- Nombres para Persona Natural -->
+    <div id="sec_persona_natural" class="form-row-4" style="display:none;">
+      <div class="field">
+        <label>Primer Nombre *</label>
+        <input type="text" id="PRIMER_NOMBRE" class="input" placeholder="Ej: Juan">
+      </div>
+      <div class="field">
+        <label>Segundo Nombre</label>
+        <input type="text" id="SEGUNDO_NOMBRE" class="input" placeholder="Ej: Alejandro">
+      </div>
+      <div class="field">
+        <label>Primer Apellido *</label>
+        <input type="text" id="PRIMER_APELLIDO" class="input" placeholder="Ej: Pérez">
+      </div>
+      <div class="field">
+        <label>Segundo Apellido</label>
+        <input type="text" id="SEGUNDO_APELLIDO" class="input" placeholder="Ej: Gómez">
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="field">
+        <label>Nombre Comercial / Fantasía</label>
+        <input type="text" id="NOMBRE_COMERCIAL" class="input" placeholder="Ej: Muebles de Guadua Pitalito">
+      </div>
+      <div class="field">
+        <label>Clasificación Comercial *</label>
+        <select id="TIPO_CLIENTE" class="input">
+          <option value="MAYORISTA" selected>Cliente Mayorista / Empresarial</option>
+          <option value="MINORISTA">Cliente Detalle / Minorista</option>
+          <option value="OBRA_PROYECTO">Constructora / Contratista de Obra</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Estado del Cliente *</label>
+        <select id="ESTADO_CLIENTE" class="input">
+          <option value="ACTIVO" selected>ACTIVO</option>
+          <option value="INACTIVO">INACTIVO</option>
+          <option value="BLOQUEADO">BLOQUEADO</option>
+        </select>
+      </div>
+    </div>
+
+    <h4 style="margin:24px 0 12px; font-size:13px; font-weight:800; color:#475569; text-transform:uppercase;">📍 Datos de Ubicación y Contacto</h4>
+    <div class="form-row-3">
+      <div class="field">
+        <label>Dirección Principal *</label>
+        <input type="text" id="DIRECCION" class="input" placeholder="Ej: Cra 4 # 12-45">
+      </div>
+      <div class="field">
+        <label>Ciudad / Municipio *</label>
+        <input type="text" id="CIUDAD" class="input" value="Pitalito">
+      </div>
+      <div class="field">
+        <label>Departamento *</label>
+        <input type="text" id="DEPARTAMENTO" class="input" value="Huila">
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="field">
+        <label>Teléfono Fijo / Móvil</label>
+        <input type="text" id="TELEFONO" class="input" placeholder="Ej: 6088360000">
+      </div>
+      <div class="field">
+        <label>Celular / WhatsApp *</label>
+        <input type="text" id="CELULAR" class="input" placeholder="Ej: 3118172601">
+      </div>
+      <div class="field">
+        <label>Correo Electrónico (Facturación Electrónica) *</label>
+        <input type="email" id="CORREO" class="input" placeholder="facturas@cliente.com">
+      </div>
+    </div>
+
+    <h4 style="margin:24px 0 12px; font-size:13px; font-weight:800; color:#475569; text-transform:uppercase;">🏛️ Responsabilidades RUT / DIAN & Condiciones Comerciales</h4>
+    
+    <div class="checkbox-group" style="margin-bottom:20px;">
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="05"> 05 - Improrrenta Régimen Ordinario</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="07"> 07 - Agente Retención en la Fuente</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="14"> 14 - Informante de Exógena</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="42"> 42 - Obligado a llevar contabilidad</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="48" checked> 48 - Impuesto Sobre Ventas - IVA</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="52" checked> 52 - Facturador Electrónico</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="55"> 55 - Beneficiarios Finales</label>
+      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="R-99-PN"> R-99-PN - No Aplica / Persona Natural</label>
+    </div>
+    <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="48,52">
+
+    <div class="form-row-4">
+      <div class="field">
+        <label>Forma de Pago Acordada *</label>
+        <select id="FORMA_PAGO" class="input">
+          <option value="CONTADO" selected>Contado</option>
+          <option value="CREDITO">Crédito</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Plazo de Crédito (Días)</label>
+        <input type="number" id="PLAZO_PAGO_DIAS" class="input" value="30" min="0">
+      </div>
+      <div class="field">
+        <label>Cupo / Límite de Crédito (COP)</label>
+        <input type="number" id="LIMITE_CREDITO" class="input" value="50000000" min="0">
+      </div>
+      <div class="field">
+        <label>País *</label>
+        <input type="text" id="PAIS" class="input" value="COLOMBIA">
+      </div>
+    </div>
   </div>
 
-  <!-- Observaciones -->
-  <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
-    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 15px; font-weight: 800; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">📝 Observaciones Generales</h3>
-    <textarea id="OBSERVACIONES" style="width: 100%; height: 90px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: sans-serif; resize: none;" placeholder="Inserte anotaciones logísticas, restricciones comerciales o notas tributarias del Tercero..."></textarea>
+  <!-- TABLA HISTÓRICA DE CLIENTES REGISTRADOS -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">👥 Listado de Clientes Registrados en la Base de Datos</h2>
+      <button class="button button-secondary" onclick="cargarListaClientes()">↻ Actualizar Tabla</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Cliente</th>
+            <th>Documento / NIT</th>
+            <th>Razón Social / Nombre</th>
+            <th>Ciudad</th>
+            <th>Teléfono / Celular</th>
+            <th>Correo</th>
+            <th>Forma Pago</th>
+            <th>Estado</th>
+            <th style="text-align:center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla_clientes_body">
+          <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando lista de clientes...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-
-  <!-- Botones de Acción -->
-  <div style="display: flex; gap: 15px; justify-content: flex-end; border-top: 2px solid #e5e7eb; padding-top: 20px;">
-    <!-- ID Temporal Oculto -->
-    <input type="hidden" id="ID_CLIENTE" value="">
-    <button class="btn btn-primary" onclick="guardarTercero()" style="background-color: #2563eb; color: white; border: none; padding: 12px 30px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s;">💾 Guardar Registro</button>
-    <button class="btn btn-secondary" onclick="actualizarTercero()" style="background-color: #1e293b; color: white; border: none; padding: 12px 30px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s;">🔄 Actualizar Registro</button>
-  </div>
-
 </div>
 
-<footer style="text-align: center; margin-top: 30px; font-size: 11px; color: #64748b; font-weight: 500;">
-  MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS © 2026 · Todos los derechos reservados · F1_CLI_FORM
-</footer>
-
 <script>
-  // (VERSIÓN 2.0 - V2 ERP - LIBRO 1)
-  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
-  const aliasMap = {
-    FORMA_PAGO: "CONDICION_PAGO",
-    LIMITE_CREDITO: "CUPO_CREDITO",
-    CONTACTO_PRINCIPAL: "NOMBRE_CONTACTO"
-  };
-  const targetKey = "ID_CLIENTE";
-  // Sincronizar checkboxes de responsabilidades DIAN
-  document.querySelectorAll('input[name="responsabilidad_rut"]').forEach(cb => {
-    cb.addEventListener("change", compilarResponsabilidadesRUT);
+  var TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
+  var CLIENTES_CACHE_LISTA = [];
+
+  document.addEventListener("DOMContentLoaded", function() {
+    cargarListaClientes();
   });
 
-  function compilarResponsabilidadesRUT() {
-    const checked = document.querySelectorAll('input[name="responsabilidad_rut"]:checked');
-    const valores = [];
-    checked.forEach(cb => {
-      valores.push(cb.value);
-    });
-    // Si no hay ninguno, colocar por defecto R-99-PN
-    if (valores.length === 0) {
-      valores.push("R-99-PN");
-      document.getElementById("resp_r99").checked = true;
-    } else if (valores.length > 1 && valores.includes("R-99-PN")) {
-      // Si seleccionó otro junto con R-99-PN, desmarcar R-99-PN
-      const idx = valores.indexOf("R-99-PN");
-      valores.splice(idx, 1);
-      document.getElementById("resp_r99").checked = false;
-    }
-    const unificado = valores.join(",");
-    document.getElementById("RESPONSABILIDAD_FISCAL").value = unificado;
-    return unificado;
+  function mostrarAlerta(msg, tipo) {
+    var el = document.getElementById("CLI_ALERT");
+    if (!el) return;
+    el.textContent = msg;
+    el.className = "message message-" + tipo;
+    el.style.display = "block";
+    setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
-  function alternarTipoPersona(tipo) {
-    const secEmpresa = document.getElementById("sec_empresa");
-    const secPersona = document.getElementById("sec_persona");
-    if (tipo === "PERSONA_NATURAL") {
-      secEmpresa.style.display = "none";
-      secPersona.style.display = "block";
+  function alternarTipoPersona(val) {
+    var secRazon = document.getElementById("sec_razon_social");
+    var secNat = document.getElementById("sec_persona_natural");
+    if (val === "PERSONA_NATURAL") {
+      secNat.style.display = "grid";
     } else {
-      secPersona.style.display = "none";
-      secEmpresa.style.display = "block";
+      secNat.style.display = "none";
+    }
+  }
+
+  function alCambiarTipoDoc(val) {
+    var dvInput = document.getElementById("DIGITO_VERIFICACION");
+    if (val === "NIT") {
+      calcularDVFrontend(document.getElementById("NUMERO_DOCUMENTO").value);
+    } else {
+      if (dvInput) dvInput.value = "";
     }
   }
 
   function calcularDVFrontend(nit) {
-    if (!nit) {
-      document.getElementById("DIGITO_VERIFICACION").value = "";
-      return;
+    if (document.getElementById("TIPO_DOCUMENTO").value !== "NIT") return;
+    var strNit = String(nit || "").replace(/\D/g, "");
+    if (!strNit) { document.getElementById("DIGITO_VERIFICACION").value = ""; return; }
+    var vpri = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+    var z = strNit.length;
+    var y = 0;
+    for (var i = 0; i < z; i++) {
+      y += parseInt(strNit.charAt(z - 1 - i), 10) * vpri[i];
     }
-    const limpio = nit.replace(/\D/g, "");
-    if (!limpio || isNaN(limpio)) {
-      document.getElementById("DIGITO_VERIFICACION").value = "";
-      return;
-    }
-    const v = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
-    let suma = 0;
-    const len = limpio.length;
-    for (let i = 0; i < len; i++) {
-      suma += parseInt(limpio.charAt(len - 1 - i), 10) * v[i];
-    }
-    const residuo = suma % 11;
-    const dv = (residuo > 1) ? String(11 - residuo) : String(residuo);
+    var x = y % 11;
+    var dv = x > 1 ? String(11 - x) : String(x);
     document.getElementById("DIGITO_VERIFICACION").value = dv;
   }
 
-  function mostrarMensaje(texto, tipo) {
-    const alertBox = document.getElementById("CLI_ALERT");
-    alertBox.textContent = texto;
-    if (tipo === "success") {
-      alertBox.style.backgroundColor = "rgba(22, 163, 74, 0.15)";
-      alertBox.style.color = "#16a34a";
-      alertBox.style.border = "1px solid rgba(22, 163, 74, 0.3)";
-    } else if (tipo === "error") {
-      alertBox.style.backgroundColor = "rgba(220, 38, 38, 0.15)";
-      alertBox.style.color = "#dc2626";
-      alertBox.style.border = "1px solid rgba(220, 38, 38, 0.3)";
-    } else {
-      alertBox.style.backgroundColor = "rgba(37, 99, 235, 0.15)";
-      alertBox.style.color = "#2563eb";
-      alertBox.style.border = "1px solid rgba(37, 99, 235, 0.3)";
-    }
-    alertBox.style.display = "block";
+  function compilarResponsabilidadesRUT() {
+    var seleccionados = [];
+    document.querySelectorAll('input[name="responsabilidad_rut"]:checked').forEach(function(cb) {
+      seleccionados.push(cb.value);
+    });
+    document.getElementById("RESPONSABILIDAD_FISCAL").value = seleccionados.join(",");
+  }
+
+  function nuevoTercero() {
+    limpiarFormulario();
+    mostrarAlerta("Formulario listo para registrar un nuevo cliente.", "info");
   }
 
   function limpiarFormulario() {
@@ -421,66 +361,22 @@
     document.getElementById("TELEFONO").value = "";
     document.getElementById("CELULAR").value = "";
     document.getElementById("CORREO").value = "";
-    document.getElementById("PLAZO_PAGO_DIAS").value = "0";
-    document.getElementById("LIMITE_CREDITO").value = "0";
-    document.getElementById("VENDEDOR_ASIGNADO").value = "";
-    document.getElementById("CENTRO_COSTO").value = "";
-    document.getElementById("OBRA_PRINCIPAL").value = "";
-    document.getElementById("CUENTA_CONTABLE_CLIENTE").value = "";
-    document.getElementById("OBSERVACIONES").value = "";
-    document.getElementById("ID_SIIGO").value = "";
-    document.getElementById("ID_ALEGRA").value = "";
-    
-    // Resetear checkboxes RUT
-    document.querySelectorAll('input[name="responsabilidad_rut"]').forEach(cb => {
-      cb.checked = (cb.value === "R-99-PN");
-    });
-    document.getElementById("RESPONSABILIDAD_FISCAL").value = "R-99-PN";
-    
-    // Resetear selects
+    document.getElementById("PLAZO_PAGO_DIAS").value = "30";
+    document.getElementById("LIMITE_CREDITO").value = "50000000";
     document.getElementById("TIPO_PERSONA").value = "PERSONA_JURIDICA";
     document.getElementById("TIPO_DOCUMENTO").value = "NIT";
-    document.getElementById("TIPO_CLIENTE").value = "MAYORISTA";
-    document.getElementById("RESPONSABILIDAD_IVA").value = "NO_RESPONSABLE_IVA";
-    document.getElementById("REGIMEN_FISCAL").value = "ORDINARIO";
     document.getElementById("ESTADO_CLIENTE").value = "ACTIVO";
-    document.getElementById("FORMA_PAGO").value = "CONTADO";
-    document.getElementById("METODO_PAGO").value = "TRANSFERENCIA";
-    
     alternarTipoPersona("PERSONA_JURIDICA");
   }
 
-  function nuevoTercero() {
-    limpiarFormulario();
-    CLI_MODO = "NUEVO";
-    mostrarMensaje("Formulario listo para registrar un nuevo Tercero.", "info");
-    
-    const esProveedor = document.getElementById("tipo_proveedor").checked && !document.getElementById("tipo_cliente").checked;
-    
-    if (esProveedor) {
-      google.script.run
-        .withSuccessHandler(function(idGenerado) {
-          document.getElementById("ID_CLIENTE").value = idGenerado;
-          mostrarMensaje("Código asignado para Proveedor: " + idGenerado, "info");
-        })
-        .PROV_GENERAR_ID(TOKEN_SESION);
-    } else {
-      google.script.run
-        .withSuccessHandler(function(idGenerado) {
-          document.getElementById("ID_CLIENTE").value = idGenerado;
-          mostrarMensaje("Código asignado para Cliente: " + idGenerado, "info");
-        })
-        .CLI_GENERAR_ID(TOKEN_SESION);
-    }
-  }
-
   function obtenerDatosFormulario() {
+    compilarResponsabilidadesRUT();
     return {
-      ID_CLIENTE: document.getElementById("ID_CLIENTE").value.trim(),
+      ID_CLIENTE: document.getElementById("ID_CLIENTE").value,
       TIPO_PERSONA: document.getElementById("TIPO_PERSONA").value,
       TIPO_DOCUMENTO: document.getElementById("TIPO_DOCUMENTO").value,
       NUMERO_DOCUMENTO: document.getElementById("NUMERO_DOCUMENTO").value.trim(),
-      DIGITO_VERIFICACION: document.getElementById("DIGITO_VERIFICACION").value.trim(),
+      DIGITO_VERIFICACION: document.getElementById("DIGITO_VERIFICACION").value,
       RAZON_SOCIAL: document.getElementById("RAZON_SOCIAL").value.trim(),
       PRIMER_NOMBRE: document.getElementById("PRIMER_NOMBRE").value.trim(),
       SEGUNDO_NOMBRE: document.getElementById("SEGUNDO_NOMBRE").value.trim(),
@@ -488,236 +384,201 @@
       SEGUNDO_APELLIDO: document.getElementById("SEGUNDO_APELLIDO").value.trim(),
       NOMBRE_COMERCIAL: document.getElementById("NOMBRE_COMERCIAL").value.trim(),
       TIPO_CLIENTE: document.getElementById("TIPO_CLIENTE").value,
+      ESTADO_CLIENTE: document.getElementById("ESTADO_CLIENTE").value,
+      DIRECCION: document.getElementById("DIRECCION").value.trim(),
       CIUDAD: document.getElementById("CIUDAD").value.trim(),
       DEPARTAMENTO: document.getElementById("DEPARTAMENTO").value.trim(),
       PAIS: document.getElementById("PAIS").value.trim(),
-      DIRECCION: document.getElementById("DIRECCION").value.trim(),
       TELEFONO: document.getElementById("TELEFONO").value.trim(),
       CELULAR: document.getElementById("CELULAR").value.trim(),
       CORREO: document.getElementById("CORREO").value.trim(),
-      RESPONSABILIDAD_IVA: document.getElementById("RESPONSABILIDAD_IVA").value,
-      REGIMEN_FISCAL: document.getElementById("REGIMEN_FISCAL").value,
       RESPONSABILIDAD_FISCAL: document.getElementById("RESPONSABILIDAD_FISCAL").value,
-      ID_SIIGO: document.getElementById("ID_SIIGO").value.trim(),
-      ID_ALEGRA: document.getElementById("ID_ALEGRA").value.trim(),
       FORMA_PAGO: document.getElementById("FORMA_PAGO").value,
-      METODO_PAGO: document.getElementById("METODO_PAGO").value,
       PLAZO_PAGO_DIAS: Number(document.getElementById("PLAZO_PAGO_DIAS").value || 0),
-      LIMITE_CREDITO: Number(document.getElementById("LIMITE_CREDITO").value || 0),
-      VENDEDOR_ASIGNADO: document.getElementById("VENDEDOR_ASIGNADO").value.trim(),
-      CENTRO_COSTO: document.getElementById("CENTRO_COSTO").value.trim(),
-      OBRA_PRINCIPAL: document.getElementById("OBRA_PRINCIPAL").value.trim(),
-      CUENTA_CONTABLE_CLIENTE: document.getElementById("CUENTA_CONTABLE_CLIENTE").value.trim(),
-      ESTADO_CLIENTE: document.getElementById("ESTADO_CLIENTE").value,
-      OBSERVACIONES: document.getElementById("OBSERVACIONES").value.trim()
+      LIMITE_CREDITO: Number(document.getElementById("LIMITE_CREDITO").value || 0)
     };
   }
 
   function guardarTercero() {
-    compilarResponsabilidadesRUT();
-    const datos = obtenerDatosFormulario();
-    if (!datos.NUMERO_DOCUMENTO || !datos.CORREO) {
-      mostrarMensaje("La Identificación/NIT y el Correo Electrónico son obligatorios.", "error");
+    var datos = obtenerDatosFormulario();
+    if (!datos.NUMERO_DOCUMENTO) {
+      mostrarAlerta("El número de documento / NIT es obligatorio.", "error");
       return;
     }
     if (datos.TIPO_PERSONA === "PERSONA_JURIDICA" && !datos.RAZON_SOCIAL) {
-      mostrarMensaje("La Razón Social es obligatoria para Personas Jurídicas.", "error");
+      mostrarAlerta("La Razón Social es obligatoria para Personas Jurídicas.", "error");
       return;
     }
     if (datos.TIPO_PERSONA === "PERSONA_NATURAL" && (!datos.PRIMER_NOMBRE || !datos.PRIMER_APELLIDO)) {
-      mostrarMensaje("El Primer Nombre y Primer Apellido son obligatorios para Personas Naturales.", "error");
+      mostrarAlerta("Primer Nombre y Primer Apellido son obligatorios.", "error");
       return;
     }
 
-    const esProveedor = document.getElementById("tipo_proveedor").checked && !document.getElementById("tipo_cliente").checked;
-    
-    mostrarMensaje("Guardando tercero en la base de datos...", "info");
-    
-    if (esProveedor) {
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.EXITO) {
-            mostrarMensaje("¡Proveedor guardado exitosamente con ID: " + res.ID_PROVEEDOR + "!", "success");
-            document.getElementById("ID_CLIENTE").value = res.ID_PROVEEDOR;
-            CLI_MODO = "EDITAR";
-          } else {
-            mostrarMensaje("Error al guardar proveedor: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarMensaje("Error de red: " + err.message, "error");
-        })
-        .PROV_GUARDAR_PROVEEDOR(datos, TOKEN_SESION);
-    } else {
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.EXITO) {
-            mostrarMensaje("¡Cliente guardado exitosamente con ID: " + res.ID_CLIENTE + "!", "success");
-            document.getElementById("ID_CLIENTE").value = res.ID_CLIENTE;
-            CLI_MODO = "EDITAR";
-          } else {
-            mostrarMensaje("Error al guardar cliente: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarMensaje("Error de red: " + err.message, "error");
-        })
-        .CLI_GUARDAR_CLIENTE(datos, TOKEN_SESION);
-    }
-  }
+    mostrarAlerta("Guardando cliente en Google Sheets...", "info");
 
-  function actualizarTercero() {
-    compilarResponsabilidadesRUT();
-    const datos = obtenerDatosFormulario();
-    if (!datos.ID_CLIENTE) {
-      mostrarMensaje("Debe cargar o buscar un tercero primero.", "error");
-      return;
-    }
-    mostrarMensaje("Actualizando registro...", "info");
-    
-    const esProveedor = datos.ID_CLIENTE.startsWith("PROV");
-    
-    if (esProveedor) {
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.EXITO) {
-            mostrarMensaje("¡Proveedor actualizado exitosamente!", "success");
-          } else {
-            mostrarMensaje("Error al actualizar: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarMensaje("Error de red: " + err.message, "error");
-        })
-        .PROV_ACTUALIZAR_PROVEEDOR(datos, TOKEN_SESION);
-    } else {
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.EXITO) {
-            mostrarMensaje("¡Cliente actualizado exitosamente!", "success");
-          } else {
-            mostrarMensaje("Error al actualizar: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarMensaje("Error de red: " + err.message, "error");
-        })
-        .CLI_ACTUALIZAR_CLIENTE(datos, TOKEN_SESION);
-    }
-  }
-
-  function buscarTercero() {
-    const criterio = document.getElementById("buscarTercero").value.trim();
-    if (!criterio) {
-      mostrarMensaje("Por favor digite un NIT, Cédula, Nombre o ID para realizar la búsqueda.", "error");
-      return;
-    }
-    mostrarMensaje("Consultando base de datos...", "info");
-    
-    // Primero buscar en Clientes
     google.script.run
-      .withSuccessHandler(function(cliente) {
-        if (cliente) {
-          cargarTerceroFormulario(cliente, "CLIENTE");
-          mostrarMensaje("Cliente encontrado e inyectado con éxito.", "success");
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarAlerta(res.MENSAJE || "¡Cliente guardado exitosamente!", "success");
+          if (res.ID_CLIENTE) document.getElementById("ID_CLIENTE").value = res.ID_CLIENTE;
+          cargarListaClientes();
         } else {
-          // Si no se encuentra en clientes, buscar en proveedores
-          google.script.run
-            .withSuccessHandler(function(prov) {
-              if (prov) {
-                cargarTerceroFormulario(prov, "PROVEEDOR");
-                mostrarMensaje("Proveedor encontrado e inyectado con éxito.", "success");
-              } else {
-                mostrarMensaje("No se encontró ningún tercero con el criterio ingresado.", "error");
-              }
-            })
-            .withFailureHandler(function(err) {
-              mostrarMensaje("Error de red buscando proveedor: " + err.message, "error");
-            })
-            .PROV_BUSCAR_PROVEEDOR(criterio);
+          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        mostrarMensaje("Error de red buscando cliente: " + err.message, "error");
+        mostrarAlerta("Fallo de red: " + err.message, "error");
       })
-      .CLI_BUSCAR_CLIENTE(criterio);
+      .CLI_GUARDAR_CLIENTE(datos, TOKEN_SESION_PROY);
   }
 
-  function cargarTerceroFormulario(tercero, tipoTercero) {
-    limpiarFormulario();
-    CLI_MODO = "EDITAR";
-    
-    if (tipoTercero === "CLIENTE") {
-      document.getElementById("tipo_cliente").checked = true;
-      document.getElementById("tipo_proveedor").checked = false;
-      document.getElementById("ID_CLIENTE").value = tercero.ID_CLIENTE || "";
-      document.getElementById("TIPO_PERSONA").value = tercero.TIPO_PERSONA || "PERSONA_JURIDICA";
-      document.getElementById("TIPO_DOCUMENTO").value = tercero.TIPO_DOCUMENTO || "NIT";
-      document.getElementById("NUMERO_DOCUMENTO").value = tercero.NUMERO_DOCUMENTO || "";
-      document.getElementById("DIGITO_VERIFICACION").value = tercero.DIGITO_VERIFICACION || "";
-      document.getElementById("RAZON_SOCIAL").value = tercero.RAZON_SOCIAL || "";
-      document.getElementById("PRIMER_NOMBRE").value = tercero.PRIMER_NOMBRE || "";
-      document.getElementById("SEGUNDO_NOMBRE").value = tercero.SEGUNDO_NOMBRE || "";
-      document.getElementById("PRIMER_APELLIDO").value = tercero.PRIMER_APELLIDO || "";
-      document.getElementById("SEGUNDO_APELLIDO").value = tercero.SEGUNDO_APELLIDO || "";
-      document.getElementById("NOMBRE_COMERCIAL").value = tercero.NOMBRE_COMERCIAL || "";
-      document.getElementById("TIPO_CLIENTE").value = tercero.TIPO_CLIENTE || "MAYORISTA";
-      document.getElementById("CIUDAD").value = tercero.CIUDAD || "Pitalito";
-      document.getElementById("DEPARTAMENTO").value = tercero.DEPARTAMENTO || "Huila";
-      document.getElementById("PAIS").value = tercero.PAIS || "COLOMBIA";
-      document.getElementById("DIRECCION").value = tercero.DIRECCION || "";
-      document.getElementById("TELEFONO").value = tercero.TELEFONO || "";
-      document.getElementById("CELULAR").value = tercero.CELULAR || "";
-      document.getElementById("CORREO").value = tercero.CORREO || "";
-      document.getElementById("RESPONSABILIDAD_IVA").value = tercero.RESPONSABILIDAD_IVA || "NO_RESPONSABLE_IVA";
-      document.getElementById("REGIMEN_FISCAL").value = tercero.REGIMEN_FISCAL || "ORDINARIO";
-      document.getElementById("RESPONSABILIDAD_FISCAL").value = tercero.RESPONSABILIDAD_FISCAL || "R-99-PN";
-      document.getElementById("ID_SIIGO").value = tercero.ID_SIIGO || "";
-      document.getElementById("ID_ALEGRA").value = tercero.ID_ALEGRA || "";
-      document.getElementById("FORMA_PAGO").value = tercero.FORMA_PAGO || "CONTADO";
-      document.getElementById("METODO_PAGO").value = tercero.METODO_PAGO || "TRANSFERENCIA";
-      document.getElementById("PLAZO_PAGO_DIAS").value = tercero.PLAZO_PAGO_DIAS || 0;
-      document.getElementById("LIMITE_CREDITO").value = tercero.LIMITE_CREDITO || 0;
-      document.getElementById("VENDEDOR_ASIGNADO").value = tercero.VENDEDOR_ASIGNADO || "";
-      document.getElementById("CENTRO_COSTO").value = tercero.CENTRO_COSTO || "";
-      document.getElementById("OBRA_PRINCIPAL").value = tercero.OBRA_PRINCIPAL || "";
-      document.getElementById("CUENTA_CONTABLE_CLIENTE").value = tercero.CUENTA_CONTABLE_CLIENTE || "";
-      document.getElementById("ESTADO_CLIENTE").value = tercero.ESTADO_CLIENTE || "ACTIVO";
-      document.getElementById("OBSERVACIONES").value = tercero.OBSERVACIONES || "";
-    } else {
-      document.getElementById("tipo_cliente").checked = false;
-      document.getElementById("tipo_proveedor").checked = true;
-      document.getElementById("ID_CLIENTE").value = tercero.ID_PROVEEDOR || "";
-      document.getElementById("TIPO_PERSONA").value = tercero.TIPO_PERSONA || "PERSONA_JURIDICA";
-      document.getElementById("TIPO_DOCUMENTO").value = tercero.TIPO_DOCUMENTO || "NIT";
-      document.getElementById("NUMERO_DOCUMENTO").value = tercero.NIT_CC || "";
-      document.getElementById("DIGITO_VERIFICACION").value = tercero.DV || "";
-      document.getElementById("RAZON_SOCIAL").value = tercero.RAZON_SOCIAL || "";
-      document.getElementById("NOMBRE_COMERCIAL").value = tercero.NOMBRE_COMERCIAL || "";
-      document.getElementById("CONTACTO_PRINCIPAL").value = tercero.NOMBRE_CONTACTO || "";
-      document.getElementById("TELEFONO").value = tercero.TELEFONO || "";
-      document.getElementById("CORREO").value = tercero.EMAIL || "";
-      document.getElementById("DIRECCION").value = tercero.DIRECCION || "";
-      document.getElementById("CIUDAD").value = tercero.CIUDAD || "PITALITO";
-      document.getElementById("DEPARTAMENTO").value = tercero.DEPARTAMENTO || "HUILA";
-      document.getElementById("FORMA_PAGO").value = tercero.CONDICION_PAGO || "CONTADO";
-      document.getElementById("LIMITE_CREDITO").value = tercero.CUPO_CREDITO || 0;
-      document.getElementById("ESTADO_CLIENTE").value = tercero.ESTADO || "ACTIVO";
-      document.getElementById("ID_SIIGO").value = tercero.ID_SIIGO || "";
-      document.getElementById("ID_ALEGRA").value = tercero.ID_ALEGRA || "";
-      document.getElementById("RESPONSABILIDAD_FISCAL").value = tercero.RESPONSABILIDAD_FISCAL || "R-99-PN";
+  function actualizarTercero() {
+    var datos = obtenerDatosFormulario();
+    if (!datos.ID_CLIENTE) {
+      mostrarAlerta("Debe cargar o buscar un cliente primero.", "error");
+      return;
     }
+    mostrarAlerta("Actualizando registro...", "info");
 
-    alternarTipoPersona(document.getElementById("TIPO_PERSONA").value);
-
-    // Seleccionar los checkboxes según Responsabilidad Fiscal
-    const respString = document.getElementById("RESPONSABILIDAD_FISCAL").value;
-    const arrayResp = respString.split(",");
-    document.querySelectorAll('input[name="responsabilidad_rut"]').forEach(cb => {
-      cb.checked = arrayResp.includes(cb.value);
-    });
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarAlerta(res.MENSAJE || "¡Cliente actualizado con éxito!", "success");
+          cargarListaClientes();
+        } else {
+          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Fallo de red: " + err.message, "error");
+      })
+      .CLI_ACTUALIZAR_CLIENTE(datos, TOKEN_SESION_PROY);
   }
 
-  // Inicializar DV
-  calcularDVFrontend(document.getElementById("NUMERO_DOCUMENTO").value);
+  function buscarTercero() {
+    var q = document.getElementById("buscarTercero").value.trim();
+    if (!q) {
+      mostrarAlerta("Ingrese un NIT, ID o Razón Social para buscar.", "error");
+      return;
+    }
+    mostrarAlerta("Buscando en la base de datos...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(cliente) {
+        if (cliente) {
+          cargarClienteFormulario(cliente);
+          mostrarAlerta("Cliente " + cliente.ID_CLIENTE + " cargado exitosamente.", "success");
+        } else {
+          mostrarAlerta("No se encontró ningún cliente con ese criterio.", "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Error de búsqueda: " + err.message, "error");
+      })
+      .CLI_BUSCAR_CLIENTE(q, TOKEN_SESION_PROY);
+  }
+
+  function inactivarTercero() {
+    var idCli = document.getElementById("ID_CLIENTE").value;
+    if (!idCli) {
+      mostrarAlerta("Debe seleccionar o buscar un cliente primero.", "error");
+      return;
+    }
+    if (!confirm("¿Está seguro de inactivar el cliente " + idCli + "?")) return;
+
+    mostrarAlerta("Inactivando cliente...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarAlerta(res.MENSAJE, "success");
+          limpiarFormulario();
+          cargarListaClientes();
+        } else {
+          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlerta("Error de red: " + err.message, "error");
+      })
+      .CLI_ELIMINAR_CLIENTE(idCli, TOKEN_SESION_PROY);
+  }
+
+  function cargarClienteFormulario(c) {
+    limpiarFormulario();
+    document.getElementById("ID_CLIENTE").value = c.ID_CLIENTE || "";
+    document.getElementById("TIPO_PERSONA").value = c.TIPO_PERSONA || "PERSONA_JURIDICA";
+    document.getElementById("TIPO_DOCUMENTO").value = c.TIPO_DOCUMENTO || "NIT";
+    document.getElementById("NUMERO_DOCUMENTO").value = c.NUMERO_DOCUMENTO || c.NIT_CC || "";
+    document.getElementById("DIGITO_VERIFICACION").value = c.DIGITO_VERIFICACION || c.DV || "";
+    document.getElementById("RAZON_SOCIAL").value = c.RAZON_SOCIAL || "";
+    document.getElementById("PRIMER_NOMBRE").value = c.PRIMER_NOMBRE || "";
+    document.getElementById("SEGUNDO_NOMBRE").value = c.SEGUNDO_NOMBRE || "";
+    document.getElementById("PRIMER_APELLIDO").value = c.PRIMER_APELLIDO || "";
+    document.getElementById("SEGUNDO_APELLIDO").value = c.SEGUNDO_APELLIDO || "";
+    document.getElementById("NOMBRE_COMERCIAL").value = c.NOMBRE_COMERCIAL || "";
+    document.getElementById("DIRECCION").value = c.DIRECCION || "";
+    document.getElementById("CIUDAD").value = c.CIUDAD || "Pitalito";
+    document.getElementById("DEPARTAMENTO").value = c.DEPARTAMENTO || "Huila";
+    document.getElementById("TELEFONO").value = c.TELEFONO || "";
+    document.getElementById("CELULAR").value = c.CELULAR || "";
+    document.getElementById("CORREO").value = c.CORREO || "";
+    document.getElementById("FORMA_PAGO").value = c.FORMA_PAGO || "CONTADO";
+    document.getElementById("PLAZO_PAGO_DIAS").value = c.PLAZO_PAGO_DIAS || "30";
+    document.getElementById("LIMITE_CREDITO").value = c.LIMITE_CREDITO || "50000000";
+    document.getElementById("ESTADO_CLIENTE").value = c.ESTADO_CLIENTE || "ACTIVO";
+
+    alternarTipoPersona(c.TIPO_PERSONA || "PERSONA_JURIDICA");
+  }
+
+  function cargarListaClientes() {
+    var tbody = document.getElementById("tabla_clientes_body");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Consultando base de datos de clientes...</td></tr>';
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          tbody.innerHTML = "";
+          CLIENTES_CACHE_LISTA = res.DATOS;
+          if (res.DATOS.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">No hay clientes registrados.</td></tr>';
+            return;
+          }
+          res.DATOS.forEach(function(c) {
+            var tr = document.createElement("tr");
+            var badgeEst = c.ESTADO_CLIENTE === 'ACTIVO' ? 'badge-active' : 'badge-inactive';
+            tr.innerHTML = '<td><code>' + c.ID_CLIENTE + '</code></td>' +
+                           '<td>' + (c.NUMERO_DOCUMENTO || c.NIT_CC || 'N/A') + (c.DIGITO_VERIFICACION ? '-' + c.DIGITO_VERIFICACION : '') + '</td>' +
+                           '<td><strong>' + (c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || 'Sin nombre') + '</strong></td>' +
+                           '<td>' + (c.CIUDAD || 'Pitalito') + '</td>' +
+                           '<td>' + (c.CELULAR || c.TELEFONO || 'N/A') + '</td>' +
+                           '<td>' + (c.CORREO || 'N/A') + '</td>' +
+                           '<td>' + (c.FORMA_PAGO || 'CONTADO') + '</td>' +
+                           '<td><span class="badge ' + badgeEst + '">' + (c.ESTADO_CLIENTE || 'ACTIVO') + '</span></td>' +
+                           '<td style="text-align:center;">' +
+                             '<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="cargarClienteFormularioById('' + c.ID_CLIENTE + '')">✏️ Cargar</button>' +
+                           '</td>';
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Error: ' + (res ? res.MENSAJE : "Sin respuesta") + '</td></tr>';
+        }
+      })
+      .withFailureHandler(function(err) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Fallo de red: ' + err.message + '</td></tr>';
+      })
+      .CLI_LISTAR_CLIENTES_WEB(TOKEN_SESION_PROY);
+  }
+
+  function cargarClienteFormularioById(idCli) {
+    var encontrado = CLIENTES_CACHE_LISTA.find(function(c) { return String(c.ID_CLIENTE).trim() === String(idCli).trim(); });
+    if (encontrado) {
+      cargarClienteFormulario(encontrado);
+      mostrarAlerta("Cliente " + idCli + " cargado en el formulario.", "success");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
 </script>
+</body>
+</html>
