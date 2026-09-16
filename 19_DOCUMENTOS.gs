@@ -138,3 +138,4 @@ function DOC_GENERAR_PDF_VENTA_WEB(idVenta, tokenSesion) {
     return { EXITO: false, URL_PDF: "", MENSAJE: "Error al generar PDF: " + error.toString() };
   }
 }
+

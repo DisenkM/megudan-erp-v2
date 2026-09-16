@@ -1,5 +1,5 @@
 /**************************************************************
-* 06_PROVEEDORES.gs (VERSIÓN 4.0 - V2 ERP - LIBRO 1)
+* 06_PROVEEDORES.gs (VERSIÓN 5.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el catálogo y operaciones (CRUD) de Proveedores (PROV_MAESTRO).
 * - Control de NITs colombianos y cálculo de DV reutilizando clientes.
@@ -280,8 +280,11 @@ function PROV_ACTUALIZAR_PROVEEDOR(datos, tokenSesion) {
 /**
  * Busca un proveedor por nit, id o razon social
  */
-function PROV_BUSCAR_PROVEEDOR(criterio) {
+function PROV_BUSCAR_PROVEEDOR(criterio, tokenSesion) {
   if (!criterio) return null;
+  if (tokenSesion !== undefined) {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "PROVEEDORES", "VER");
+  }
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(PROV_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return null;
@@ -294,18 +297,22 @@ function PROV_BUSCAR_PROVEEDOR(criterio) {
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
   
   const criterioNormalizado = String(criterio).trim().toUpperCase();
-  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
   
-  const filaEncontrada = registros.find(fila => {
-    const valId = String(fila[idxId] || "").trim().toUpperCase();
-    const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
-    const valDocSoloNumeros = valDoc.replace(/\D/g, "");
-    const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
-    
-    return valId === criterioNormalizado || 
-           (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) || 
-           valRazon.includes(criterioNormalizado);
-  });
+  // 1. Búsqueda prioritaria por ID_PROVEEDOR exacto
+  let filaEncontrada = registros.find(fila => String(fila[idxId] || "").trim().toUpperCase() === criterioNormalizado);
+  
+  // 2. Búsqueda secundaria por NIT/Documento o Razón Social
+  if (!filaEncontrada) {
+    const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
+    filaEncontrada = registros.find(fila => {
+      const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
+      const valDocSoloNumeros = valDoc.replace(/\D/g, "");
+      const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
+      
+      return (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) || 
+             (criterioNormalizado.length >= 3 && valRazon.includes(criterioNormalizado));
+    });
+  }
   
   return filaEncontrada ? SEG_SANITIZAR_PARA_CLIENTE(PROV_CONVERTIR_FILA_OBJETO(encabezados, filaEncontrada)) : null;
 }
@@ -313,20 +320,24 @@ function PROV_BUSCAR_PROVEEDOR(criterio) {
 function PROV_CONVERTIR_FILA_OBJETO(encabezados, fila) {
   const objeto = {};
   encabezados.forEach((campo, indice) => {
-    objeto[campo] = fila[indice] !== undefined ? fila[indice] : "";
+    let val = fila[indice] !== undefined && fila[indice] !== null ? fila[indice] : "";
+    if (["NUMERO_DOCUMENTO", "NIT_CC", "DIGITO_VERIFICACION", "DV", "TELEFONO", "CELULAR", "CUPO_CREDITO"].includes(campo)) {
+      val = String(val).trim();
+    }
+    objeto[campo] = val;
   });
   if (objeto.NUMERO_DOCUMENTO === undefined || objeto.NUMERO_DOCUMENTO === "") {
-    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = objeto.NIT_CC;
-    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = objeto.NUMERO;
+    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = String(objeto.NIT_CC).trim();
+    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = String(objeto.NUMERO).trim();
   }
   if (objeto.NIT_CC === undefined || objeto.NIT_CC === "") {
-    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = objeto.NUMERO_DOCUMENTO;
+    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = String(objeto.NUMERO_DOCUMENTO).trim();
   }
   if (objeto.DIGITO_VERIFICACION === undefined || objeto.DIGITO_VERIFICACION === "") {
-    if (objeto.DV) objeto.DIGITO_VERIFICACION = objeto.DV;
+    if (objeto.DV) objeto.DIGITO_VERIFICACION = String(objeto.DV).trim();
   }
   if (objeto.DV === undefined || objeto.DV === "") {
-    if (objeto.DIGITO_VERIFICACION) objeto.DV = objeto.DIGITO_VERIFICACION;
+    if (objeto.DIGITO_VERIFICACION) objeto.DV = String(objeto.DIGITO_VERIFICACION).trim();
   }
   return objeto;
 }

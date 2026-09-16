@@ -1,5 +1,5 @@
 /**************************************************************
-* 05_CLIENTES.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 1)
+* 05_CLIENTES.gs (VERSIÓN 4.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida (CRUD) de Clientes (CLI_MAESTRO).
 * - Proteger accesos bajo la arquitectura de seguridad dual.
@@ -308,8 +308,11 @@ function CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion) {
 /**
  * Busca un tercero en Clientes por NIT, Razón Social o ID_CLIENTE
  */
-function CLI_BUSCAR_CLIENTE(criterio) {
+function CLI_BUSCAR_CLIENTE(criterio, tokenSesion) {
   if (!criterio) return null;
+  if (tokenSesion !== undefined) {
+    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "VER");
+  }
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
   if (!hoja || hoja.getLastRow() < 2) return null;
@@ -322,18 +325,22 @@ function CLI_BUSCAR_CLIENTE(criterio) {
   const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
   
   const criterioNormalizado = String(criterio).trim().toUpperCase();
-  const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
   
-  const filaEncontrada = registros.find(fila => {
-    const valId = String(fila[idxId] || "").trim().toUpperCase();
-    const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
-    const valDocSoloNumeros = valDoc.replace(/\D/g, "");
-    const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
-    
-    return valId === criterioNormalizado || 
-           (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) || 
-           valRazon.includes(criterioNormalizado);
-  });
+  // 1. Búsqueda prioritaria por ID_CLIENTE exacto (evita falsos positivos con dígitos del ID)
+  let filaEncontrada = registros.find(fila => String(fila[idxId] || "").trim().toUpperCase() === criterioNormalizado);
+  
+  // 2. Búsqueda secundaria por NIT/Documento o Razón Social
+  if (!filaEncontrada) {
+    const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
+    filaEncontrada = registros.find(fila => {
+      const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
+      const valDocSoloNumeros = valDoc.replace(/\D/g, "");
+      const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
+      
+      return (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) || 
+             (criterioNormalizado.length >= 3 && valRazon.includes(criterioNormalizado));
+    });
+  }
   
   return filaEncontrada ? SEG_SANITIZAR_PARA_CLIENTE(CLI_CONVERTIR_FILA_OBJETO(encabezados, filaEncontrada)) : null;
 }
@@ -341,20 +348,24 @@ function CLI_BUSCAR_CLIENTE(criterio) {
 function CLI_CONVERTIR_FILA_OBJETO(encabezados, fila) {
   const objeto = {};
   encabezados.forEach((campo, indice) => {
-    objeto[campo] = fila[indice] !== undefined ? fila[indice] : "";
+    let val = fila[indice] !== undefined && fila[indice] !== null ? fila[indice] : "";
+    if (["NUMERO_DOCUMENTO", "NIT_CC", "DIGITO_VERIFICACION", "DV", "TELEFONO", "CELULAR", "PLAZO_PAGO_DIAS"].includes(campo)) {
+      val = String(val).trim();
+    }
+    objeto[campo] = val;
   });
   if (objeto.NUMERO_DOCUMENTO === undefined || objeto.NUMERO_DOCUMENTO === "") {
-    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = objeto.NIT_CC;
-    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = objeto.NUMERO;
+    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = String(objeto.NIT_CC).trim();
+    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = String(objeto.NUMERO).trim();
   }
   if (objeto.NIT_CC === undefined || objeto.NIT_CC === "") {
-    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = objeto.NUMERO_DOCUMENTO;
+    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = String(objeto.NUMERO_DOCUMENTO).trim();
   }
   if (objeto.DIGITO_VERIFICACION === undefined || objeto.DIGITO_VERIFICACION === "") {
-    if (objeto.DV) objeto.DIGITO_VERIFICACION = objeto.DV;
+    if (objeto.DV) objeto.DIGITO_VERIFICACION = String(objeto.DV).trim();
   }
   if (objeto.DV === undefined || objeto.DV === "") {
-    if (objeto.DIGITO_VERIFICACION) objeto.DV = objeto.DIGITO_VERIFICACION;
+    if (objeto.DIGITO_VERIFICACION) objeto.DV = String(objeto.DIGITO_VERIFICACION).trim();
   }
   return objeto;
 }

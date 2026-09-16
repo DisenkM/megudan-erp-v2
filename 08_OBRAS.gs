@@ -196,3 +196,4 @@ function OBR_OBTENER_DETALLE_OBRA_WEB(idObra, tokenSesion) {
     return { EXITO: false, DATOS: null, MENSAJE: "Error al consolidar detalle de obra: " + error.toString() };
   }
 }
+

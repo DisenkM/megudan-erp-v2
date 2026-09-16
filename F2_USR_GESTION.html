@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 22.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 26.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,24 +10,30 @@
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
       background-color: #f8fafc; color: #1e293b;
     }
-    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1300px; margin: 0 auto; }
     
     .header {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      color: white; padding: 24px; border-radius: 12px; margin-bottom: 25px;
-      display: flex; align-items: center; gap: 18px;
-      box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
     }
-    .header-icon { font-size: 36px; }
-    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-    .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+    .header-info { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+      font-size: 32px; width: 60px; height: 60px;
+      background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; font-weight: 500; }
     
-    .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
     .tab-button {
-      padding: 12px 22px; border: none; background: none; font-size: 13px; font-weight: 700;
+      padding: 12px 24px; border: none; background: none; font-size: 13px; font-weight: 700;
       color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
     }
     .tab-button:hover { color: #2563eb; }
@@ -36,54 +42,52 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
+    .message { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
     .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .message-success { background-color: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
+    .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
     .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
-    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-    .card-title { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
 
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-    .input { width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border 0.2s; }
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
     .input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
 
-    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background-color: white; }
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background-color: white; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { background-color: #f8fafc; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
-    td { padding: 12px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    th { background-color: #f8fafc; padding: 14px 18px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 14px 18px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
     tr:hover td { background-color: #f8fafc; }
 
-    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
-    .badge-active { background-color: #dcfce7; color: #15803d; }
-    .badge-inactive { background-color: #fee2e2; color: #dc2626; }
-    .badge-pending { background-color: #fef3c7; color: #d97706; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+    .badge-active { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-inactive { background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-pending { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
 
-    .button { padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-    .button-primary { background-color: #2563eb; color: white; }
+    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .button-primary { background-color: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
     .button-primary:hover { background-color: #1d4ed8; }
     .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
     .button-secondary:hover { background-color: #f8fafc; }
-    .button-success { background-color: #16a34a; color: white; }
-    .button-danger { background-color: #dc2626; color: white; }
 
-    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .toggle-switch { position: relative; display: inline-block; width: 48px; height: 24px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 22px; }
-    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-    input:checked + .slider { background-color: #16a34a; }
-    input:checked + .slider:before { transform: translateX(22px); }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: #10b981; }
+    input:checked + .slider:before { transform: translateX(24px); }
   </style>
 </head>
 <body>
 <div class="app">
   <header class="header">
-    <div class="header-icon">🔐</div>
-    <div>
-      <h1>Gestión de Seguridad y Control de Acceso Dual</h1>
-      <p>ERP Operativo · Permisos Dinámicos por Jerarquía, Usuarios, Roles, Sesiones y Auditoría</p>
+    <div class="header-info">
+      <div class="header-icon">🔐</div>
+      <div>
+        <h1>Gestión de Seguridad & Control de Acceso Dual</h1>
+        <p>ERP Operativo · Permisos Dinámicos por Jerarquía de Rol y Usuario Particular</p>
+      </div>
     </div>
   </header>
 
@@ -101,7 +105,10 @@
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">👤 Usuarios Registrados en el ERP</h2>
-        <button class="button button-primary" onclick="USR_ABRIR_MODAL_USUARIO()">+ Nuevo Usuario</button>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="USR_BUSCADOR_USUARIOS" class="input" style="width:260px;" placeholder="Buscar usuario..." oninput="USR_BUSCAR_USUARIOS()">
+          <button class="button button-primary" onclick="USR_CARGAR_USUARIOS()">↻ Recargar</button>
+        </div>
       </div>
       <div class="table-container">
         <table>
@@ -110,13 +117,13 @@
               <th>ID Usuario</th>
               <th>Usuario</th>
               <th>Nombre Completo</th>
-              <th>Correo Electronico</th>
+              <th>Correo Electrónico</th>
               <th>Rol Asignado</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody id="USR_TABLA_USUARIOS">
-            <tr><td colspan="6" style="text-align:center; padding:20px;">Cargando usuarios...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:24px; color:#64748b;">Cargando lista de usuarios...</td></tr>
           </tbody>
         </table>
       </div>
@@ -128,6 +135,7 @@
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">🛡️ Roles y Niveles Jerárquicos</h2>
+        <button class="button button-secondary" onclick="USR_CARGAR_ROLES()">↻ Recargar</button>
       </div>
       <div class="table-container">
         <table>
@@ -141,40 +149,40 @@
             </tr>
           </thead>
           <tbody id="USR_TABLA_ROLES">
-            <tr><td colspan="5" style="text-align:center; padding:20px;">Cargando roles...</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:24px; color:#64748b;">Cargando roles...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- Pestaña 3: Permisos Dinámicos (Habilitar / Deshabilitar Módulos) -->
+  <!-- Pestaña 3: Permisos Dinámicos -->
   <section id="tab-permisos" class="tab-content">
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">🔑 Control Dinámico de Módulos y Permisos por Rol</h2>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <label style="font-size:12px; font-weight:800; color:#475569;">Seleccionar Rol:</label>
-          <select id="perm_select_rol" class="input" style="width:220px;" onchange="USR_CARGAR_PERMISOS()"></select>
+        <h2 class="card-title">🔑 Matriz de Permisos Dinámicos (Rol / Usuario)</h2>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <label style="font-size:12px; font-weight:800; color:#475569;">Modificar Acceso Para:</label>
+          <select id="perm_select_rol" class="input" style="width:280px;" onchange="USR_CARGAR_PERMISOS()"></select>
           <button class="button button-secondary" onclick="USR_CARGAR_PERMISOS()">↻ Recargar Matriz</button>
         </div>
       </div>
-      <p style="font-size:12px; color:#4b5563; margin-top:0; margin-bottom:15px;">
-        Activa o desactiva de forma inmediata el acceso a cada módulo del ERP para el Rol seleccionado. Los cambios se guardan automáticamente en la hoja <code>USR_PERMISOS</code> de Google Sheets.
+      <p style="font-size:12px; color:#64748b; margin-top:0; margin-bottom:18px; line-height:1.5;">
+        Selecciona un <strong>Rol</strong> o un <strong>Usuario Particular</strong> para activar o desactivar en tiempo real los módulos autorizados en Google Sheets.
       </p>
       <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>Módulo del ERP</th>
-              <th>Submódulo / Subpestaña</th>
-              <th>Acción Autorizada</th>
-              <th>Rol Seleccionado</th>
-              <th style="text-align:center;">Acceso Permitido</th>
+              <th>Submódulo</th>
+              <th>Acción</th>
+              <th>Entidad Seleccionada</th>
+              <th style="text-align:center;">Acceso Autorizado</th>
             </tr>
           </thead>
           <tbody id="USR_TABLA_PERMISOS">
-            <tr><td colspan="5" style="text-align:center; padding:20px;">Seleccione un rol para auditar y cambiar sus permisos...</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:24px; color:#64748b;">Seleccione una entidad para auditar sus permisos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -186,7 +194,7 @@
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">🟢 Control de Sesiones Activas</h2>
-        <button class="button button-secondary" onclick="USR_CARGAR_SESIONES()">↻ Actualizar</button>
+        <button class="button button-secondary" onclick="USR_CARGAR_SESIONES()">↻ Recargar</button>
       </div>
       <div class="table-container">
         <table>
@@ -201,7 +209,7 @@
             </tr>
           </thead>
           <tbody id="USR_TABLA_SESIONES">
-            <tr><td colspan="6" style="text-align:center; padding:20px;">Cargando sesiones activas...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:24px; color:#64748b;">Cargando sesiones activas...</td></tr>
           </tbody>
         </table>
       </div>
@@ -210,105 +218,188 @@
 </div>
 
 <script>
-  const TOKEN_SESION = "<?= TOKEN_SESION ?>";
+  var TOKEN_SESION_LOCAL = "<?= TOKEN_SESION ?>";
+  var CACHE_USUARIOS = [];
 
   document.addEventListener("DOMContentLoaded", function() {
     USR_CARGAR_USUARIOS();
     USR_CARGAR_ROLES();
-    USR_CARGAR_PERMISOS();
     USR_CARGAR_SESIONES();
   });
 
   function USR_CAMBIAR_PESTANA(target) {
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(function(c) { c.classList.remove("active"); });
+    document.querySelectorAll(".tab-button").forEach(function(b) { b.classList.remove("active"); });
     
-    document.getElementById(`tab-${target}`).classList.add("active");
-    document.getElementById(`btn-tab-${target}`).classList.add("active");
+    var elTab = document.getElementById("tab-" + target);
+    var elBtn = document.getElementById("btn-tab-" + target);
+    if (elTab) elTab.classList.add("active");
+    if (elBtn) elBtn.classList.add("active");
     
     if (target === "permisos") USR_CARGAR_PERMISOS();
   }
 
   function USR_MOSTRAR_ALERTA(msg, tipo) {
-    const el = document.getElementById("USR_MENSAJE_ALERT");
+    var el = document.getElementById("USR_MENSAJE_ALERT");
+    if (!el) return;
     el.textContent = msg;
     el.className = "message message-" + tipo;
     el.style.display = "block";
-    setTimeout(() => { if (el.textContent === msg) el.style.display = "none"; }, 6000);
+    setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
   function USR_CARGAR_USUARIOS() {
-    const tbody = document.getElementById("USR_TABLA_USUARIOS");
+    var tbody = document.getElementById("USR_TABLA_USUARIOS");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#64748b;">Cargando usuarios...</td></tr>';
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
-          tbody.innerHTML = "";
-          res.DATOS.forEach(u => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><code>${u.ID_USUARIO}</code></td>
-              <td><strong>${u.USUARIO}</strong></td>
-              <td>${u.NOMBRE_COMPLETO || u.NOMBRE || ''}</td>
-              <td>${u.CORREO || ''}</td>
-              <td><span class="badge badge-pending">${u.ID_ROL}</span></td>
-              <td><span class="badge ${u.ESTADO_USUARIO === 'ACTIVO' ? 'badge-active' : 'badge-inactive'}">${u.ESTADO_USUARIO}</span></td>
-            `;
-            tbody.appendChild(tr);
-          });
+          CACHE_USUARIOS = res.DATOS;
+          USR_MOSTRAR_USUARIOS(res.DATOS);
+        } else {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#dc2626;">Error: ' + (res ? res.MENSAJE : "Sin respuesta") + '</td></tr>';
         }
       })
-      .SEG_OBTENER_REGISTROS("USR_USUARIOS");
+      .withFailureHandler(function(err) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#dc2626;">Fallo de red: ' + err.message + '</td></tr>';
+      })
+      .SEG_LISTAR_USUARIOS(TOKEN_SESION_LOCAL);
+  }
+
+  function USR_MOSTRAR_USUARIOS(lista) {
+    var tbody = document.getElementById("USR_TABLA_USUARIOS");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#64748b;">No hay usuarios registrados.</td></tr>';
+      return;
+    }
+
+    lista.forEach(function(u) {
+      var tr = document.createElement("tr");
+      var idUsr = u.ID_USUARIO || "N/A";
+      var usr = u.USUARIO || "N/A";
+      var nom = u.NOMBRE_COMPLETO || u.NOMBRE || "";
+      var correo = u.CORREO || "";
+      var rol = u.ID_ROL || "ROL-000001";
+      var est = u.ESTADO_USUARIO || "ACTIVO";
+      var badgeEst = est === "ACTIVO" ? "badge-active" : "badge-inactive";
+
+      tr.innerHTML = '<td><code>' + idUsr + '</code></td>' +
+                     '<td><strong>' + usr + '</strong></td>' +
+                     '<td>' + nom + '</td>' +
+                     '<td>' + correo + '</td>' +
+                     '<td><span class="badge badge-pending">' + rol + '</span></td>' +
+                     '<td><span class="badge ' + badgeEst + '">' + est + '</span></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function USR_BUSCAR_USUARIOS() {
+    var q = document.getElementById("USR_BUSCADOR_USUARIOS").value.trim().toUpperCase();
+    if (!q) { USR_MOSTRAR_USUARIOS(CACHE_USUARIOS); return; }
+    var filtrados = CACHE_USUARIOS.filter(function(u) {
+      return (u.USUARIO || "").toUpperCase().indexOf(q) !== -1 ||
+             (u.NOMBRE_COMPLETO || u.NOMBRE || "").toUpperCase().indexOf(q) !== -1 ||
+             (u.CORREO || "").toUpperCase().indexOf(q) !== -1 ||
+             (u.ID_USUARIO || "").toUpperCase().indexOf(q) !== -1;
+    });
+    USR_MOSTRAR_USUARIOS(filtrados);
   }
 
   function USR_CARGAR_ROLES() {
-    const tbody = document.getElementById("USR_TABLA_ROLES");
-    const selectPermRol = document.getElementById("perm_select_rol");
-    
+    var tbody = document.getElementById("USR_TABLA_ROLES");
+    var selectPermRol = document.getElementById("perm_select_rol");
+    if (!tbody) return;
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
           tbody.innerHTML = "";
-          selectPermRol.innerHTML = "";
-          
-          res.DATOS.forEach(r => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><code>${r.ID_ROL}</code></td>
-              <td><strong>${r.NOMBRE_ROL}</strong></td>
-              <td>${r.DESCRIPCION || ''}</td>
-              <td>Nivel ${r.NIVEL_JERARQUIA || 100}</td>
-              <td><span class="badge badge-active">${r.ESTADO_ROL || 'ACTIVO'}</span></td>
-            `;
+          if (selectPermRol) selectPermRol.innerHTML = "";
+
+          var optGroupRoles = document.createElement("optgroup");
+          optGroupRoles.label = "🛡️ PERMISOS POR ROL (JERARQUÍA)";
+
+          res.DATOS.forEach(function(r) {
+            var tr = document.createElement("tr");
+            var idRol = r.ID_ROL || "ROL-001";
+            var nomRol = r.NOMBRE_ROL || "ROL";
+            var desc = r.DESCRIPCION || "";
+            var jer = r.NIVEL_JERARQUIA || 100;
+            var est = r.ESTADO_ROL || "ACTIVO";
+
+            tr.innerHTML = '<td><code>' + idRol + '</code></td>' +
+                           '<td><strong>' + nomRol + '</strong></td>' +
+                           '<td>' + desc + '</td>' +
+                           '<td>Nivel ' + jer + '</td>' +
+                           '<td><span class="badge badge-active">' + est + '</span></td>';
             tbody.appendChild(tr);
 
-            const opt = document.createElement("option");
-            opt.value = r.ID_ROL;
-            opt.text = `${r.NOMBRE_ROL} (${r.ID_ROL})`;
-            selectPermRol.add(opt);
+            if (selectPermRol) {
+              var opt = document.createElement("option");
+              opt.value = idRol;
+              opt.text = "🛡️ ROL: " + nomRol + " (" + idRol + ")";
+              optGroupRoles.appendChild(opt);
+            }
           });
+
+          if (selectPermRol) {
+            selectPermRol.appendChild(optGroupRoles);
+            USR_CARGAR_USUARIOS_EN_SELECT_PERMISOS();
+          }
         }
       })
-      .SEG_OBTENER_ROLES(TOKEN_SESION);
+      .SEG_OBTENER_ROLES(TOKEN_SESION_LOCAL);
+  }
+
+  function USR_CARGAR_USUARIOS_EN_SELECT_PERMISOS() {
+    var selectPermRol = document.getElementById("perm_select_rol");
+    if (!selectPermRol) return;
+
+    google.script.run
+      .withSuccessHandler(function(resUsr) {
+        if (resUsr && resUsr.EXITO && resUsr.DATOS && resUsr.DATOS.length > 0) {
+          var optGroupUsrs = document.createElement("optgroup");
+          optGroupUsrs.label = "👤 PERMISOS POR USUARIO PARTICULAR";
+          
+          resUsr.DATOS.forEach(function(u) {
+            var idUsr = u.ID_USUARIO || u.USUARIO;
+            var nomUsr = u.USUARIO || u.ID_USUARIO;
+            var nomComp = u.NOMBRE_COMPLETO || u.NOMBRE || "";
+            var opt = document.createElement("option");
+            opt.value = idUsr;
+            opt.text = "👤 USUARIO: " + nomUsr + " (" + (nomComp ? nomComp + " - " : "") + idUsr + ")";
+            optGroupUsrs.appendChild(opt);
+          });
+          selectPermRol.appendChild(optGroupUsrs);
+        }
+      })
+      .SEG_LISTAR_USUARIOS(TOKEN_SESION_LOCAL);
   }
 
   function USR_CARGAR_PERMISOS() {
-    const tbody = document.getElementById("USR_TABLA_PERMISOS");
-    const selectRol = document.getElementById("perm_select_rol");
-    const idRolSeleccionado = selectRol.value || "ROL-000001";
+    var tbody = document.getElementById("USR_TABLA_PERMISOS");
+    var selectRol = document.getElementById("perm_select_rol");
+    if (!tbody || !selectRol) return;
+    var idTargetSeleccionado = selectRol.value || "ROL-000001";
     
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">Consultando matriz de permisos para ${idRolSeleccionado}...</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:24px; color:#64748b;">Consultando permisos para ' + idTargetSeleccionado + '...</td></tr>';
 
-    const modulosMaestros = [
-      { id: "CLIENTES", label: "👥 Clientes / Terceros" },
-      { id: "VENTAS", label: "💰 Ventas / Facturación" },
-      { id: "COMPRAS", label: "🛒 Compras / CxP" },
-      { id: "PRODUCTOS", label: "📦 Productos / Servicios" },
-      { id: "INVENTARIO", label: "🗃️ Inventario / Existencias" },
-      { id: "FINANZAS", label: "📊 Finanzas / Contabilidad" },
-      { id: "PLANEACION", label: "🗓️ Planeación & Noticias" },
-      { id: "OBRAS", label: "🏗️ Obras / Proyectos" },
-      { id: "NOMINA", label: "👥 Nómina Operativa" },
-      { id: "SEGURIDAD", label: "🔐 Gestión Seguridad" }
+    var modulosMaestros = [
+      { id: "CLIENTES", label: "Clientes / Terceros" },
+      { id: "VENTAS", label: "Ventas / Facturación" },
+      { id: "COMPRAS", label: "Compras / CxP" },
+      { id: "PRODUCTOS", label: "Productos / Servicios" },
+      { id: "INVENTARIO", label: "Inventario / Existencias" },
+      { id: "FINANZAS", label: "Finanzas / Contabilidad" },
+      { id: "PLANEACION", label: "Planeación & Noticias" },
+      { id: "OBRAS", label: "Obras / Proyectos" },
+      { id: "NOMINA", label: "Nómina Operativa" },
+      { id: "SEGURIDAD", label: "Gestión Seguridad" }
     ];
 
     google.script.run
@@ -316,38 +407,40 @@
         if (res && res.EXITO && res.DATOS) {
           tbody.innerHTML = "";
           
-          modulosMaestros.forEach(m => {
-            const permEncontrado = res.DATOS.find(p => String(p.ID_ROL).trim() === idRolSeleccionado && String(p.MODULO).trim().toUpperCase() === m.id);
-            const estaPermitido = permEncontrado ? String(permEncontrado.PERMITIDO).toUpperCase() === "SI" : true;
-            const idPerm = permEncontrado ? permEncontrado.ID_PERMISO : "";
+          modulosMaestros.forEach(function(m) {
+            var permEncontrado = res.DATOS.find(function(p) {
+              return String(p.ID_ROL).trim().toUpperCase() === idTargetSeleccionado.toUpperCase() && String(p.MODULO).trim().toUpperCase() === m.id;
+            });
+            var estaPermitido = permEncontrado ? String(permEncontrado.PERMITIDO).toUpperCase() === "SI" || String(permEncontrado.PERMITIDO).toUpperCase() === "SÍ" : true;
+            var idPerm = permEncontrado ? permEncontrado.ID_PERMISO : "";
 
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><strong>${m.label}</strong></td>
-              <td>GENERAL</td>
-              <td>ACCESO VER / NAVEGACIÓN</td>
-              <td><code>${idRolSeleccionado}</code></td>
-              <td style="text-align:center;">
-                <label class="toggle-switch">
-                  <input type="checkbox" ${estaPermitido ? 'checked' : ''} onchange="USR_TOGGLE_PERMISO('${idPerm}', '${idRolSeleccionado}', '${m.id}', this.checked)">
-                  <span class="slider"></span>
-                </label>
-              </td>
-            `;
+            var tr = document.createElement("tr");
+            var checkAttr = estaPermitido ? "checked" : "";
+            
+            tr.innerHTML = '<td><strong>' + m.label + '</strong></td>' +
+                           '<td>GENERAL</td>' +
+                           '<td>ACCESO VER / NAVEGACIÓN</td>' +
+                           '<td><code>' + idTargetSeleccionado + '</code></td>' +
+                           '<td style="text-align:center;">' +
+                             '<label class="toggle-switch">' +
+                               '<input type="checkbox" ' + checkAttr + ' onchange="USR_TOGGLE_PERMISO(\'' + idPerm + '\', \'' + idTargetSeleccionado + '\', \'' + m.id + '\', this.checked)">' +
+                               '<span class="slider"></span>' +
+                             '</label>' +
+                           '</td>';
             tbody.appendChild(tr);
           });
         }
       })
-      .SEG_OBTENER_PERMISOS(TOKEN_SESION);
+      .SEG_OBTENER_PERMISOS(TOKEN_SESION_LOCAL);
   }
 
-  function USR_TOGGLE_PERMISO(idPermiso, idRol, modulo, estaChecked) {
-    const nuevoEstado = estaChecked ? "SI" : "NO";
-    USR_MOSTRAR_ALERTA(`Actualizando permiso de ${modulo} para ${idRol} a ${nuevoEstado}...`, "info");
+  function USR_TOGGLE_PERMISO(idPermiso, idTarget, modulo, estaChecked) {
+    var nuevoEstado = estaChecked ? "SI" : "NO";
+    USR_MOSTRAR_ALERTA("Actualizando permiso de " + modulo + " para " + idTarget + " a " + nuevoEstado + "...", "info");
     
-    const datos = {
+    var datos = {
       ID_PERMISO: idPermiso,
-      ID_ROL: idRol,
+      ID_ROL: idTarget,
       MODULO: modulo,
       SUBMODULO: "GENERAL",
       ACCION: "VER",
@@ -358,31 +451,41 @@
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
           USR_MOSTRAR_ALERTA(res.MENSAJE, "success");
-        } else USR_MOSTRAR_ALERTA("Error: " + res.MENSAJE, "error");
+        } else {
+          USR_MOSTRAR_ALERTA("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
+        }
       })
-      .SEG_GUARDAR_PERMISO_WEB(datos, TOKEN_SESION);
+      .SEG_GUARDAR_PERMISO_WEB(datos, TOKEN_SESION_LOCAL);
   }
 
   function USR_CARGAR_SESIONES() {
-    const tbody = document.getElementById("USR_TABLA_SESIONES");
+    var tbody = document.getElementById("USR_TABLA_SESIONES");
+    if (!tbody) return;
+    
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.length > 0) {
           tbody.innerHTML = "";
-          res.slice(0, 10).forEach(s => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><code>${s[0] || 'SES-001'}</code></td>
-              <td><strong>${s[2] || 'SISTEMA'}</strong></td>
-              <td>${s[4] ? String(s[4]).substring(0, 19) : 'N/A'}</td>
-              <td>${s[5] ? String(s[5]).substring(0, 19) : 'N/A'}</td>
-              <td>${s[9] || 'WEB'}</td>
-              <td><span class="badge ${s[7] === 'ACTIVA' ? 'badge-active' : 'badge-inactive'}">${s[7] || 'ACTIVA'}</span></td>
-            `;
+          res.slice(0, 10).forEach(function(s) {
+            var tr = document.createElement("tr");
+            var idSes = s.ID_SESION || s[0] || 'SES-001';
+            var usr = s.USUARIO || s[2] || 'SISTEMA';
+            var fInicio = s.FECHA_INICIO || s[4] || 'N/A';
+            var fAct = s.ULTIMA_ACTIVIDAD || s[5] || 'N/A';
+            var orig = s.ORIGEN_ACCESO || s[9] || 'WEB';
+            var est = s.ESTADO_SESION || s[7] || 'ACTIVA';
+            var badgeEst = est === 'ACTIVA' ? 'badge-active' : 'badge-inactive';
+
+            tr.innerHTML = '<td><code>' + String(idSes).substring(0, 15) + '</code></td>' +
+                           '<td><strong>' + usr + '</strong></td>' +
+                           '<td>' + String(fInicio).substring(0, 19) + '</td>' +
+                           '<td>' + String(fAct).substring(0, 19) + '</td>' +
+                           '<td>' + orig + '</td>' +
+                           '<td><span class="badge ' + badgeEst + '">' + est + '</span></td>';
             tbody.appendChild(tr);
           });
         } else {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">No hay sesiones activas registradas.</td></tr>`;
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#64748b;">No hay sesiones activas registradas.</td></tr>';
         }
       })
       .SEG_OBTENER_REGISTROS("USR_SESIONES");

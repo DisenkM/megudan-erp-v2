@@ -1,94 +1,89 @@
-<!-- (VERSIÓN 1.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nómina Básica Operativa | MEGUDAN ERP</title>
+  <title>Nómina Específica Colombiana | MEGUDAN ERP</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background-color: #f8fafc; color: #1e293b;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: #f8fafc; color: #0f172a;
     }
     .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
     
     .header {
-      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-      color: white; padding: 24px; border-radius: 12px; margin-bottom: 25px;
-      display: flex; align-items: center; gap: 18px;
-      box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.15);
+      background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+      color: white; padding: 22px 25px; border-radius: 12px; margin-bottom: 22px;
+      display: flex; align-items: center; gap: 16px;
+      box-shadow: 0 10px 15px -3px rgba(6, 95, 70, 0.2);
     }
-    .header-icon { font-size: 36px; }
-    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-    .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+    .header-icon { font-size: 32px; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
     
-    .tabs-container {
-      display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 0px; overflow-x: auto;
-    }
+    .tabs-container { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
     .tab-btn {
-      padding: 12px 22px; border: none; background: none; font-size: 13px; font-weight: 700;
-      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
+      padding: 12px 20px; border: none; background: none; font-size: 13px; font-weight: 700;
+      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
     }
-    .tab-btn:hover { color: #10b981; }
-    .tab-btn.active { color: #10b981; border-bottom-color: #10b981; }
+    .tab-btn:hover { color: #059669; }
+    .tab-btn.active { color: #059669; border-bottom-color: #059669; }
     
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
-
-    .message {
-      padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;
-    }
-    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .message-success { background-color: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
-    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-
-    .card {
-      background-color: white; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
-    }
-    .card-header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
-    }
-    .card-title { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
-
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-    .input {
-      width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border 0.2s;
-    }
-    .input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
     
-    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background-color: white; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { background-color: #f8fafc; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
-    td { padding: 12px 15px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .card {
+      background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
+    }
+    .card-title { margin: 0 0 15px; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; }
+    .input {
+      width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;
+      font-size: 13px; outline: none; transition: all 0.2s;
+    }
+    .input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15); }
+    
+    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+    th { background: #f8fafc; padding: 10px 14px; font-weight: 800; color: #475569; border-bottom: 1.5px solid #e2e8f0; text-transform: uppercase; font-size: 10px; }
+    td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
     tr:hover td { background-color: #f8fafc; }
-
-    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
-    .badge-activo { background-color: #dcfce7; color: #15803d; }
-
+    
+    .badge { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    
     .button {
-      padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 9px 16px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
-    .button-primary { background-color: #10b981; color: white; }
-    .button-primary:hover { background-color: #047857; }
-    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
-    .button-secondary:hover { background-color: #f8fafc; }
-
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); align-items: center; justify-content: center;
+    .button-primary { background: #059669; color: white; }
+    .button-primary:hover { background: #047857; }
+    .button-secondary { background: white; border: 1.5px solid #cbd5e1; color: #334155; }
+    .button-secondary:hover { background: #f8fafc; }
+    
+    .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; font-weight: 700; display: none; }
+    .message-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
+    .message-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    
+    .summary-box {
+      background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 15px;
+      display: flex; flex-direction: column; gap: 8px;
     }
-    .modal-content {
-      background-color: white; margin: auto; padding: 25px; border: 1px solid #cbd5e1; border-radius: 16px; width: 90%; max-width: 580px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
-    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
+    .summary-item { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #166534; }
+    .summary-item.total { font-size: 16px; font-weight: 900; color: #047857; border-top: 1.5px dashed #86efac; padding-top: 8px; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -96,279 +91,425 @@
   <header class="header">
     <div class="header-icon">👥</div>
     <div>
-      <h1>Nómina Básica & Control de Personal Operativo</h1>
-      <p>ERP Operativo · Gestión de Operarios, Liquidación de Salarios y Afectación Contable</p>
+      <h1>Nómina Específica & Control Laboral Colombiano</h1>
+      <p>ERP Operativo · Liquidación CST, Recargos, Horas Extras, Auxilio de Transporte, Provisiones & Historial</p>
     </div>
   </header>
 
   <div id="NOM_ALERT" class="message"></div>
 
-  <!-- Tabs Navigation -->
+  <!-- Navegación de Pestañas -->
   <div class="tabs-container">
-    <button class="tab-btn active" id="btn-tab-empleados" onclick="cambiarNomPestana('empleados')">👥 Registro de Empleados</button>
-    <button class="tab-btn" id="btn-tab-liquidar" onclick="cambiarNomPestana('liquidar')">🧮 Liquidación de Nómina</button>
+    <button class="tab-btn active" id="btn-tab-empleados" onclick="cambiarNomPestana('empleados')">👥 Empleados & Contratos</button>
+    <button class="tab-btn" id="btn-tab-liquidar" onclick="cambiarNomPestana('liquidar')">🧮 Calculadora & Liquidación</button>
+    <button class="tab-btn" id="btn-tab-historial" onclick="cambiarNomPestana('historial')">📜 Historial de Pagos de Nómina</button>
   </div>
 
-  <!-- Panel 1: Registro de Empleados -->
+  <!-- PESTAÑA 1: EMPLEADOS -->
   <div id="panel-empleados" class="tab-panel active">
     <div class="card">
-      <div class="card-header">
-        <h2 class="card-title">👥 Registro de Personal y Operarios de Planta</h2>
-        <div style="display:flex; gap:8px;">
-          <button class="button button-primary" onclick="abrirModalEmpleado()">+ Nuevo Empleado</button>
-          <button class="button button-secondary" onclick="nomCargarEmpleados()">↻ Actualizar</button>
-        </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 class="card-title" style="margin:0;">👥 Personal Registrado en Planta</h3>
+        <button class="button button-primary" onclick="abrirModalEmpleado()">+ Registrar Empleado</button>
       </div>
       <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>ID Empleado</th>
-              <th>Documento CC</th>
-              <th>Nombres y Apellidos</th>
+              <th>Documento</th>
+              <th>Empleado</th>
               <th>Cargo</th>
               <th>Salario Base (COP)</th>
-              <th>Tipo Contrato</th>
+              <th>Contrato / ARL</th>
+              <th>Aux. Trans.</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody id="tabla_empleados_body">
-            <tr><td colspan="7" style="text-align:center; padding:25px; color:#64748b;">Cargando lista de empleados...</td></tr>
+            <tr><td colspan="8" style="text-align:center; padding:20px; color:#64748b;">Cargando personal de nómina...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- Panel 2: Liquidación de Nómina -->
+  <!-- PESTAÑA 2: LIQUIDACIÓN ESPECÍFICA -->
   <div id="panel-liquidar" class="tab-panel">
-    <div class="card">
-      <h3 class="card-title">🧮 Procesar Liquidación de Nómina</h3>
-      <div style="display:flex; flex-direction:column; gap:14px; margin-top:15px; max-width:600px;">
+    <div class="grid-2">
+      <!-- Columna Izquierda: Formulario de Novedades -->
+      <div class="card">
+        <h3 class="card-title">🧮 Captura de Novedades de la Quincena/Mes</h3>
+        
         <div class="field">
           <label>Seleccionar Empleado *</label>
-          <select id="nom_id_empleado" class="input" onchange="actualizarSalarioBaseEmpleado()"></select>
+          <select id="nom_id_empleado" class="input" onchange="actualizarCálculosEnVivo()"></select>
         </div>
-        <div class="form-row">
+        
+        <div class="grid-2">
           <div class="field">
-            <label>Período de Pago *</label>
-            <select id="nom_periodo" class="input">
-              <option value="2026-09" selected>Septiembre 2026</option>
-              <option value="2026-10">Octubre 2026</option>
-            </select>
+            <label>Período *</label>
+            <input type="month" id="nom_periodo" class="input" value="2026-09" onchange="actualizarCálculosEnVivo()">
           </div>
           <div class="field">
-            <label>Salario Devengado Base (COP)</label>
-            <input type="number" id="nom_devengado" class="input" min="0" value="0" oninput="calcularNetoNomina()">
+            <label>Días Trabajados *</label>
+            <input type="number" id="nom_dias_trabajados" class="input" min="1" max="30" value="30" oninput="actualizarCálculosEnVivo()">
           </div>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Auxilio de Transporte (COP)</label>
-            <input type="number" id="nom_aux_transporte" class="input" min="0" value="162000" oninput="calcularNetoNomina()">
-          </div>
-          <div class="field">
-            <label>Deducciones / Salud / Pensión (COP)</label>
-            <input type="number" id="nom_deducciones" class="input" min="0" value="0" oninput="calcularNetoNomina()">
+
+        <div style="background:#f1f5f9; padding:12px; border-radius:8px; margin-bottom:12px;">
+          <strong style="font-size:11px; text-transform:uppercase; color:#334155; display:block; margin-bottom:8px;">⏰ Recargos & Horas Extras (CST Colombia)</strong>
+          <div class="grid-3">
+            <div class="field">
+              <label>H. Extra Diurna (25%)</label>
+              <input type="number" id="nom_hed" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+            <div class="field">
+              <label>H. Extra Noct. (75%)</label>
+              <input type="number" id="nom_hen" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+            <div class="field">
+              <label>Rec. Nocturno (35%)</label>
+              <input type="number" id="nom_rn" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+            <div class="field">
+              <label>Rec. Dom/Fest (75%)</label>
+              <input type="number" id="nom_rd" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+            <div class="field">
+              <label>Extra Dom Diurna (100%)</label>
+              <input type="number" id="nom_hedd" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+            <div class="field">
+              <label>Extra Dom Noct (150%)</label>
+              <input type="number" id="nom_hend" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
           </div>
         </div>
+
+        <div style="background:#f8fafc; padding:12px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:12px;">
+          <strong style="font-size:11px; text-transform:uppercase; color:#334155; display:block; margin-bottom:8px;">💰 Comisiones & Bonos Opcionales</strong>
+          <div class="grid-2">
+            <div class="field">
+              <label>Comisiones (Salarial)</label>
+              <input type="number" id="nom_comisiones" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+            <div class="field">
+              <label>Bonos Art. 128 (No Salarial)</label>
+              <input type="number" id="nom_bonos_no_salariales" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+            </div>
+          </div>
+        </div>
+
         <div class="field">
-          <label>Total Neto Pagado (COP) *</label>
-          <input type="text" id="nom_neto_display" class="input" readonly style="background:#f1f5f9; font-weight:800; color:#10b981; font-size:16px;" value="$0 COP">
+          <label>Otras Deducciones (Préstamos / Embargos)</label>
+          <input type="number" id="nom_otras_deducciones" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
         </div>
-        <button class="button button-primary" onclick="guardarLiquidacionNomina()">💾 Liquidar y Procesar Pago</button>
+
+        <button class="button button-primary" style="width:100%; justify-content:center;" onclick="guardarLiquidacionCompleta()">💾 Liquidar & Procesar Pago de Nómina</button>
+      </div>
+
+      <!-- Columna Derecha: Desglose Matemático Automatizado -->
+      <div class="card">
+        <h3 class="card-title">📊 Pre-Liquidación & Provisiones de Ley</h3>
+        
+        <div class="summary-box" style="margin-bottom:15px;">
+          <div class="summary-item"><span>Sueldo Base Devengado:</span><span id="disp_sueldo_dev">$0 COP</span></div>
+          <div class="summary-item"><span>Total Recargos y Horas Extras:</span><span id="disp_total_recargos">$0 COP</span></div>
+          <div class="summary-item"><span>Comisiones Salariales:</span><span id="disp_comisiones">$0 COP</span></div>
+          <div class="summary-item"><span>Auxilio de Transporte (< 2 SMMLV):</span><span id="disp_aux_trans">$0 COP</span></div>
+          <div class="summary-item"><span>Bonos No Salariales (Art. 128):</span><span id="disp_bonos">$0 COP</span></div>
+          <div class="summary-item total"><span>TOTAL DEVENGADO:</span><span id="disp_total_devengado">$0 COP</span></div>
+        </div>
+
+        <div class="summary-box" style="background:#fef2f2; border-color:#fecaca; margin-bottom:15px;">
+          <div class="summary-item" style="color:#991b1b;"><span>Deducción Salud (4% IBC):</span><span id="disp_ded_salud">-$0 COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Deducción Pensión (4% IBC):</span><span id="disp_ded_pension">-$0 COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Fondo Solidaridad (1% si >4 SMMLV):</span><span id="disp_ded_fsp">-$0 COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Otras Deducciones:</span><span id="disp_ded_otras">-$0 COP</span></div>
+          <div class="summary-item total" style="color:#b91c1c; border-color:#fca5a5;"><span>TOTAL DEDUCCIONES:</span><span id="disp_total_deducciones">-$0 COP</span></div>
+        </div>
+
+        <div style="background:#f0fdf4; border:2px solid #16a34a; border-radius:10px; padding:15px; text-align:center; margin-bottom:15px;">
+          <span style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;">NETO REAL A PAGAR AL TRABAJADOR</span>
+          <h2 style="margin:5px 0 0; color:#15803d; font-size:24px; font-weight:900;" id="disp_neto_pagar">$0 COP</h2>
+        </div>
+
+        <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:12px;">
+          <strong style="font-size:11px; text-transform:uppercase; color:#6b21a8; display:block; margin-bottom:8px;">🏦 Carga Prestacional & Aportes Empresa</strong>
+          <div style="font-size:11px; display:grid; grid-template-columns: 1fr 1fr; gap:6px; color:#581c87;">
+            <div>Cesantías (8.33%): <strong id="disp_cesantias">$0</strong></div>
+            <div>Int. Cesantías (1%): <strong id="disp_int_cesantias">$0</strong></div>
+            <div>Prima Serv. (8.33%): <strong id="disp_prima">$0</strong></div>
+            <div>Vacaciones (4.17%): <strong id="disp_vacaciones">$0</strong></div>
+            <div>ARL Aporte: <strong id="disp_arl">$0</strong></div>
+            <div>Caja Comp. (4%): <strong id="disp_caja">$0</strong></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Modal: Nuevo Empleado -->
-<div id="modal_empleado" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title">👥 Registrar Empleado / Operario</h3>
-      <span class="close-btn" onclick="cerrarModalEmpleado()">&times;</span>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <div class="form-row">
-        <div class="field">
-          <label>Documento C.C. *</label>
-          <input type="text" id="emp_documento" class="input" placeholder="Ej: 1018457298">
-        </div>
-        <div class="field">
-          <label>Nombres y Apellidos *</label>
-          <input type="text" id="emp_nombres" class="input" placeholder="Ej: Pedro Pablo Pérez">
+  <!-- PESTAÑA 3: HISTORIAL DE PAGOS -->
+  <div id="panel-historial" class="tab-panel">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 class="card-title" style="margin:0;">📜 Historial Registrado de Liquidaciones de Nómina</h3>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <label style="font-size:11px; font-weight:800; color:#475569;">PERÍODO:</label>
+          <input type="month" id="hist_filtro_periodo" class="input" style="width:160px;" value="2026-09" onchange="cargarHistorialNomina()">
+          <button class="button button-secondary" onclick="cargarHistorialNomina()">↻ Actualizar</button>
         </div>
       </div>
-      <div class="form-row">
-        <div class="field">
-          <label>Cargo / Función *</label>
-          <input type="text" id="emp_cargo" class="input" placeholder="Ej: Cortador de Guadua / Operario">
-        </div>
-        <div class="field">
-          <label>Salario Base Mensual (COP) *</label>
-          <input type="number" id="emp_salario" class="input" min="0" value="1300000">
-        </div>
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-        <button class="button button-secondary" onclick="cerrarModalEmpleado()">Cancelar</button>
-        <button class="button button-primary" onclick="guardarNuevoEmpleado()">💾 Guardar Empleado</button>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Nómina</th>
+              <th>Período</th>
+              <th>Empleado</th>
+              <th>Devengado Salarial</th>
+              <th>Aux. Trans.</th>
+              <th>Deducciones</th>
+              <th>Neto Pagado</th>
+              <th>Cesantías Prov.</th>
+              <th>Estado</th>
+              <th>Fecha Pago</th>
+            </tr>
+          </thead>
+          <tbody id="tabla_historial_body">
+            <tr><td colspan="10" style="text-align:center; padding:20px; color:#64748b;">Seleccione un período para consultar historial...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  const TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
-  let EMPLEADOS_CACHE = {};
+  var TOKEN_SESION_LOCAL = "<?= TOKEN_SESION ?>";
+  var EMPLEADOS_CACHE = {};
+  var SMMLV_2026 = 1423500;
+  var AUX_TRANSPORTE_2026 = 162000;
 
   document.addEventListener("DOMContentLoaded", function() {
-    nomCargarEmpleados();
+    cargarEmpleadosNomina();
   });
 
   function cambiarNomPestana(target) {
-    document.querySelectorAll(".tab-panel").forEach(panel => { panel.classList.remove("active"); });
-    document.querySelectorAll(".tab-btn").forEach(btn => { btn.classList.remove("active"); });
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
     
-    document.getElementById(`panel-${target}`).classList.add("active");
-    document.getElementById(`btn-tab-${target}`).classList.add("active");
+    var elTab = document.getElementById("panel-" + target);
+    var elBtn = document.getElementById("btn-tab-" + target);
+    if (elTab) elTab.classList.add("active");
+    if (elBtn) elBtn.classList.add("active");
+    
+    if (target === "historial") cargarHistorialNomina();
   }
 
   function mostrarNomAlerta(msg, tipo) {
-    const el = document.getElementById("NOM_ALERT");
+    var el = document.getElementById("NOM_ALERT");
+    if (!el) return;
     el.textContent = msg;
     el.className = "message message-" + tipo;
     el.style.display = "block";
-    setTimeout(() => {
-      if (el.textContent === msg) el.style.display = "none";
-    }, 6000);
+    setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
-  function nomCargarEmpleados() {
-    const tbody = document.getElementById("tabla_empleados_body");
-    const select = document.getElementById("nom_id_empleado");
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">Cargando empleados...</td></tr>`;
-
+  function cargarEmpleadosNomina() {
+    var tbody = document.getElementById("tabla_empleados_body");
+    var selectLiq = document.getElementById("nom_id_empleado");
+    if (!tbody) return;
+    
     google.script.run
       .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
+        if (res && res.EXITO && res.DATOS) {
           tbody.innerHTML = "";
-          select.innerHTML = "<option value=''>Seleccione un empleado...</option>";
+          if (selectLiq) selectLiq.innerHTML = "<option value=''>Seleccione un empleado...</option>";
+          EMPLEADOS_CACHE = {};
           
           if (res.DATOS.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b; padding:20px;">No hay empleados registrados.</td></tr>`;
+            tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:20px; color:#64748b;'>No hay empleados registrados.</td></tr>";
             return;
           }
-
-          res.DATOS.forEach(e => {
+          
+          res.DATOS.forEach(function(e) {
             EMPLEADOS_CACHE[e.ID_EMPLEADO] = e;
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><strong>${e.ID_EMPLEADO}</strong></td>
-              <td><code>${e.DOCUMENTO}</code></td>
-              <td><strong>${e.NOMBRES_APELLIDOS}</strong></td>
-              <td>${e.CARGO}</td>
-              <td style="color:#10b981; font-weight:700;">$${Number(e.SALARIO_BASE || 0).toLocaleString('es-CO')} COP</td>
-              <td>${e.TIPO_CONTRATO || 'INDEFINIDO'}</td>
-              <td><span class="badge badge-activo">${e.ESTADO || 'ACTIVO'}</span></td>
-            `;
+            var tr = document.createElement("tr");
+            
+            tr.innerHTML = "<td><code>" + e.ID_EMPLEADO + "</code></td>" +
+                           "<td>" + e.DOCUMENTO + " (" + (e.TIPO_DOCUMENTO || 'CC') + ")</td>" +
+                           "<td><strong>" + e.NOMBRES_APELLIDOS + "</strong></td>" +
+                           "<td>" + (e.CARGO || 'OPERARIO') + "</td>" +
+                           "<td>$" + Number(e.SALARIO_BASE || 0).toLocaleString('es-CO') + "</td>" +
+                           "<td>" + (e.TIPO_CONTRATO || 'INDEFINIDO') + " / " + (e.NIVEL_ARL || 'RIESGO 1') + "</td>" +
+                           "<td><span class='badge " + (e.TIENE_AUX_TRANSPORTE === 'SI' ? 'badge-success' : 'badge-warning') + "'>" + (e.TIENE_AUX_TRANSPORTE || 'NO') + "</span></td>" +
+                           "<td><span class='badge badge-success'>" + (e.ESTADO || 'ACTIVO') + "</span></td>";
             tbody.appendChild(tr);
 
-            const opt = document.createElement("option");
-            opt.value = e.ID_EMPLEADO;
-            opt.text = `${e.NOMBRES_APELLIDOS} (${e.CARGO})`;
-            select.add(opt);
+            if (selectLiq) {
+              var opt = document.createElement("option");
+              opt.value = e.ID_EMPLEADO;
+              opt.text = e.NOMBRES_APELLIDOS + " - " + e.DOCUMENTO + " ($" + Number(e.SALARIO_BASE || 0).toLocaleString('es-CO') + ")";
+              selectLiq.add(opt);
+            }
           });
         }
       })
-      .NOM_LISTAR_EMPLEADOS_WEB(TOKEN_SESION_PROY);
+      .NOM_LISTAR_EMPLEADOS_WEB(TOKEN_SESION_LOCAL);
   }
 
-  function abrirModalEmpleado() {
-    document.getElementById("emp_documento").value = "";
-    document.getElementById("emp_nombres").value = "";
-    document.getElementById("emp_cargo").value = "";
-    document.getElementById("modal_empleado").style.display = "flex";
-  }
-
-  function cerrarModalEmpleado() {
-    document.getElementById("modal_empleado").style.display = "none";
-  }
-
-  function guardarNuevoEmpleado() {
-    const datos = {
-      DOCUMENTO: document.getElementById("emp_documento").value.trim(),
-      NOMBRES_APELLIDOS: document.getElementById("emp_nombres").value.trim(),
-      CARGO: document.getElementById("emp_cargo").value.trim(),
-      SALARIO_BASE: Number(document.getElementById("emp_salario").value || 0)
-    };
-
-    if (!datos.DOCUMENTO || !datos.NOMBRES_APELLIDOS) {
-      alert("Por favor ingrese el documento y el nombre completo.");
-      return;
-    }
-
-    mostrarNomAlerta("Guardando empleado en Sheets...", "info");
-    cerrarModalEmpleado();
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          mostrarNomAlerta(res.MENSAJE, "success");
-          nomCargarEmpleados();
-        } else mostrarNomAlerta("Error: " + res.MENSAJE, "error");
-      })
-      .NOM_GUARDAR_EMPLEADO_WEB(datos, TOKEN_SESION_PROY);
-  }
-
-  function actualizarSalarioBaseEmpleado() {
-    const idEmp = document.getElementById("nom_id_empleado").value;
+  function actualizarCálculosEnVivo() {
+    var idEmp = document.getElementById("nom_id_empleado").value;
     if (!idEmp || !EMPLEADOS_CACHE[idEmp]) return;
     
-    const e = EMPLEADOS_CACHE[idEmp];
-    document.getElementById("nom_devengado").value = e.SALARIO_BASE || 1300000;
-    calcularNetoNomina();
-  }
-
-  function calcularNetoNomina() {
-    const dev = Number(document.getElementById("nom_devengado").value || 0);
-    const aux = Number(document.getElementById("nom_aux_transporte").value || 0);
-    const ded = Number(document.getElementById("nom_deducciones").value || 0);
-    const neto = dev + aux - ded;
+    var emp = EMPLEADOS_CACHE[idEmp];
+    var salarioBase = Number(emp.SALARIO_BASE || SMMLV_2026);
+    var dias = Number(document.getElementById("nom_dias_trabajados").value || 30);
+    var vHora = salarioBase / 230; // Jornada laboral
     
-    document.getElementById("nom_neto_display").value = "$" + neto.toLocaleString('es-CO') + " COP";
+    var sueldoDev = (salarioBase / 30) * dias;
+    
+    // Horas Extras
+    var hed = Number(document.getElementById("nom_hed").value || 0) * (vHora * 1.25);
+    var hen = Number(document.getElementById("nom_hen").value || 0) * (vHora * 1.75);
+    var rn = Number(document.getElementById("nom_rn").value || 0) * (vHora * 0.35);
+    var rd = Number(document.getElementById("nom_rd").value || 0) * (vHora * 0.75);
+    var hedd = Number(document.getElementById("nom_hedd").value || 0) * (vHora * 2.00);
+    var hend = Number(document.getElementById("nom_hend").value || 0) * (vHora * 2.50);
+    
+    var totalRecargos = hed + hen + rn + rd + hedd + hend;
+    var comisiones = Number(document.getElementById("nom_comisiones").value || 0);
+    var bonos = Number(document.getElementById("nom_bonos_no_salariales").value || 0);
+    
+    var devSalarial = sueldoDev + totalRecargos + comisiones;
+    
+    // Auxilio de Transporte
+    var auxTrans = 0;
+    if (salarioBase <= (SMMLV_2026 * 2)) {
+      auxTrans = (AUX_TRANSPORTE_2026 / 30) * dias;
+    }
+    
+    var totalDevengado = devSalarial + bonos + auxTrans;
+    
+    // Deducciones
+    var ibc = devSalarial;
+    var dedSalud = ibc * 0.04;
+    var dedPension = ibc * 0.04;
+    var dedFsp = (ibc >= (SMMLV_2026 * 4)) ? (ibc * 0.01) : 0;
+    var dedOtras = Number(document.getElementById("nom_otras_deducciones").value || 0);
+    
+    var totalDeducciones = dedSalud + dedPension + dedFsp + dedOtras;
+    var neto = totalDevengado - totalDeducciones;
+    
+    // Provisiones
+    var basePrest = devSalarial + auxTrans;
+    var cesantias = basePrest * 0.0833;
+    var intCes = cesantias * 0.12;
+    var prima = basePrest * 0.0833;
+    var vacaciones = sueldoDev * 0.0417;
+    var arl = ibc * 0.00522;
+    var caja = ibc * 0.04;
+    
+    // Renderizado DOM
+    document.getElementById("disp_sueldo_dev").textContent = "$" + Math.round(sueldoDev).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_total_recargos").textContent = "$" + Math.round(totalRecargos).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_comisiones").textContent = "$" + Math.round(comisiones).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_aux_trans").textContent = "$" + Math.round(auxTrans).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_bonos").textContent = "$" + Math.round(bonos).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_total_devengado").textContent = "$" + Math.round(totalDevengado).toLocaleString('es-CO') + " COP";
+    
+    document.getElementById("disp_ded_salud").textContent = "-$" + Math.round(dedSalud).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_ded_pension").textContent = "-$" + Math.round(dedPension).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_ded_fsp").textContent = "-$" + Math.round(dedFsp).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_ded_otras").textContent = "-$" + Math.round(dedOtras).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_total_deducciones").textContent = "-$" + Math.round(totalDeducciones).toLocaleString('es-CO') + " COP";
+    
+    document.getElementById("disp_neto_pagar").textContent = "$" + Math.round(neto).toLocaleString('es-CO') + " COP";
+    
+    document.getElementById("disp_cesantias").textContent = "$" + Math.round(cesantias).toLocaleString('es-CO');
+    document.getElementById("disp_int_cesantias").textContent = "$" + Math.round(intCes).toLocaleString('es-CO');
+    document.getElementById("disp_prima").textContent = "$" + Math.round(prima).toLocaleString('es-CO');
+    document.getElementById("disp_vacaciones").textContent = "$" + Math.round(vacaciones).toLocaleString('es-CO');
+    document.getElementById("disp_arl").textContent = "$" + Math.round(arl).toLocaleString('es-CO');
+    document.getElementById("disp_caja").textContent = "$" + Math.round(caja).toLocaleString('es-CO');
   }
 
-  function guardarLiquidacionNomina() {
-    const idEmp = document.getElementById("nom_id_empleado").value;
-    if (!idEmp) {
-      alert("Por favor seleccione un empleado.");
+  function guardarLiquidacionCompleta() {
+    var idEmp = document.getElementById("nom_id_empleado").value;
+    if (!idEmp || !EMPLEADOS_CACHE[idEmp]) {
+      alert("Por favor seleccione un empleado de la lista.");
       return;
     }
-
-    const dev = Number(document.getElementById("nom_devengado").value || 0);
-    const aux = Number(document.getElementById("nom_aux_transporte").value || 0);
-    const ded = Number(document.getElementById("nom_deducciones").value || 0);
-    const neto = dev + aux - ded;
-
-    const datos = {
+    
+    var emp = EMPLEADOS_CACHE[idEmp];
+    var datos = {
       ID_EMPLEADO: idEmp,
+      DOCUMENTO: emp.DOCUMENTO,
+      EMPLEADO_NOMBRE: emp.NOMBRES_APELLIDOS,
       PERIODO: document.getElementById("nom_periodo").value,
-      DEVENGADO_BASE: dev,
-      AUX_TRANSPORTE: aux,
-      DEDUCCIONES: ded,
-      VALOR_NETO: neto
+      DIAS_TRABAJADOS: Number(document.getElementById("nom_dias_trabajados").value || 30),
+      SALARIO_BASE: Number(emp.SALARIO_BASE || SMMLV_2026),
+      NIVEL_ARL: emp.NIVEL_ARL || "RIESGO_1",
+      HORAS_EXTRA_DIURNAS: Number(document.getElementById("nom_hed").value || 0),
+      HORAS_EXTRA_NOCTURNAS: Number(document.getElementById("nom_hen").value || 0),
+      HORAS_RECARGO_NOCTURNO: Number(document.getElementById("nom_rn").value || 0),
+      HORAS_RECARGO_DOMINICAL: Number(document.getElementById("nom_rd").value || 0),
+      HORAS_EXTRA_DOM_DIURNAS: Number(document.getElementById("nom_hedd").value || 0),
+      HORAS_EXTRA_DOM_NOCTURNAS: Number(document.getElementById("nom_hend").value || 0),
+      COMISIONES: Number(document.getElementById("nom_comisiones").value || 0),
+      BONOS_NO_SALARIALES: Number(document.getElementById("nom_bonos_no_salariales").value || 0),
+      OTRAS_DEDUCCIONES: Number(document.getElementById("nom_otras_deducciones").value || 0)
     };
-
-    mostrarNomAlerta("Procesando liquidación de nómina...", "info");
-
+    
+    mostrarNomAlerta("Procesando liquidación completa de nómina en Sheets...", "info");
+    
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
           mostrarNomAlerta(res.MENSAJE, "success");
-        } else mostrarNomAlerta("Error: " + res.MENSAJE, "error");
+          cambiarNomPestana("historial");
+        } else {
+          mostrarNomAlerta("Error: " + res.MENSAJE, "error");
+        }
       })
-      .NOM_LIQUIDAR_NOMINA_WEB(datos, TOKEN_SESION_PROY);
+      .NOM_LIQUIDAR_NOMINA_COMPLETA_WEB(datos, TOKEN_SESION_LOCAL);
+  }
+
+  function cargarHistorialNomina() {
+    var tbody = document.getElementById("tabla_historial_body");
+    var periodo = document.getElementById("hist_filtro_periodo").value;
+    if (!tbody) return;
+    
+    tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:20px; color:#64748b;'>Cargando historial de nómina para " + periodo + "...</td></tr>";
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          tbody.innerHTML = "";
+          if (res.DATOS.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:20px; color:#64748b;'>No hay registros de liquidación para el período " + periodo + ".</td></tr>";
+            return;
+          }
+          
+          res.DATOS.forEach(function(n) {
+            var tr = document.createElement("tr");
+            tr.innerHTML = "<td><code>" + n.ID_NOMINA + "</code></td>" +
+                           "<td>" + n.PERIODO + "</td>" +
+                           "<td><strong>" + (n.EMPLEADO_NOMBRE || n.ID_EMPLEADO) + "</strong> (" + (n.DOCUMENTO || '') + ")</td>" +
+                           "<td>$" + Number(n.TOTAL_DEVENGADO_SALARIAL || 0).toLocaleString('es-CO') + "</td>" +
+                           "<td>$" + Number(n.AUXILIO_TRANSPORTE || 0).toLocaleString('es-CO') + "</td>" +
+                           "<td style='color:#dc2626;'>-$" + Number(n.TOTAL_DEDUCCIONES || 0).toLocaleString('es-CO') + "</td>" +
+                           "<td style='color:#16a34a; font-weight:800;'>$" + Number(n.NETO_PAGADO || 0).toLocaleString('es-CO') + "</td>" +
+                           "<td>$" + Number(n.PROV_CESANTIAS || 0).toLocaleString('es-CO') + "</td>" +
+                           "<td><span class='badge badge-success'>" + (n.ESTADO || 'PROCESADA') + "</span></td>" +
+                           "<td>" + String(n.FECHA_PAGO || '').substring(0, 10) + "</td>";
+            tbody.appendChild(tr);
+          });
+        }
+      })
+      .NOM_OBTENER_HISTORIAL_PAGOS_WEB(periodo, TOKEN_SESION_LOCAL);
   }
 </script>
 </body>

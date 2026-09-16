@@ -1,6 +1,6 @@
-// (VERSIÓN 35.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 36.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 98_PRUEBAS_VISTAS.gs (VERSIÓN 35.0 - V2 ERP - LIBRO 1)
+* 98_PRUEBAS_VISTAS.gs (VERSIÓN 36.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Suite de Pruebas Unitarias para validación del Motor de Renderizado (HTML5/ES6) y Enrutamiento.
 * - Probar de manera automatizada la compilación, interpolación de scriptlets y evaluación de vistas.
@@ -74,9 +74,9 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
   }
 
   // ==========================================================
-  // TEST 3: SEGURIDAD (F2_USR_GESTION v22)
+  // TEST 3: SEGURIDAD (F2_USR_GESTION v25)
   // ==========================================================
-  console.log("\n🔐 [TEST 3] Evaluando compilación de F2_USR_GESTION v22:");
+  console.log("\n🔐 [TEST 3] Evaluando compilación de F2_USR_GESTION v25:");
   try {
     const template = HtmlService.createTemplateFromFile("F2_USR_GESTION");
     template.TOKEN_SESION = "SES-TEST-TOKEN-999999";
@@ -91,7 +91,7 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
       throw new Error("Llamada RPC SEG_GUARDAR_PERMISO_WEB no encontrada en permisos dinámicos.");
     }
     
-    console.log("   [PASS] F2_USR_GESTION v22 compilado correctamente.");
+    console.log("   [PASS] F2_USR_GESTION v25 compilado correctamente.");
     resultadosVistas.push({ modulo: "VISTAS", prueba: "RENDER_GESTION_SEGURIDAD", estado: "PASS", detalle: "Pestaña de permisos dinámicos v22 ok." });
   } catch (errGestion) {
     console.error("   [FAIL] Error en Render de Seguridad: " + errGestion.message);
@@ -359,3 +359,5 @@ function PROBAR_RENDERING_Y_VISTAS_E2E() {
     console.warn("⚠️ SE DETECTARON INCONSISTENCIAS EN LA COMPILACIÓN DE ALGUNAS PLANTILLAS.");
   }
 }
+
+

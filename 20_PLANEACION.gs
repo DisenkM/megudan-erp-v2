@@ -415,3 +415,4 @@ function PLA_OBTENER_NOTICIAS_GLOBALES_WEB(categoria, tokenSesion) {
     return { EXITO: false, DATOS: [], MENSAJE: "Error al obtener noticias: " + error.toString() };
   }
 }
+

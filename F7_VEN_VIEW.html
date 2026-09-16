@@ -1,1427 +1,605 @@
-<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 14.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Módulo de Ventas | MEGUDAN ERP</title>
+  <title>Ventas & Facturación Comercial | MEGUDAN ERP</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
       background-color: #f8fafc; color: #1e293b;
     }
-    
-    /* Scrollbar personalizado */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1350px; margin: 0 auto; }
 
-    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
-    
-    /* Header corporativo */
     .header {
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-      color: white; padding: 24px;
-      border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; gap: 18px;
-      box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.1), 0 4px 6px -2px rgba(30, 58, 138, 0.05);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+      color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      box-shadow: 0 10px 25px -5px rgba(29, 78, 216, 0.3);
     }
-    .header-icon { font-size: 36px; animation: pulse 2s infinite; }
-    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-    .header p { margin: 6px 0 0; font-size: 13px; opacity: 0.85; font-weight: 500; }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+    .header-info { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+      font-size: 32px; width: 60px; height: 60px;
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
 
-    .message {
-      padding: 14px 18px; border-radius: 8px; margin-bottom: 25px; font-size: 13px; font-weight: 600; 
-      display: none; line-height: 1.5; border-left: 4px solid transparent;
-      animation: slideIn 0.3s ease-out;
-    }
-    .message-info { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; border-left-color: #3b82f6; }
-    .message-success { background-color: #ecfdf5; color: #16a34a; border-color: #a7f3d0; border-left-color: #10b981; }
-    .message-error { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; border-left-color: #ef4444; }
-
-    @keyframes slideIn {
-      from { transform: translateY(-10px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    /* Layout modular */
-    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px; }
-    @media (max-width: 1024px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-    
-    .card {
-      background-color: white; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card:hover {
-      box-shadow: 0 10px 20px -3px rgba(0,0,0,0.03), 0 4px 6px -2px rgba(0,0,0,0.02);
-    }
-    .card-title {
-      margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 800; color: #0f172a;
-      border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; display: flex; align-items: center; gap: 10px;
-    }
-    
-    /* Grillas del formulario */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-    @media (max-width: 600px) {
-      .form-row { grid-template-columns: 1fr; gap: 15px; }
-    }
-    .field { display: flex; flex-direction: column; gap: 6px; position: relative; }
-    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    .input {
-      width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; 
-      font-size: 13px; font-weight: 500; outline: none; transition: all 0.2s;
-      background-color: #ffffff; color: #0f172a;
-    }
-    .input:focus { 
-      border-color: #1d4ed8; 
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
-    .input[readonly] {
-      background-color: #f1f5f9;
-      color: #64748b;
-      border-color: #e2e8f0;
-      cursor: not-allowed;
-    }
-    
-    /* Contenedor de Detalle e ítems */
-    .items-container { 
-      margin-top: 20px; border: 1.5px solid #e2e8f0; border-radius: 10px; 
-      overflow: hidden; margin-bottom: 20px; background-color: #f8fafc;
-    }
-    .items-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .items-table th { 
-      background-color: #f1f5f9; padding: 12px; font-size: 11px; 
-      font-weight: 800; color: #475569; text-transform: uppercase; 
-      border-bottom: 1.5px solid #e2e8f0; letter-spacing: 0.5px;
-    }
-    .items-table td { 
-      padding: 12px; border-bottom: 1px solid #e2e8f0; 
-      vertical-align: top; background-color: #ffffff;
-    }
-    
-    /* AIU Card colombiana */
-    .aiu-card {
-      background-color: #faf5ff; border: 1.5px solid #ebd5ff; border-radius: 10px; 
-      padding: 18px; margin-bottom: 20px; display: none;
-      animation: fadeIn 0.3s ease-out;
-    }
-    .aiu-title { font-size: 13px; font-weight: 800; color: #6b21a8; margin-top: 0; margin-bottom: 8px; text-transform: uppercase; }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    
-    /* Bloque consolidado de totales */
-    .totals-box { 
-      display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; 
-      background: linear-gradient(to bottom, #ffffff, #f8fafc); 
-      padding: 18px; border-radius: 10px; border: 1.5px solid #e2e8f0; 
-    }
-    .total-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #475569; }
-    .total-row-grand { 
-      font-size: 18px; font-weight: 800; color: #0f172a; 
-      border-top: 2px solid #cbd5e1; padding-top: 12px; margin-top: 8px; 
-    }
-    
-    /* Botones dinámicos */
-    .button {
-      padding: 11px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; 
-      cursor: pointer; transition: all 0.2s ease; text-align: center; display: inline-flex; 
-      align-items: center; justify-content: center; gap: 8px; width: 100%;
-    }
-    .button-primary { 
-      background-color: #1d4ed8; color: white;
-      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-    }
-    .button-primary:hover { 
-      background-color: #1e40af; 
-      transform: translateY(-1px);
-      box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.3);
-    }
-    .button-primary:active { transform: translateY(0); }
-    
-    .button-secondary { 
-      background-color: #ffffff; color: #334155; 
-      border: 1.5px solid #cbd5e1; 
-    }
-    .button-secondary:hover { 
-      background-color: #f8fafc; 
-      border-color: #94a3b8; 
-    }
-    
-    .button-danger { 
-      background-color: #fef2f2; color: #dc2626; 
-      border: 1.5px solid #fecaca; 
-    }
-    .button-danger:hover { 
-      background-color: #fee2e2; 
-      border-color: #fca5a5; 
-    }
-    .button-item-add { width: auto; font-size: 12px; padding: 8px 14px; margin-bottom: 0px; }
-
-    /* Historial y tablas recias */
-    .history-card { margin-top: 25px; }
-    .history-table-container { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1.5px solid #e2e8f0; }
-    .history-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-    .history-table th { 
-      background-color: #f8fafc; padding: 12px 16px; font-size: 11px; 
-      font-weight: 800; color: #475569; text-transform: uppercase; 
-      border-bottom: 1.5px solid #e2e8f0; letter-spacing: 0.5px;
-    }
-    .history-table td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; background-color: #ffffff; }
-    .history-table tr:hover td { background-color: #f8fafc; }
-    
-    /* Badges de Integración Siigo / Alegra */
-    .badge { 
-      padding: 4px 8px; border-radius: 6px; font-size: 11px; 
-      font-weight: 700; text-transform: uppercase; display: inline-flex; 
-      align-items: center; gap: 4px;
-    }
-    .badge-emitida { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .badge-anulada { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-    .badge-pago { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-    .badge-sync-siigo { background-color: #faf5ff; color: #6b21a8; border: 1px solid #ebd5ff; }
-    .badge-sync-alegra { background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-    .badge-pending { background-color: #fffbeb; color: #9a3412; border: 1px solid #fed7aa; }
-
-    /* Estilo de ayuda stock */
-    .stock-help {
-      font-size: 11px; font-weight: 700; margin-top: 4px; display: block;
-    }
-    .stock-ok { color: #16a34a; }
-    .stock-low { color: #d97706; }
-    .stock-empty { color: #dc2626; font-size: 10px; animation: blink 1.5s infinite; }
-    
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Modal de detalle */
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0; 
-      width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.4); 
-      align-items: center; justify-content: center; backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background-color: #ffffff; margin: auto; padding: 25px; 
-      border: 1px solid #e2e8f0; width: 90%; max-width: 800px; 
-      border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes modalScale {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center; 
-      border-bottom: 2px solid #e2e8f0; padding-bottom: 12px;
-    }
-    .close-btn {
-      color: #94a3b8; font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s;
-    }
-    .close-btn:hover { color: #0f172a; }
-
-    /* Tabs Navigation styling */
-    .tabs-container {
-      display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 0px;
-    }
+    .tabs-container { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
     .tab-btn {
-      padding: 12px 24px; border: none; background: none; font-size: 14px; font-weight: 700;
-      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+      padding: 12px 24px; border: none; background: none; font-size: 13px; font-weight: 700;
+      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
     }
     .tab-btn:hover { color: #1d4ed8; }
     .tab-btn.active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
-    
+
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
-    
+
+    .message { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
+    .input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15); }
+
+    .items-container { border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-top: 16px; margin-bottom: 20px; }
+    .items-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .items-table th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    .items-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+    .totals-box { display: flex; flex-direction: column; gap: 10px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 20px; }
+    .total-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #475569; }
+    .total-row-grand { font-size: 20px; font-weight: 900; color: #0f172a; border-top: 2px solid #cbd5e1; padding-top: 12px; margin-top: 8px; }
+
+    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .button-primary { background-color: #1d4ed8; color: white; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25); }
+    .button-primary:hover { background-color: #1e40af; }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+    .button-success { background-color: #16a34a; color: white; }
+    .button-danger { background-color: #dc2626; color: white; }
+
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
     .badge-active { background-color: #dcfce7; color: #15803d; }
     .badge-pending { background-color: #fef3c7; color: #d97706; }
     .badge-overdue { background-color: #fee2e2; color: #dc2626; }
 
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
+    .close-btn:hover { color: #0f172a; }
   </style>
 </head>
 <body>
 <div class="app">
   <header class="header">
-    <div class="header-icon">💰</div>
-    <div>
-      <h1>Emisión de Ventas e Integración Comercial</h1>
-      <p>ERP Operativo · Facturación, Pedidos, Cotizaciones y Control AIU Sostenible</p>
+    <div class="header-info">
+      <div class="header-icon">💰</div>
+      <div>
+        <h1>Emisión de Ventas, Facturación & Cartera</h1>
+        <p>ERP Operativo · Cotizaciones, Remisiones, AIU Colombia, Cartera CxC y Pre-sincronización Siigo/Alegra</p>
+      </div>
     </div>
   </header>
 
   <div id="VEN_ALERT" class="message"></div>
 
-  
-  <!-- Tabs Navigation (Sincronizado SPA - Estilo Compras) -->
   <div class="tabs-container">
     <button class="tab-btn active" id="btn-tab-nueva-venta" onclick="cambiarPestana('nueva-venta')">🧾 Registrar Venta</button>
     <button class="tab-btn" id="btn-tab-historial-ventas" onclick="cambiarPestana('historial-ventas')">🔄 Historial de Ventas</button>
     <button class="tab-btn" id="btn-tab-cartera" onclick="cambiarPestana('cartera')">📋 Cuentas por Cobrar (CxC)</button>
   </div>
 
-
-  <!-- Panel 1: Registro de Nueva Venta -->
+  <!-- PANEL 1: REGISTRAR VENTA -->
   <div id="panel-nueva-venta" class="tab-panel active">
-    <div class="grid">
-    <!-- Card principal de captura de venta -->
-    <div class="card">
-      <h3 class="card-title">🧾 Nueva Transacción de Venta</h3>
-      
-      <!-- Fila 1: Configuración de Documento -->
-      <div class="form-row">
-        <div class="field">
-          <label for="ven_tipo_documento">Tipo de Documento *</label>
-          <select id="ven_tipo_documento" class="input" onchange="alternarAIU()">
-            <option value="FACTURA_VENTA" selected>Factura Electrónica de Venta Tradicional</option>
-            <option value="FACTURA_AIU">Factura Electrónica de Venta con AIU (Obras)</option>
-            <option value="COTIZACION">Cotización / Propuesta Comercial</option>
-            <option value="ORDEN_PEDIDO">Orden de Pedido</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="ven_num_documento">Número / Consecutivo Físico *</label>
-          <input type="text" id="ven_num_documento" class="input" placeholder="Ej: FEV-1001 o COT-500">
-        </div>
-      </div>
-
-      <!-- Fila 2: Cliente y Obra vinculada -->
-      <div class="form-row">
-        <div class="field">
-          <label for="ven_id_cliente">Seleccionar Cliente / Tercero *</label>
-          <select id="ven_id_cliente" class="input" onchange="actualizarCondicionesPagoCliente()"></select>
-        </div>
-        <div class="field">
-          <label for="ven_id_obra">Obra / Proyecto Destino</label>
-          <select id="ven_id_obra" class="input">
-            <option value="">Ninguna - Venta de Sede o Fábrica</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Fila 3: Términos comerciales -->
-      <div class="form-row">
-        <div class="field">
-          <label for="ven_forma_pago">Forma de Pago *</label>
-          <select id="ven_forma_pago" class="input">
-            <option value="CONTADO" selected>Contado (Efectivo / Transferencia)</option>
-            <option value="CREDITO">Crédito (Afecta Cartera automáticamente)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="ven_plazo_dias">Plazo de Pago (Días)</label>
-          <input type="number" id="ven_plazo_dias" class="input" min="0" value="0">
-        </div>
-      </div>
-
-      <!-- Card de AIU Colombia -->
-      <div id="aiu_container" class="aiu-card">
-        <h4 class="aiu-title">🏗️ Configuración del AIU (Ley Tributaria de Colombia)</h4>
-        <p style="font-size: 11px; color: #475569; margin-top: 0; margin-bottom: 12px; line-height: 1.4;">
-          De acuerdo con el Estatuto Tributario, el IVA se aplicará del 19% únicamente sobre la base de <strong>Utilidad (U)</strong>. El subtotal de Administración (A) e Imprevistos (I) permanecerán exentos de IVA.
-        </p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-          <div class="field">
-            <label for="ven_aiu_a">Administración (A) %</label>
-            <input type="number" id="ven_aiu_a" class="input" min="0" max="100" value="15" oninput="calcularTotalesVenta()">
-          </div>
-          <div class="field">
-            <label for="ven_aiu_i">Imprevistos (I) %</label>
-            <input type="number" id="ven_aiu_i" class="input" min="0" max="100" value="5" oninput="calcularTotalesVenta()">
-          </div>
-          <div class="field">
-            <label for="ven_aiu_u">Utilidad (U) %</label>
-            <input type="number" id="ven_aiu_u" class="input" min="1" max="100" value="10" oninput="calcularTotalesVenta()">
-          </div>
-        </div>
-      </div>
-
-      <!-- Sección de Detalle de Productos -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px;">
-        <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase;">📦 Detalle de Ítems / Productos</h4>
-        <button class="button button-secondary button-item-add" onclick="agregarLineaDetalle()">➕ Agregar Item</button>
-      </div>
-
-      <div class="items-container">
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th style="width: 32%;">Producto / Servicio</th>
-              <th style="width: 12%;">U/M</th>
-              <th style="width: 16%;">Cant.</th>
-              <th style="width: 18%;">Precio Unitario</th>
-              <th style="width: 10%;">Desc %</th>
-              <th style="width: 12%;">Total Línea</th>
-              <th style="width: 5%; text-align: center;"></th>
-            </tr>
-          </thead>
-          <tbody id="detalles_tabla"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Panel Lateral de Totales y Envío -->
-    <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
       <div class="card">
-        <h3 class="card-title">🧮 Consolidado y Liquidación</h3>
-        
-        <div class="totals-box">
-          <div class="total-row">
-            <span>Subtotal Bruto:</span>
-            <span id="txt_subtotal">$0 COP</span>
+        <h3 class="card-title">🧾 Captura Comercial de Venta</h3>
+        <div class="form-row" style="margin-top:16px;">
+          <div class="field">
+            <label>Tipo de Documento *</label>
+            <select id="ven_tipo_documento" class="input" onchange="alternarAIU()">
+              <option value="FACTURA_VENTA" selected>Factura Electrónica de Venta</option>
+              <option value="FACTURA_AIU">Factura de Obra / Contrato con AIU (Colombia)</option>
+              <option value="COTIZACION">Cotización / Propuesta Comercial</option>
+              <option value="ORDEN_PEDIDO">Orden de Pedido / Remisión</option>
+            </select>
           </div>
-          <div class="total-row" style="color: #dc2626;">
-            <span>Descuentos:</span>
-            <span id="txt_descuento">-$0 COP</span>
+          <div class="field">
+            <label>Consecutivo / N° Soporte Físico *</label>
+            <input type="text" id="ven_num_documento" class="input" placeholder="Ej: FEV-2026-001">
           </div>
-          <div class="total-row">
-            <span>I.V.A. Liquido:</span>
-            <span id="txt_iva">$0 COP</span>
+        </div>
+        <div class="form-row-3">
+          <div class="field">
+            <label>Cliente / Tercero *</label>
+            <select id="ven_id_cliente" class="input" onchange="actualizarCondicionesPagoCliente()"></select>
           </div>
-          
-          <!-- Elementos AIU si corresponden -->
-          <div id="resumen_aiu" style="display: none; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px dashed #cbd5e1; margin-top: 5px;">
-            <div class="total-row" style="font-size: 11px; font-weight: 500;">
-              <span>Subtotal AIU (A+I):</span>
-              <span id="txt_sub_ai_aiu">$0 COP</span>
-            </div>
-            <div class="total-row" style="font-size: 11px; font-weight: 500;">
-              <span>Base Utilidad Gravable (U):</span>
-              <span id="txt_base_u_aiu">$0 COP</span>
-            </div>
+          <div class="field">
+            <label>Obra / Proyecto Destino</label>
+            <select id="ven_id_obra" class="input">
+              <option value="">Sede Principal / Venta de Fábrica</option>
+            </select>
           </div>
-
-          <div class="total-row total-row-grand">
-            <span>TOTAL FACTURADO:</span>
-            <span id="txt_total">$0 COP</span>
+          <div class="field">
+            <label>Forma de Pago *</label>
+            <select id="ven_forma_pago" class="input">
+              <option value="CONTADO" selected>Contado (Ingreso a Tesorería)</option>
+              <option value="CREDITO">Crédito (Afecta Cartera CxC)</option>
+            </select>
           </div>
         </div>
 
-        <button class="button button-primary" id="btn_guardar_venta" onclick="enviarVentaAAppsScript()">💾 Guardar y Emitir Transacción</button>
+        <!-- Módulo de AIU -->
+        <div id="aiu_container" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:16px; border-radius:12px; margin-bottom:16px;">
+          <h4 style="margin:0 0 10px; font-size:12px; font-weight:800; color:#166534; text-transform:uppercase;">🏗️ Parámetros AIU (Estatuto Tributario Colombia)</h4>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+            <div class="field">
+              <label>Administración (%)</label>
+              <input type="number" id="ven_aiu_a" class="input" min="0" max="100" value="15" oninput="calcularTotalesVenta()">
+            </div>
+            <div class="field">
+              <label>Imprevistos (%)</label>
+              <input type="number" id="ven_aiu_i" class="input" min="0" max="100" value="5" oninput="calcularTotalesVenta()">
+            </div>
+            <div class="field">
+              <label>Utilidad (%) *</label>
+              <input type="number" id="ven_aiu_u" class="input" min="1" max="100" value="10" oninput="calcularTotalesVenta()">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:12px;">
+          <h4 style="margin:0; font-size:13px; font-weight:800; color:#475569; text-transform:uppercase;">📦 Detalle de Ítems / Catálogo de Productos</h4>
+          <button class="button button-secondary" style="padding:6px 14px; font-size:12px;" onclick="agregarLineaDetalle()">+ Agregar Ítem</button>
+        </div>
+
+        <div class="items-container">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width:35%;">Producto / Servicio</th>
+                <th style="width:15%;">Cantidad</th>
+                <th style="width:20%;">Precio Unit. (COP)</th>
+                <th style="width:20%;">Total Línea</th>
+                <th style="width:10%; text-align:center;">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="detalles_tabla"></tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="card" style="background-color: #faf5ff; border-color: #ebd5ff;">
-        <h3 class="card-title" style="color: #6b21a8;">🏗️ Capa de Sincronización</h3>
-        <p style="font-size: 12px; color: #581c87; line-height: 1.5; margin: 0; font-weight: 500;">
-          <strong>Cliente ➔ ERP ➔ Siigo/Alegra ➔ DIAN</strong><br>
-          Esta solución registra la venta de forma local operando el Kardex e inventarios en vivo. Las facturas a crédito se encolan automáticamente en cartera para ser enviadas a Siigo o Alegra sin doble digitación contable.
-        </p>
+      <!-- Resumen Lateral -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <div class="card">
+          <h3 class="card-title">🧮 Liquidación de Venta</h3>
+          <div class="totals-box">
+            <div class="total-row"><span>Subtotal Bruto:</span><span id="txt_subtotal">$0 COP</span></div>
+            <div class="total-row" style="color:#dc2626;"><span>Descuento Comercial:</span><span id="txt_descuento">-$0 COP</span></div>
+            <div class="total-row" id="row_iva"><span>IVA Liquidado (19%):</span><span id="txt_iva">$0 COP</span></div>
+            <div class="total-row total-row-grand"><span>TOTAL GENERAL:</span><span id="txt_total">$0 COP</span></div>
+          </div>
+          <button class="button button-primary" style="width:100%; padding:14px;" onclick="enviarVentaAAppsScript()">💾 Emitir & Guardar Venta</button>
+        </div>
+
+        <div class="card" style="background-color:#faf5ff; border-color:#ebd5ff;">
+          <h3 class="card-title" style="color:#6b21a8;">🔌 Integración Sincronizada</h3>
+          <p style="font-size:12px; color:#581c87; line-height:1.5; margin:0; font-weight:500;">
+            Al confirmar la venta, se descargará el stock correspondiente del Kardex, se afectará la Tesorería o Cartera y la operación quedará lista para ser enviada a Siigo o Alegra.
+          </p>
+        </div>
       </div>
     </div>
-  </div> <!-- Closes panel-nueva-venta -->
-  
   </div>
 
-  <!-- Panel 2: Historial de Ventas -->
+  <!-- PANEL 2: HISTORIAL -->
   <div id="panel-historial-ventas" class="tab-panel">
-    <div class="card" style="margin-bottom: 20px;">
-      <div class="search-container">
-        <input type="text" id="historial_buscador" class="input" placeholder="Filtrar historial por ID, cliente, NIT o consecutivo físico..." oninput="filtrarHistorialVentas()">
-        <button class="button button-secondary" style="width: auto; padding: 8px 20px;" onclick="cargarHistorialVentas()">↻ Actualizar Historial</button>
-      </div>
-    </div>
-    <div class="card history-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-      <h3 class="card-title" style="margin: 0; border: none; padding: 0;">🔄 Registro Histórico de Ventas Recientes</h3>
-      <div style="max-width: 400px; width: 100%;">
-        <input type="text" id="historial_buscador" class="input" placeholder="🔎 Filtrar ventas por ID, cliente, NIT o documento..." oninput="filtrarHistorialVentas()">
-      </div>
-    </div>
-    <div class="history-table-container">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>ID Venta</th>
-            <th>Fecha</th>
-            <th>Cliente / Tercero</th>
-            <th>Documento</th>
-            <th>N° Soporte</th>
-            <th>Forma Pago</th>
-            <th>Subtotal COP</th>
-            <th>I.V.A. COP</th>
-            <th>Total Facturado</th>
-            <th>Sincronización</th>
-            <th style="text-align: center;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="ventas_historial_tabla">
-          <tr>
-            <td colspan="11" style="text-align: center; color: #64748b; padding: 25px;">
-              <strong>Cargando transacciones recientes desde Sheets...</strong>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  </div>
-
-  
-  <!-- Panel 3: Cuentas por Cobrar (CxC / Cartera) -->
-  <div id="panel-cartera" class="tab-panel">
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">📋 Cuentas por Cobrar de Clientes (CxC)</h2>
-        <button class="button button-secondary" style="width:auto;" onclick="carCargarCartera()">↻ Actualizar Cartera</button>
+        <h2 class="card-title">🔄 Registro Histórico de Ventas Emitidas</h2>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="text" id="historial_buscador" class="input" style="width:280px;" placeholder="Buscar por ID, cliente, NIT..." oninput="filtrarHistorialVentas()">
+          <button class="button button-secondary" onclick="cargarHistorialVentas()">↻ Actualizar</button>
+        </div>
       </div>
-      <div class="search-container">
-        <input type="text" id="CAR_BUSCADOR" class="input" placeholder="Filtrar cartera por ID, cliente o número de documento..." oninput="carFiltrarCartera()">
-      </div>
-      <div class="table-container" style="overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <table class="history-table">
+      <div class="table-container">
+        <table>
           <thead>
             <tr>
-              <th>ID CxC</th>
-              <th>Cliente / Tercero</th>
               <th>ID Venta</th>
-              <th>Fecha Emisión</th>
-              <th>Vencimiento</th>
-              <th>Valor Obligación</th>
-              <th>Abonos</th>
-              <th>Saldo Pendiente</th>
-              <th>Vencimiento (Días)</th>
-              <th>Estado</th>
-              <th style="text-align: center;">Acciones</th>
+              <th>Fecha</th>
+              <th>Cliente / Tercero</th>
+              <th>Documento</th>
+              <th>Forma Pago</th>
+              <th>Subtotal</th>
+              <th>IVA</th>
+              <th>Total COP</th>
+              <th style="text-align:center;">Acción</th>
             </tr>
           </thead>
-          <tbody id="cartera_tabla_body">
-            <tr>
-              <td colspan="11" style="text-align: center; color: #64748b; padding: 25px;">
-                <strong>Cargando cartera operativa desde Sheets...</strong>
-              </td>
-            </tr>
+          <tbody id="ventas_historial_tabla">
+            <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando historial transaccional...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- Modal: Registrar Abono o Recaudo de Cartera -->
-  <div id="modal_recaudo" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">💵 Registrar Abono / Recaudo</h3>
-        <span class="close-btn" onclick="cerrarModalRecaudo()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="rec_id_cartera">
-        <div class="field">
-          <label>ID Cartera / Obligación</label>
-          <input type="text" id="rec_id_cartera_display" class="input" readonly style="background-color: #f1f5f9;">
-        </div>
-        <div class="field">
-          <label>Saldo Pendiente (COP)</label>
-          <input type="text" id="rec_saldo_pendiente" class="input" readonly style="background-color: #f1f5f9;">
-        </div>
-        <div class="field">
-          <label>Valor del Abono *</label>
-          <input type="number" id="rec_valor" class="input" min="1" value="0">
-        </div>
-        <div class="field">
-          <label>Cuenta de Destino (Tesorera) *</label>
-          <select id="rec_cuenta_destino" class="input">
-            <option value="CTA-000001">Bancolombia Corporativa (35463960)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Método de Pago *</label>
-          <select id="rec_metodo_pago" class="input">
-            <option value="TRANSFERENCIA" selected>Transferencia Bancaria</option>
-            <option value="EFECTIVO">Efectivo (Caja General)</option>
-            <option value="CONSIGNACION">Consignación Bancaria</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Observaciones / Detalle *</label>
-          <input type="text" id="rec_observaciones" class="input" placeholder="Ej: Abono parcial de cuota">
+  <!-- PANEL 3: CARTERA CXC -->
+  <div id="panel-cartera" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📋 Cuentas por Cobrar de Clientes (CxC)</h2>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="text" id="CAR_BUSCADOR" class="input" style="width:280px;" placeholder="Filtrar cartera..." oninput="carFiltrarCartera()">
+          <button class="button button-secondary" onclick="carCargarCartera()">↻ Actualizar Cartera</button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="button button-secondary" onclick="cerrarModalRecaudo()" style="width: auto;">Cancelar</button>
-        <button class="button button-primary" onclick="guardarRecaudo()" style="width: auto;">Guardar Recaudo</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Ver Detalle de Historial de Recaudos -->
-  <div id="modal_historial_recaudos" class="modal">
-    <div class="modal-content" style="max-width: 650px;">
-      <div class="modal-header">
-        <h3 class="modal-title" id="md_recaudos_titulo">👁️ Historial de Recaudos</h3>
-        <span class="close-btn" onclick="cerrarModalHistorialRecaudos()">&times;</span>
-      </div>
-      <div class="modal-body" style="padding: 15px 0 0 0;">
-        <div class="table-container" style="overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: white;">
-          <table class="items-table" style="font-size: 12px; margin: 0;">
-            <thead>
-              <tr>
-                <th>ID Recaudo</th>
-                <th>Fecha Recibo</th>
-                <th style="text-align: right;">Monto Recaudado</th>
-                <th>Medio</th>
-                <th>Origen Destino</th>
-                <th>Operador</th>
-              </tr>
-            </thead>
-            <tbody id="recaudos_historial_tabla_body"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="button button-secondary" onclick="cerrarModalHistorialRecaudos()" style="width: auto;">Cerrar Historial</button>
-      </div>
-    </div>
-  </div>
-
-<!-- Modal Detalle Venta -->
-<div id="modal_detalle_venta" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title" style="margin:0; font-size: 16px; font-weight: 800; color: #1d4ed8;" id="md_titulo_venta">🔍 Detalle de Transacción</h3>
-      <span class="close-btn" onclick="cerrarModalDetalleVenta()">&times;</span>
-    </div>
-    <div class="modal-body" style="padding: 15px 0 0 0;">
-      <div id="md_info_general" style="margin-bottom: 20px; font-family: 'Segoe UI', Arial, sans-serif;"></div>
-      <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-height: 250px; overflow-y: auto; background: white;">
-        <table class="items-table" style="font-size: 12px; margin: 0;">
-          <thead style="position: sticky; top: 0; z-index: 1;">
+      <div class="table-container">
+        <table>
+          <thead>
             <tr>
-              <th>ID Producto</th>
-              <th>Descripción</th>
-              <th style="text-align: center;">Cantidad</th>
-              <th style="text-align: right;">Precio Unitario</th>
-              <th style="text-align: right;">Descuento</th>
-              <th style="text-align: right;">IVA Liquidado</th>
-              <th style="text-align: right;">Total Línea</th>
+              <th>ID CxC</th>
+              <th>Cliente</th>
+              <th>N° Venta</th>
+              <th>Documento</th>
+              <th>Vencimiento</th>
+              <th>Valor Inicial</th>
+              <th>Abonos</th>
+              <th>Saldo Pendiente</th>
+              <th>Estado</th>
+              <th style="text-align:center;">Acciones</th>
             </tr>
           </thead>
-          <tbody id="md_detalles_tabla_body"></tbody>
+          <tbody id="cartera_tabla">
+            <tr><td colspan="10" style="text-align:center; padding:24px; color:#64748b;">Cargando cartera operativa...</td></tr>
+          </tbody>
         </table>
       </div>
-      
-      <!-- Detalle AIU en Modal en caso de Facturas de Obra -->
-      <div id="md_resumen_aiu" style="display: none; margin-top: 15px; background: #faf5ff; border: 1px solid #ebd5ff; padding: 12px; border-radius: 8px; font-size: 12px; color: #581c87; font-weight: 600;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span>Cargos AIU de Obra (A+I):</span>
-          <span id="md_txt_aiu_ai">$0 COP</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span>Base de Utilidad Gravada (U):</span>
-          <span id="md_txt_aiu_u">$0 COP</span>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer" style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
-      <button class="button button-secondary" onclick="cerrarModalDetalleVenta()" style="width: auto;">Cerrar Ficha</button>
     </div>
   </div>
 </div>
-</div> <!-- Closes app -->
 
-<!-- Datalist global del catálogo homologado -->
-<datalist id="catalogo_productos_list"></datalist>
+<!-- MODAL RECAUDO CARTERA -->
+<div id="modal_recaudo" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">💵 Registrar Abono / Recaudo de Cartera</h3>
+      <span class="close-btn" onclick="cerrarModalRecaudo()">&times;</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <input type="hidden" id="rec_id_cartera">
+      <div class="field">
+        <label>Cuenta de Tesorería Destino *</label>
+        <select id="rec_id_cuenta" class="input"></select>
+      </div>
+      <div class="field">
+        <label>Monto de Abono (COP) *</label>
+        <input type="number" id="rec_valor" class="input" min="1" value="0">
+      </div>
+      <div class="field">
+        <label>Medio de Pago *</label>
+        <select id="rec_metodo_pago" class="input">
+          <option value="TRANSFERENCIA" selected>Transferencia Bancaria / PSE</option>
+          <option value="EFECTIVO">Efectivo / Caja General</option>
+          <option value="CHEQUE">Cheque / Consignación</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Observaciones de Recaudo *</label>
+        <input type="text" id="rec_observacion" class="input" placeholder="Ej: Abono parcial transferencia N° 4589">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button class="button button-secondary" onclick="cerrarModalRecaudo()">Cancelar</button>
+        <button class="button button-success" onclick="guardarRecaudoCartera()">💾 Procesar Recaudo</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  const TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
-  let LISTA_CLIENTES_CACHE = {};
-  let CATALOGO_PRODUCTOS_CACHE = {};
-  let STOCK_CACHE = {};
-  let PROCESANDO_VENTA = false;
+  var TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
+  var LISTA_CLIENTES_CACHE = {};
+  var LISTA_PRODUCTOS_CACHE = [];
 
   document.addEventListener("DOMContentLoaded", function() {
     inicializarModuloVentas();
   });
 
+  function cambiarPestana(target) {
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
+    
+    var panelEl = document.getElementById("panel-" + target);
+    var btnEl = document.getElementById("btn-tab-" + target);
+    if (panelEl) panelEl.classList.add("active");
+    if (btnEl) btnEl.classList.add("active");
+
+    if (target === "historial-ventas") cargarHistorialVentas();
+    else if (target === "cartera") carCargarCartera();
+  }
+
   function mostrarAlerta(msg, tipo) {
-    const el = document.getElementById("VEN_ALERT");
+    var el = document.getElementById("VEN_ALERT");
+    if (!el) return;
     el.textContent = msg;
     el.className = "message message-" + tipo;
     el.style.display = "block";
-    setTimeout(() => {
-      if (el.textContent === msg) {
-        el.style.display = "none";
-      }
-    }, 6000);
+    setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
   function inicializarModuloVentas() {
-    // 1. Cargar Clientes en el Desplegable
-    const selectClientes = document.getElementById("ven_id_cliente");
-    selectClientes.innerHTML = "<option value=''>Cargando clientes de Sheets...</option>";
-    
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          selectClientes.innerHTML = "<option value=''>Seleccione un cliente...</option>";
-          res.DATOS.forEach(function(c) {
-            LISTA_CLIENTES_CACHE[c.ID_CLIENTE] = c;
-            const opt = document.createElement("option");
-            opt.value = c.ID_CLIENTE;
-            opt.text = (c.RAZON_SOCIAL || (c.PRIMER_NOMBRE + " " + c.PRIMER_APELLIDO)) + " (" + (c.NUMERO_DOCUMENTO || c.NIT_CC) + ")";
-            selectClientes.add(opt);
-          });
-        } else {
-          selectClientes.innerHTML = "<option value=''>Error al cargar clientes</option>";
-        }
-      })
-      .CLI_LISTAR_CLIENTES(TOKEN_SESION_PROY);
-
-    // 2. Cargar Obras en el Desplegable
-    const selectObras = document.getElementById("ven_id_obra");
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.length > 0) {
-          res.forEach(function(o) {
-            const opt = document.createElement("option");
-            opt.value = o.ID_OBRA || o[0];
-            opt.text = o.NOMBRE_OBRA || o[2];
-            selectObras.add(opt);
-          });
-        }
-      })
-      .SEG_OBTENER_REGISTROS("OBR_MAESTRO");
-
-    // 3. Cargar Catálogo de Productos y Saldos de Inventario
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          const datalist = document.getElementById("catalogo_productos_list");
-          datalist.innerHTML = "";
-          
-          res.DATOS.forEach(function(p) {
-            CATALOGO_PRODUCTOS_CACHE[p.ID_PRODUCTO] = p;
-            const opt = document.createElement("option");
-            opt.value = p.DESCRIPCION + " (" + p.CODIGO + ")";
-            datalist.appendChild(opt);
-          });
-          
-          // Cargar stocks de bodega en background
-          google.script.run
-            .withSuccessHandler(function(invRes) {
-              if (invRes && invRes.EXITO) {
-                invRes.DATOS.forEach(function(s) {
-                  STOCK_CACHE[s.ID_PRODUCTO] = Number(s.SALDO_FINAL || 0);
-                });
-              }
-              // Crear primera fila vacía homologada
-              agregarLineaDetalle();
-            })
-            .INV_LISTAR_SALDOS_WEB(TOKEN_SESION_PROY);
-        }
-      })
-      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION_PROY);
-
-    // 4. Cargar Historial de Ventas
-    cargarHistorialVentas();
-  }
-
-  function alternarAIU() {
-    const tipoDoc = document.getElementById("ven_tipo_documento").value;
-    const aiuCard = document.getElementById("aiu_container");
-    const resumenAiu = document.getElementById("resumen_aiu");
-    
-    if (tipoDoc === "FACTURA_AIU") {
-      aiuCard.style.display = "block";
-      resumenAiu.style.display = "flex";
-    } else {
-      aiuCard.style.display = "none";
-      resumenAiu.style.display = "none";
+    var selectClientes = document.getElementById("ven_id_cliente");
+    if (selectClientes) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.EXITO && res.DATOS) {
+            selectClientes.innerHTML = '<option value="">Seleccione cliente...</option>';
+            res.DATOS.forEach(function(c) {
+              LISTA_CLIENTES_CACHE[c.ID_CLIENTE] = c;
+              var opt = document.createElement("option");
+              opt.value = c.ID_CLIENTE;
+              opt.text = (c.RAZON_SOCIAL || c.NOMBRE) + ' (' + c.ID_CLIENTE + ')';
+              selectClientes.add(opt);
+            });
+          }
+        })
+        .CLI_LISTAR_CLIENTES(TOKEN_SESION_PROY);
     }
-    calcularTotalesVenta();
-  }
-
-  function actualizarCondicionesPagoCliente() {
-    const idCli = document.getElementById("ven_id_cliente").value;
-    if (!idCli || !LISTA_CLIENTES_CACHE[idCli]) return;
-    
-    const c = LISTA_CLIENTES_CACHE[idCli];
-    if (c.FORMA_PAGO) {
-      document.getElementById("ven_forma_pago").value = c.FORMA_PAGO;
-    }
-    if (c.PLAZO_PAGO_DIAS !== undefined) {
-      document.getElementById("ven_plazo_dias").value = c.PLAZO_PAGO_DIAS;
-    }
-  }
-
-  function agregarLineaDetalle() {
-    const tbody = document.getElementById("detalles_tabla");
-    const filaIndex = tbody.children.length;
-    
-    const tr = document.createElement("tr");
-    tr.id = "fila_det_" + filaIndex;
-
-    tr.innerHTML = `
-      <td>
-        <input type="text" class="input" id="det_id_text_${filaIndex}" list="catalogo_productos_list" placeholder="Buscar por referencia o nombre..." onchange="cambiarFilaProducto(${filaIndex})" style="width:100%;">
-        <input type="hidden" id="det_id_${filaIndex}" value="">
-      </td>
-      <td>
-        <input type="text" class="input" id="det_un_${filaIndex}" readonly style="background:#f1f5f9; text-align:center;">
-        <span class="stock-help" id="det_stock_help_${filaIndex}"></span>
-      </td>
-      <td>
-        <input type="number" class="input" id="det_can_${filaIndex}" value="1" min="1" oninput="validarStockCantidad(${filaIndex})" style="text-align:center;">
-      </td>
-      <td>
-        <input type="number" class="input" id="det_pre_${filaIndex}" value="0" min="0" oninput="calcularTotalesVenta()">
-      </td>
-      <td>
-        <input type="number" class="input" id="det_desc_${filaIndex}" value="0" min="0" max="100" oninput="calcularTotalesVenta()" style="text-align:center;">
-      </td>
-      <td style="vertical-align: middle;">
-        <strong id="det_tot_${filaIndex}">$0 COP</strong>
-      </td>
-      <td style="text-align:center; vertical-align: middle;">
-        <button class="button button-danger" style="padding: 6px 10px; font-size:11px; width: auto;" onclick="removerLineaDetalle(${filaIndex})">❌</button>
-      </td>
-    `;
-    
-    tbody.appendChild(tr);
-  }
-
-  function removerLineaDetalle(idx) {
-    const tbody = document.getElementById("detalles_tabla");
-    const tr = document.getElementById("fila_det_" + idx);
-    if (tr) {
-      tbody.removeChild(tr);
-    }
-    calcularTotalesVenta();
-  }
-
-  function cambiarFilaProducto(idx) {
-    const val = document.getElementById("det_id_text_" + idx).value;
-    let selectedProduct = null;
-    
-    Object.values(CATALOGO_PRODUCTOS_CACHE).forEach(function(p) {
-      const matchString = p.DESCRIPCION + " (" + p.CODIGO + ")";
-      if (val === matchString || val === p.CODIGO || val === p.ID_PRODUCTO) {
-        selectedProduct = p;
-      }
-    });
-
-    if (!selectedProduct) {
-      document.getElementById("det_id_" + idx).value = "";
-      document.getElementById("det_un_" + idx).value = "";
-      document.getElementById("det_pre_" + idx).value = 0;
-      document.getElementById("det_stock_help_" + idx).innerHTML = "";
-      calcularTotalesVenta();
-      return;
-    }
-    
-    document.getElementById("det_id_" + idx).value = selectedProduct.ID_PRODUCTO;
-    document.getElementById("det_un_" + idx).value = selectedProduct.ID_UNIDAD || "UND";
-    document.getElementById("det_pre_" + idx).value = selectedProduct.PRECIO_VENTA || 0;
-    
-    validarStockCantidad(idx);
-  }
-
-  function validarStockCantidad(idx) {
-    const idProd = document.getElementById("det_id_" + idx).value;
-    const canInput = document.getElementById("det_can_" + idx);
-    const helpSpan = document.getElementById("det_stock_help_" + idx);
-    
-    if (!idProd || !CATALOGO_PRODUCTOS_CACHE[idProd]) {
-      helpSpan.innerHTML = "";
-      calcularTotalesVenta();
-      return;
-    }
-
-    const p = CATALOGO_PRODUCTOS_CACHE[idProd];
-    const stock = STOCK_CACHE[idProd] !== undefined ? STOCK_CACHE[idProd] : 0;
-    const cant = Number(canInput.value || 0);
-
-    if (p.CONTROL_INVENTARIO !== "NO") {
-      helpSpan.style.display = "block";
-      if (stock === 0) {
-        helpSpan.className = "stock-help stock-empty";
-        helpSpan.textContent = "⚠️ Sin stock disponible";
-        canInput.style.borderColor = "#ef4444";
-      } else if (cant > stock) {
-        helpSpan.className = "stock-help stock-empty";
-        helpSpan.textContent = `⚠️ Excede disponible (${stock})`;
-        canInput.style.borderColor = "#ef4444";
-      } else if (stock <= 10) {
-        helpSpan.className = "stock-help stock-low";
-        helpSpan.textContent = `⚠️ Stock crítico: ${stock}`;
-        canInput.style.borderColor = "#d97706";
-      } else {
-        helpSpan.className = "stock-help stock-ok";
-        helpSpan.textContent = `✓ Stock: ${stock}`;
-        canInput.style.borderColor = "#cbd5e1";
-      }
-    } else {
-      helpSpan.style.display = "none";
-      canInput.style.borderColor = "#cbd5e1";
-    }
-
-    calcularTotalesVenta();
-  }
-
-  function calcularTotalesVenta() {
-    const tbody = document.getElementById("detalles_tabla");
-    const tipoDoc = document.getElementById("ven_tipo_documento").value;
-    const esAIU = (tipoDoc === "FACTURA_AIU");
-    
-    let subtotalGral = 0;
-    let descuentoGral = 0;
-    let ivaGral = 0;
-    
-    Array.from(tbody.children).forEach(function(tr) {
-      const idx = tr.id.replace("fila_det_", "");
-      const selectProdVal = document.getElementById("det_id_" + idx) ? document.getElementById("det_id_" + idx).value : "";
-      if (!selectProdVal || !CATALOGO_PRODUCTOS_CACHE[selectProdVal]) return;
-      
-      const cant = Number(document.getElementById("det_can_" + idx).value || 0);
-      const precio = Number(document.getElementById("det_pre_" + idx).value || 0);
-      const descPct = Number(document.getElementById("det_desc_" + idx).value || 0) / 100;
-      
-      const p = CATALOGO_PRODUCTOS_CACHE[selectProdVal];
-      let pctIva = Number(String(p.IVA || "0").replace("%", "")) / 100;
-      
-      const subtotalLinea = cant * precio;
-      const descuentoLinea = subtotalLinea * descPct;
-      const baseLinea = subtotalLinea - descuentoLinea;
-      
-      let ivaLinea = 0;
-      if (esAIU) {
-        ivaLinea = 0;
-      } else {
-        ivaLinea = baseLinea * pctIva;
-      }
-      
-      const totalLinea = baseLinea + ivaLinea;
-      
-      subtotalGral += subtotalLinea;
-      descuentoGral += descuentoLinea;
-      
-      if (!esAIU) {
-        ivaGral += ivaLinea;
-      }
-      
-      document.getElementById("det_tot_" + idx).textContent = "$" + totalLinea.toLocaleString('es-CO') + " COP";
-    });
-    
-    let totalFacturado = 0;
-    
-    if (esAIU) {
-      const a_pct = Number(document.getElementById("ven_aiu_a").value || 15) / 100;
-      const i_pct = Number(document.getElementById("ven_aiu_i").value || 5) / 100;
-      const u_pct = Number(document.getElementById("ven_aiu_u").value || 10) / 100;
-      
-      const netoAIU = subtotalGral - descuentoGral;
-      const subTotalAI = netoAIU * (a_pct + i_pct);
-      const baseUtilidad = netoAIU * u_pct;
-      
-      ivaGral = baseUtilidad * 0.19;
-      totalFacturado = netoAIU + ivaGral;
-      
-      document.getElementById("txt_sub_ai_aiu").textContent = "$" + subTotalAI.toLocaleString('es-CO') + " COP";
-      document.getElementById("txt_base_u_aiu").textContent = "$" + baseUtilidad.toLocaleString('es-CO') + " COP";
-    } else {
-      totalFacturado = subtotalGral - descuentoGral + ivaGral;
-    }
-    
-    document.getElementById("txt_subtotal").textContent = "$" + subtotalGral.toLocaleString('es-CO') + " COP";
-    document.getElementById("txt_descuento").textContent = "-$" + descuentoGral.toLocaleString('es-CO') + " COP";
-    document.getElementById("txt_iva").textContent = "$" + ivaGral.toLocaleString('es-CO') + " COP";
-    document.getElementById("txt_total").textContent = "$" + totalFacturado.toLocaleString('es-CO') + " COP";
-  }
-
-  function enviarVentaAAppsScript() {
-    if (PROCESANDO_VENTA) return;
-    
-    const idCliente = document.getElementById("ven_id_cliente").value;
-    const numDoc = document.getElementById("ven_num_documento").value.trim();
-    if (!idCliente) {
-      alert("Por favor seleccione un cliente/tercero para la transacción.");
-      return;
-    }
-    if (!numDoc) {
-      alert("Debe ingresar un número de documento o consecutivo físico.");
-      return;
-    }
-    
-    const tbody = document.getElementById("detalles_tabla");
-    const detalles = [];
-    let lineasValidas = true;
-    
-    Array.from(tbody.children).forEach(function(tr) {
-      const idx = tr.id.replace("fila_det_", "");
-      const idProd = document.getElementById("det_id_" + idx).value;
-      if (!idProd) return;
-      
-      const cant = Number(document.getElementById("det_can_" + idx).value || 0);
-      const precio = Number(document.getElementById("det_pre_" + idx).value || 0);
-      const desc = Number(subtotalFilaDesc(idx) || 0);
-      
-      const p = CATALOGO_PRODUCTOS_CACHE[idProd];
-      const pctIva = Number(String(p.IVA || "0").replace("%", ""));
-      
-      if (cant <= 0 || precio <= 0) {
-        lineasValidas = false;
-        return;
-      }
-      
-      detalles.push({
-        ID_PRODUCTO: idProd,
-        DESCRIPCION: p.DESCRIPCION,
-        CANTIDAD: cant,
-        ID_UNIDAD: p.ID_UNIDAD || "UND",
-        PRECIO_UNITARIO: precio,
-        DESCUENTO: desc,
-        PORCENTAJE_IVA: pctIva,
-        IVA: p.IVA || "19%"
-      });
-    });
-
-    if (!lineasValidas || detalles.length === 0) {
-      alert("La venta debe contener al menos un producto con cantidad y precio mayores a cero.");
-      return;
-    }
-    
-    PROCESANDO_VENTA = true;
-    const btn = document.getElementById("btn_guardar_venta");
-    btn.disabled = true;
-    btn.textContent = "Procesando venta en Sheets...";
-    mostrarAlerta("Conectando con el core transaccional del servidor...", "info");
-
-    const cabecera = {
-      ID_CLIENTE: idCliente,
-      TIPO_DOCUMENTO: document.getElementById("ven_tipo_documento").value,
-      NUM_DOCUMENTO: numDoc,
-      FORMA_PAGO: document.getElementById("ven_forma_pago").value,
-      PLAZO_PAGO_DIAS: Number(document.getElementById("ven_plazo_dias").value || 0),
-      ID_OBRA: document.getElementById("ven_id_obra").value,
-      AIU_A: Number(document.getElementById("ven_aiu_a").value || 0),
-      AIU_I: Number(document.getElementById("ven_aiu_i").value || 0),
-      AIU_U: Number(document.getElementById("ven_aiu_u").value || 0)
-    };
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        PROCESANDO_VENTA = false;
-        btn.disabled = false;
-        btn.textContent = "💾 Guardar y Emitir Transacción";
-        
-        if (res && res.EXITO) {
-          mostrarAlerta(res.MENSAJE, "success");
-          document.getElementById("ven_num_documento").value = "";
-          document.getElementById("detalles_tabla").innerHTML = "";
-          
-          // Recargar stocks en background
-          google.script.run
-            .withSuccessHandler(function(invRes) {
-              if (invRes && invRes.EXITO) {
-                invRes.DATOS.forEach(function(s) {
-                  STOCK_CACHE[s.ID_PRODUCTO] = Number(s.SALDO_FINAL || 0);
-                });
-              }
-              agregarLineaDetalle();
-              calcularTotalesVenta();
-              cargarHistorialVentas();
-            })
-            .INV_LISTAR_SALDOS_WEB(TOKEN_SESION_PROY);
-        } else {
-          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Fallo de conexión"), "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        PROCESANDO_VENTA = false;
-        btn.disabled = false;
-        btn.textContent = "💾 Guardar y Emitir Transacción";
-        mostrarAlerta("Fallo crítico del servidor: " + err.message, "error");
-      })
-      .VEN_GUARDAR_VENTA_WEB(cabecera, detalles, TOKEN_SESION_PROY);
-  }
-
-  function subtotalFilaDesc(idx) {
-    const cant = Number(document.getElementById("det_can_" + idx).value || 0);
-    const precio = Number(document.getElementById("det_pre_" + idx).value || 0);
-    const descPct = Number(document.getElementById("det_desc_" + idx).value || 0) / 100;
-    return cant * precio * descPct;
-  }
-
-  function filtrarHistorialVentas() {
-    const query = document.getElementById("historial_buscador").value.toLowerCase().trim();
-    const rows = document.getElementById("ventas_historial_tabla").children;
-    
-    Array.from(rows).forEach(function(row) {
-      if (row.cells.length < 5) return; // Saltar estados vacíos
-      const id = row.cells[0].textContent.toLowerCase();
-      const cli = row.cells[2].textContent.toLowerCase();
-      const num = row.cells[4].textContent.toLowerCase();
-      
-      if (id.includes(query) || cli.includes(query) || num.includes(query)) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
-    });
-  }
-
-  function verDetalleVenta(idVenta) {
-    const modal = document.getElementById("modal_detalle_venta");
-    const info = document.getElementById("md_info_general");
-    const tableBody = document.getElementById("md_detalles_tabla_body");
-    const aiuBox = document.getElementById("md_resumen_aiu");
-    
-    document.getElementById("md_titulo_venta").textContent = `🔍 Detalle de Venta: ${idVenta}`;
-    info.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; padding: 15px;">
-        <div style="border: 3px solid #f3f4f6; border-top: 3px solid #1d4ed8; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
-        <strong style="margin-left: 10px; font-size: 13px; color: #475569;">Cargando metadatos transaccionales...</strong>
-      </div>
-    `;
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px; color: #64748b; font-weight: 600;">Cargando detalles de productos de Sheets...</td></tr>`;
-    aiuBox.style.display = "none";
-    modal.style.display = "flex";
 
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
-          const cab = res.DATOS.CABECERA || {};
-          const dets = res.DATOS.DETALLES || [];
-          const esAIU = (cab.TIPO_DOCUMENTO === "FACTURA_AIU");
-          
-          let syncBadge = `<span class="badge badge-pending" style="background-color: #ffedd5; color: #ea580c; border: 1px solid #fed7aa; padding: 4px 10px; font-weight: 700;">Cola API ⏳</span>`;
-          if (cab.ID_SIIGO) {
-            syncBadge = `<span class="badge badge-sync-siigo" style="background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 4px 10px; font-weight: 700;">Siigo ✅</span>`;
-          } else if (cab.ID_ALEGRA) {
-            syncBadge = `<span class="badge badge-sync-alegra" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 4px 10px; font-weight: 700;">Alegra ✅</span>`;
-          }
-
-          let formaPagoHtml = `<span style="color: #1e3a8a; font-weight: 700;">${cab.FORMA_PAGO}</span>`;
-          if (cab.FORMA_PAGO === "CREDITO") {
-            formaPagoHtml += ` <span style="font-size: 10px; background-color: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; font-weight: 800;">${cab.CONDICION_PAGO || "0 Días"}</span>`;
-          }
-
-          info.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; width: 100%;">
-              <div style="background: #ffffff; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">👤 Cliente / Tercero</span>
-                <span style="font-size: 13px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${cab.RAZON_SOCIAL_CLIENTE || cab.ID_CLIENTE}">${cab.RAZON_SOCIAL_CLIENTE || cab.ID_CLIENTE}</span>
-                <span style="font-size: 10px; color: #94a3b8; font-weight: 600;">ID: ${cab.ID_CLIENTE || "S/D"}</span>
-              </div>
-              <div style="background: #ffffff; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">🧾 Tipo de Operación</span>
-                <span style="font-size: 12px; font-weight: 700; color: #1e3a8a;">${cab.TIPO_DOCUMENTO}</span>
-                <span style="font-size: 11px; font-weight: 600; color: #475569;">Consecutivo: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #1e293b; font-size: 11px;">${cab.NUM_DOCUMENTO || "N/A"}</code></span>
-              </div>
-              <div style="background: #ffffff; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">📅 Cronología y Emisor</span>
-                <span style="font-size: 11px; font-weight: 600; color: #334155;">Emisión: ${cab.FECHA || "N/A"}</span>
-                <span style="font-size: 11px; color: #64748b; font-weight: 500;">Operador: ${cab.USUARIO || "SISTEMA"}</span>
-              </div>
-              <div style="background: #ffffff; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">💳 Condiciones y Sinc</span>
-                <span style="font-size: 12px; font-weight: 600; color: #334155;">Pago: ${formaPagoHtml}</span>
-                <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                  <span class="badge badge-emitida" style="font-size: 9px; padding: 2px 6px; font-weight: 800; border-radius: 4px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">${cab.ESTADO}</span>
-                  ${syncBadge}
-                </span>
-              </div>
-            </div>
-          `;
-
-          tableBody.innerHTML = "";
-          dets.forEach(function(d) {
-            const tr = document.createElement("tr");
-            
-            // Calcular porcentaje de descuento en caliente
-            const brutoLinea = Number(d.CANTIDAD || 0) * Number(d.PRECIO_UNITARIO || 0);
-            const descVal = Number(d.DESCUENTO || 0);
-            let pctDescHtml = "";
-            if (brutoLinea > 0 && descVal > 0) {
-              const pctDesc = (descVal / brutoLinea) * 100;
-              pctDescHtml = `<span style="display: block; font-size: 10px; color: #ef4444; font-weight: 800;">(-${pctDesc.toFixed(0)}%)</span>`;
-            }
-
-            tr.innerHTML = `
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9;"><strong>${d.ID_PRODUCTO}</strong></td>
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500;">${d.DESCRIPCION || "S/D"}</td>
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-align:center; font-weight: 700; color: #0f172a;">${d.CANTIDAD} <span style="font-size: 10px; color: #64748b; font-weight: 500;">${d.ID_UNIDAD || "UND"}</span></td>
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-align:right; font-weight: 500;">$${Number(d.PRECIO_UNITARIO || 0).toLocaleString('es-CO')} COP</td>
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-align:right; font-weight: 600; color: ${descVal > 0 ? '#ef4444' : '#475569'};">$${descVal.toLocaleString('es-CO')} COP ${pctDescHtml}</td>
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-align:right; font-weight: 500;">$${Number(d.IVA || 0).toLocaleString('es-CO')} COP</td>
-              <td style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-align:right; font-weight: 700; color: #1e3a8a;">$${Number(d.TOTAL || 0).toLocaleString('es-CO')} COP</td>
-            `;
-            tableBody.appendChild(tr);
-          });
-
-          // Agregar desglose detallado de totales en el pie de tabla (SPA style)
-          const trSub = document.createElement("tr");
-          trSub.style.background = "#f8fafc";
-          trSub.innerHTML = `
-            <td colspan="6" style="text-align:right; font-weight:700; color:#475569;">Subtotal Bruto (Antes de IVA y Descuentos):</td>
-            <td style="text-align:right; font-weight:700; color:#475569;">$${Number(cab.SUBTOTAL || 0).toLocaleString('es-CO')} COP</td>
-          `;
-          tableBody.appendChild(trSub);
-
-          const trDesc = document.createElement("tr");
-          trDesc.style.background = "#f8fafc";
-          trDesc.innerHTML = `
-            <td colspan="6" style="text-align:right; font-weight:700; color:#dc2626;">Total Descuentos Aplicados:</td>
-            <td style="text-align:right; font-weight:700; color:#dc2626;">-$${Number(cab.DESCUENTO || 0).toLocaleString('es-CO')} COP</td>
-          `;
-          tableBody.appendChild(trDesc);
-
-          const trIva = document.createElement("tr");
-          trIva.style.background = "#f8fafc";
-          trIva.innerHTML = `
-            <td colspan="6" style="text-align:right; font-weight:700; color:#475569;">Total I.V.A. Liquidado:</td>
-            <td style="text-align:right; font-weight:700; color:#475569;">$${Number(cab.IVA || 0).toLocaleString('es-CO')} COP</td>
-          `;
-          tableBody.appendChild(trIva);
-
-          const trTotal = document.createElement("tr");
-          trTotal.style.background = "#f1f5f9";
-          trTotal.style.borderTop = "2px solid #cbd5e1";
-          trTotal.innerHTML = `
-            <td colspan="6" style="text-align:right; font-weight:800; color:#0f172a; font-size:13px;">TOTAL GENERAL FACTURADO:</td>
-            <td style="text-align:right; font-weight:800; color:#1d4ed8; font-size:13px;">$${Number(cab.TOTAL || 0).toLocaleString('es-CO')} COP</td>
-          `;
-          tableBody.appendChild(trTotal);
-
-          if (esAIU) {
-            const netoAIU = Number(cab.SUBTOTAL || 0) - Number(cab.DESCUENTO || 0);
-            const a_pct = Number(cab.AIU_A || 15) / 100;
-            const i_pct = Number(cab.AIU_I || 5) / 100;
-            const u_pct = Number(cab.AIU_U || 10) / 100;
-            
-            const subTotalAI = netoAIU * (a_pct + i_pct);
-            const baseUtilidad = netoAIU * u_pct;
-            
-            document.getElementById("md_txt_aiu_ai").textContent = "$" + subTotalAI.toLocaleString('es-CO') + " COP";
-            document.getElementById("md_txt_aiu_u").textContent = "$" + baseUtilidad.toLocaleString('es-CO') + " COP";
-            aiuBox.style.display = "block";
-          } else {
-            aiuBox.style.display = "none";
-          }
-        } else {
-          info.innerHTML = "<strong>Error al cargar la venta.</strong>";
-          tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#dc2626;">No se pudieron recuperar los registros detallados de Sheets.</td></tr>`;
+          LISTA_PRODUCTOS_CACHE = res.DATOS;
         }
       })
-      .withFailureHandler(function(err) {
-        info.innerHTML = "<strong>Fallo crítico de comunicación.</strong>";
-        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#dc2626;">Error: ${err.message}</td></tr>`;
-      })
-      .VEN_OBTENER_DETALLE_VENTA_WEB(idVenta, TOKEN_SESION_PROY);
-}
+      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION_PROY);
 
-  function cerrarModalDetalleVenta() {
-    document.getElementById("modal_detalle_venta").style.display = "none";
+    agregarLineaDetalle();
   }
 
-  function cargarHistorialVentas() {
-    const tbody = document.getElementById("ventas_historial_tabla");
-    
+  function alternarAIU() {
+    var tipo = document.getElementById("ven_tipo_documento").value;
+    var container = document.getElementById("aiu_container");
+    if (container) container.style.display = (tipo === "FACTURA_AIU") ? "block" : "none";
+    calcularTotalesVenta();
+  }
+
+  function actualizarCondicionesPagoCliente() {
+    var idCli = document.getElementById("ven_id_cliente").value;
+    if (idCli && LISTA_CLIENTES_CACHE[idCli] && LISTA_CLIENTES_CACHE[idCli].FORMA_PAGO) {
+      document.getElementById("ven_forma_pago").value = LISTA_CLIENTES_CACHE[idCli].FORMA_PAGO;
+    }
+  }
+
+  function agregarLineaDetalle() {
+    var tbody = document.getElementById("detalles_tabla");
+    if (!tbody) return;
+    var idx = tbody.children.length;
+    var tr = document.createElement("tr");
+    tr.id = "fila_det_" + idx;
+
+    var optProdHtml = '<option value="">Seleccione producto...</option>';
+    if (LISTA_PRODUCTOS_CACHE && LISTA_PRODUCTOS_CACHE.length > 0) {
+      LISTA_PRODUCTOS_CACHE.forEach(function(p) {
+        optProdHtml += '<option value="' + p.ID_PRODUCTO + '" data-precio="' + (p.PRECIO_VENTA || 0) + '">' + p.DESCRIPCION + ' (' + p.CODIGO + ')</option>';
+      });
+    }
+
+    tr.innerHTML = '<td><select class="input" id="det_prod_' + idx + '" onchange="alSeleccionarProducto(' + idx + ')">' + optProdHtml + '</select></td>' +
+                   '<td><input type="number" class="input" id="det_can_' + idx + '" value="1" min="1" oninput="calcularTotalesVenta()" style="text-align:center;"></td>' +
+                   '<td><input type="number" class="input" id="det_pre_' + idx + '" value="0" min="0" oninput="calcularTotalesVenta()"></td>' +
+                   '<td><strong id="det_tot_' + idx + '">$0 COP</strong></td>' +
+                   '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px;" onclick="removerLineaDetalle(' + idx + ')">❌</button></td>';
+    tbody.appendChild(tr);
+  }
+
+  function alSeleccionarProducto(idx) {
+    var select = document.getElementById("det_prod_" + idx);
+    var preInput = document.getElementById("det_pre_" + idx);
+    if (select && preInput && select.selectedIndex > 0) {
+      var opt = select.options[select.selectedIndex];
+      var precio = opt.getAttribute("data-precio");
+      if (precio) preInput.value = precio;
+    }
+    calcularTotalesVenta();
+  }
+
+  function removerLineaDetalle(idx) {
+    var tr = document.getElementById("fila_det_" + idx);
+    if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
+    calcularTotalesVenta();
+  }
+
+  function calcularTotalesVenta() {
+    var tbody = document.getElementById("detalles_tabla");
+    if (!tbody) return;
+    var tipoDoc = document.getElementById("ven_tipo_documento").value;
+    var total = 0;
+
+    Array.from(tbody.children).forEach(function(tr) {
+      var idx = tr.id.replace("fila_det_", "");
+      var cantInput = document.getElementById("det_can_" + idx);
+      var preInput = document.getElementById("det_pre_" + idx);
+      var totSpan = document.getElementById("det_tot_" + idx);
+      if (cantInput && preInput && totSpan) {
+        var sub = Number(cantInput.value || 0) * Number(preInput.value || 0);
+        totSpan.textContent = "$" + sub.toLocaleString('es-CO') + " COP";
+        total += sub;
+      }
+    });
+
+    var iva = total * 0.19;
+    if (tipoDoc === "FACTURA_AIU") {
+      var pctU = Number(document.getElementById("ven_aiu_u").value || 10) / 100;
+      var baseUtilidad = total * pctU;
+      iva = baseUtilidad * 0.19;
+    }
+
+    var grandTotal = total + iva;
+    document.getElementById("txt_subtotal").textContent = "$" + total.toLocaleString('es-CO') + " COP";
+    document.getElementById("txt_iva").textContent = "$" + iva.toLocaleString('es-CO') + " COP";
+    document.getElementById("txt_total").textContent = "$" + grandTotal.toLocaleString('es-CO') + " COP";
+  }
+
+  function enviarVentaAAppsScript() {
+    var idCliente = document.getElementById("ven_id_cliente").value;
+    var numDoc = document.getElementById("ven_num_documento").value.trim();
+    if (!idCliente || !numDoc) {
+      alert("Por favor seleccione un cliente e ingrese el número de consecutivo.");
+      return;
+    }
+
+    var tbody = document.getElementById("detalles_tabla");
+    var detalles = [];
+    Array.from(tbody.children).forEach(function(tr) {
+      var idx = tr.id.replace("fila_det_", "");
+      var prodSelect = document.getElementById("det_prod_" + idx);
+      var cantInput = document.getElementById("det_can_" + idx);
+      var preInput = document.getElementById("det_pre_" + idx);
+      if (prodSelect && prodSelect.value && cantInput && preInput) {
+        var idProd = prodSelect.value;
+        var cant = Number(cantInput.value || 1);
+        var pre = Number(preInput.value || 0);
+        var desc = prodSelect.options[prodSelect.selectedIndex].text;
+        detalles.push({ ID_PRODUCTO: idProd, DESCRIPCION: desc, CANTIDAD: cant, PRECIO_UNITARIO: pre, TOTAL: cant * pre });
+      }
+    });
+
+    if (detalles.length === 0) {
+      alert("Debe agregar al menos un ítem válido a la venta.");
+      return;
+    }
+
+    var cabecera = {
+      TIPO_DOCUMENTO: document.getElementById("ven_tipo_documento").value,
+      NUM_DOCUMENTO: numDoc,
+      ID_CLIENTE: idCliente,
+      ID_OBRA: document.getElementById("ven_id_obra").value,
+      FORMA_PAGO: document.getElementById("ven_forma_pago").value,
+      AIU_A: Number(document.getElementById("ven_aiu_a") ? document.getElementById("ven_aiu_a").value : 15),
+      AIU_I: Number(document.getElementById("ven_aiu_i") ? document.getElementById("ven_aiu_i").value : 5),
+      AIU_U: Number(document.getElementById("ven_aiu_u") ? document.getElementById("ven_aiu_u").value : 10)
+    };
+
+    mostrarAlerta("Registrando la transacción en Google Sheets...", "info");
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
+          mostrarAlerta(res.MENSAJE, "success");
+          document.getElementById("ven_num_documento").value = "";
           tbody.innerHTML = "";
-          if (res.DATOS.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 25px;">No se registran ventas para este período contable.</td></tr>`;
-            return;
-          }
-          
-          // Listar orden descendente de forma automatizada
-          res.DATOS.reverse().slice(0, 15).forEach(function(v) {
-            const tr = document.createElement("tr");
-            
-            let syncBadge = `<span class="badge badge-pending">Pendiente ⏳</span>`;
-            if (v.ID_SIIGO) {
-              syncBadge = `<span class="badge badge-sync-siigo" title="NIT/UUID indexado de Siigo">Siigo ✅</span>`;
-            } else if (v.ID_ALEGRA) {
-              syncBadge = `<span class="badge badge-sync-alegra" title="ID de Tercero indexado de Alegra">Alegra ✅</span>`;
-            }
-
-            tr.innerHTML = `
-              <td><strong>${v.ID_VENTA}</strong></td>
-              <td>${v.FECHA || "N/A"}</td>
-              <td>${v.RAZON_SOCIAL_CLIENTE || v.ID_CLIENTE}</td>
-              <td><span class="badge badge-emitida">${v.TIPO_DOCUMENTO}</span></td>
-              <td><code>${v.NUM_DOCUMENTO || "N/A"}</code></td>
-              <td>${v.FORMA_PAGO}</td>
-              <td>$${Number(v.SUBTOTAL || 0).toLocaleString('es-CO')}</td>
-              <td>$${Number(v.IVA || 0).toLocaleString('es-CO')}</td>
-              <td><strong style="color:#0f172a;">$${Number(v.TOTAL || 0).toLocaleString('es-CO')} COP</strong></td>
-              <td>${syncBadge}</td>
-              <td style="text-align: center;">
-                <button class="button button-secondary" style="padding: 5px 12px; font-size: 11px; width: auto;" onclick="verDetalleVenta('${v.ID_VENTA}')">👁️ Ver Detalle</button>
-              </td>
-            `;
-            tbody.appendChild(tr);
-          });
+          agregarLineaDetalle();
+          calcularTotalesVenta();
         } else {
-          tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #dc2626; padding: 25px;">Error al cargar historial.</td></tr>`;
+          mostrarAlerta("Error al registrar: " + (res ? res.MENSAJE : "Fallo de comunicación"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #dc2626; padding: 25px;">Fallo crítico: ${err.message}</td></tr>`;
+        mostrarAlerta("Fallo de red: " + err.message, "error");
+      })
+      .VEN_GUARDAR_VENTA_WEB(cabecera, detalles, TOKEN_SESION_PROY);
+  }
+
+  function cargarHistorialVentas() {
+    var tbody = document.getElementById("ventas_historial_tabla");
+    if (!tbody) return;
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          tbody.innerHTML = "";
+          res.DATOS.forEach(function(v) {
+            var tr = document.createElement("tr");
+            tr.innerHTML = '<td><code>' + v.ID_VENTA + '</code></td>' +
+                           '<td>' + (v.FECHA ? String(v.FECHA).substring(0,10) : 'Hoy') + '</td>' +
+                           '<td>' + (v.ID_CLIENTE || 'General') + '</td>' +
+                           '<td>' + (v.TIPO_DOCUMENTO || 'FACTURA') + '</td>' +
+                           '<td>' + (v.FORMA_PAGO || 'CONTADO') + '</td>' +
+                           '<td>$' + Number(v.SUBTOTAL || 0).toLocaleString('es-CO') + '</td>' +
+                           '<td>$' + Number(v.IVA || 0).toLocaleString('es-CO') + '</td>' +
+                           '<td><strong>$' + Number(v.TOTAL || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
+                           '<td style="text-align:center;"><span class="badge badge-active">REGISTRADA</span></td>';
+            tbody.appendChild(tr);
+          });
+        }
       })
       .VEN_LISTAR_VENTAS_WEB(TOKEN_SESION_PROY);
   }
 
-  // ============================================================
-  // (VERSIÓN 7.0 - V2 ERP - LIBRO 1) - CAPA DE NAVEGACION DE PESTAÑAS (SPA)
-  // ============================================================
-  function cambiarPestana(target) {
-    document.querySelectorAll(".tab-panel").forEach(panel => {
-      panel.classList.remove("active");
-    });
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.classList.remove("active");
-    });
-    
-    if (target === "nueva-venta") {
-      document.getElementById("panel-nueva-venta").classList.add("active");
-      document.getElementById("btn-tab-nueva-venta").classList.add("active");
-    } else if (target === "historial-ventas") {
-      document.getElementById("panel-historial-ventas").classList.add("active");
-      document.getElementById("btn-tab-historial-ventas").classList.add("active");
-      cargarHistorialVentas();
-    } else if (target === "cartera") {
-      document.getElementById("panel-cartera").classList.add("active");
-      document.getElementById("btn-tab-cartera").classList.add("active");
-      carCargarCartera();
-    }
-  }
-
-  // ============================================================
-  // (VERSIÓN 7.0 - V2 ERP - LIBRO 1) - GESTIÓN DE CARTERA (CXC)
-  // ============================================================
-  let CARTERA_CACHE = [];
-  let RECAUDO_PROCESANDO = false;
-
   function carCargarCartera() {
-    const tbody = document.getElementById("cartera_tabla_body");
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 25px;"><strong>Cargando cartera operativa de Google Sheets...</strong></td></tr>`;
-    
-    // Cargar cuentas del banco de tesorería para el modal
+    var tbody = document.getElementById("cartera_tabla");
+    if (!tbody) return;
     google.script.run
       .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          const select = document.getElementById("rec_cuenta_destino");
-          select.innerHTML = "";
+        if (res && res.EXITO && res.DATOS) {
+          tbody.innerHTML = "";
           res.DATOS.forEach(function(c) {
-            const opt = document.createElement("option");
-            opt.value = c.ID_CUENTA;
-            opt.text = `${c.NOMBRE_CUENTA} - ${c.ENTIDAD} (${c.NUMERO_CUENTA})`;
-            select.add(opt);
+            var tr = document.createElement("tr");
+            var badgeEst = c.ESTADO === 'PAGADO' ? 'badge-active' : 'badge-overdue';
+            tr.innerHTML = '<td><code>' + c.ID_CARTERA + '</code></td>' +
+                           '<td>' + (c.ID_CLIENTE || 'Cliente') + '</td>' +
+                           '<td>' + c.ID_VENTA + '</td>' +
+                           '<td>' + (c.DOCUMENTO || 'FEV') + '</td>' +
+                           '<td>' + (c.FECHA_VENCIMIENTO ? String(c.FECHA_VENCIMIENTO).substring(0,10) : 'N/A') + '</td>' +
+                           '<td>$' + Number(c.VALOR_DOCUMENTO || 0).toLocaleString('es-CO') + '</td>' +
+                           '<td>$' + Number(c.ABONOS || 0).toLocaleString('es-CO') + '</td>' +
+                           '<td><strong>$' + Number(c.SALDO || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
+                           '<td><span class="badge ' + badgeEst + '">' + c.ESTADO + '</span></td>' +
+                           '<td style="text-align:center;">' +
+                             (c.ESTADO !== 'PAGADO' ? '<button class="button button-success" style="padding:4px 8px; font-size:11px;" onclick="abrirModalRecaudo('\'' + c.ID_CARTERA + '\'', ' + c.SALDO + ')">💵 Abonar</button>' : '✔️ OK') +
+                           '</td>';
+            tbody.appendChild(tr);
+          });
+        }
+      })
+      .CAR_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
+  }
+
+  function abrirModalRecaudo(idCartera, saldo) {
+    document.getElementById("rec_id_cartera").value = idCartera;
+    document.getElementById("rec_valor").value = saldo;
+    
+    var selectCuentas = document.getElementById("rec_id_cuenta");
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          selectCuentas.innerHTML = "";
+          res.DATOS.forEach(function(cta) {
+            var opt = document.createElement("option");
+            opt.value = cta.ID_CUENTA;
+            opt.text = cta.NOMBRE_CUENTA + " (" + cta.NUMERO_CUENTA + ")";
+            selectCuentas.add(opt);
           });
         }
       })
       .TES_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
 
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          CARTERA_CACHE = res.DATOS;
-          carMostrarCartera(res.DATOS);
-        } else {
-          tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #dc2626; padding: 25px;">Error al cargar cartera: ${res.MENSAJE}</td></tr>`;
-        }
-      })
-      .withFailureHandler(function(err) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #dc2626; padding: 25px;">Fallo de red: ${err.message}</td></tr>`;
-      })
-      .CAR_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
-  }
-
-  function carMostrarCartera(lista) {
-    const tbody = document.getElementById("cartera_tabla_body");
-    tbody.innerHTML = "";
-    
-    if (lista.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 25px;">No se registran obligaciones pendientes de recaudo.</td></tr>`;
-      return;
-    }
-    
-    lista.forEach(function(c) {
-      const tr = document.createElement("tr");
-      
-      let badgeEstado = '<span class="badge badge-active">Pagado</span>';
-      if (c.ESTADO === "PENDIENTE") {
-        badgeEstado = '<span class="badge badge-overdue">Pendiente ⏳</span>';
-      } else if (c.ESTADO === "PARCIAL") {
-        badgeEstado = '<span class="badge badge-pending">Abonado 🌗</span>';
-      }
-      
-      const vDoc = Number(c.VALOR_DOCUMENTO || 0);
-      const vAbonado = Number(c.ABONOS || 0);
-      const vSaldo = Number(c.SALDO || 0);
-      
-      tr.innerHTML = `
-        <td><strong>${c.ID_CARTERA}</strong></td>
-        <td>${c.RAZON_SOCIAL_CLIENTE || c.ID_CLIENTE}</td>
-        <td><code>${c.ID_VENTA}</code></td>
-        <td>${c.FECHA_EMISION ? c.FECHA_EMISION.substring(0,10) : "N/A"}</td>
-        <td>${c.FECHA_VENCIMIENTO ? c.FECHA_VENCIMIENTO.substring(0,10) : "N/A"}</td>
-        <td>$${vDoc.toLocaleString('es-CO')}</td>
-        <td style="color: #16a34a; font-weight: 600;">$${vAbonado.toLocaleString('es-CO')}</td>
-        <td style="color: #1e3a8a; font-weight: 700;">$${vSaldo.toLocaleString('es-CO')} COP</td>
-        <td>${c.DIAS_VENCIDOS || 0} Días</td>
-        <td>${badgeEstado}</td>
-        <td style="text-align: center; display: flex; justify-content: center; gap: 4px;">
-          ${vSaldo > 0 ? `<button class="button button-primary button-action" onclick="abrirModalRecaudo('${c.ID_CARTERA}', ${vSaldo})">💵 Abonar</button>` : ""}
-          <button class="button button-secondary button-action" onclick="verHistorialRecaudos('${c.ID_CARTERA}')">👁️ Ver Pagos</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function carFiltrarCartera() {
-    const query = document.getElementById("CAR_BUSCADOR").value.trim().toUpperCase();
-    if (!query) {
-      carMostrarCartera(CARTERA_CACHE);
-      return;
-    }
-    const filtrados = CARTERA_CACHE.filter(c => {
-      return (
-        String(c.ID_CARTERA).toUpperCase().includes(query) ||
-        String(c.ID_CLIENTE).toUpperCase().includes(query) ||
-        String(c.RAZON_SOCIAL_CLIENTE || "").toUpperCase().includes(query) ||
-        String(c.ID_VENTA).toUpperCase().includes(query)
-      );
-    });
-    carMostrarCartera(filtrados);
-  }
-
-  function abrirModalRecaudo(idCartera, saldo) {
-    document.getElementById("rec_id_cartera").value = idCartera;
-    document.getElementById("rec_id_cartera_display").value = idCartera;
-    document.getElementById("rec_saldo_pendiente").value = saldo.toLocaleString('es-CO') + " COP";
-    document.getElementById("rec_valor").value = saldo;
-    document.getElementById("rec_observaciones").value = "";
     document.getElementById("modal_recaudo").style.display = "flex";
   }
 
@@ -1429,83 +607,29 @@
     document.getElementById("modal_recaudo").style.display = "none";
   }
 
-  function guardarRecaudo() {
-    if (RECAUDO_PROCESANDO) return;
-    
-    const datos = {
+  function guardarRecaudoCartera() {
+    var datos = {
       ID_CARTERA: document.getElementById("rec_id_cartera").value,
+      ID_CUENTA_DESTINO: document.getElementById("rec_id_cuenta").value,
       VALOR: Number(document.getElementById("rec_valor").value || 0),
-      ID_CUENTA_DESTINO: document.getElementById("rec_cuenta_destino").value,
       METODO_PAGO: document.getElementById("rec_metodo_pago").value,
-      OBSERVACION: document.getElementById("rec_observaciones").value.trim()
+      OBSERVACION: document.getElementById("rec_observacion").value.trim()
     };
-    
-    if (!datos.ID_CARTERA || datos.VALOR <= 0 || !datos.OBSERVACION) {
-      alert("Por favor diligencie todos los campos obligatorios (*).");
+
+    if (!datos.VALOR || datos.VALOR <= 0 || !datos.OBSERVACION) {
+      alert("Por favor ingrese el valor del abono y la observación.");
       return;
     }
-    
-    RECAUDO_PROCESANDO = true;
-    mostrarAlerta("Registrando recaudo operativo de cartera en Sheets...", "info");
-    cerrarModalRecaudo();
-    
+
     google.script.run
       .withSuccessHandler(function(res) {
-        RECAUDO_PROCESANDO = false;
         if (res && res.EXITO) {
-          mostrarAlerta(res.MENSAJE, "success");
+          cerrarModalRecaudo();
           carCargarCartera();
-        } else {
-          mostrarAlerta("Error al registrar recaudo: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        RECAUDO_PROCESANDO = false;
-        mostrarAlerta("Fallo de red: " + err.message, "error");
+          mostrarAlerta("Recaudo procesado con éxito.", "success");
+        } else alert("Error: " + (res ? res.MENSAJE : "Sin respuesta"));
       })
       .CAR_REGISTRAR_RECAUDO_WEB(datos, TOKEN_SESION_PROY);
-  }
-
-  function verHistorialRecaudos(idCartera) {
-    const modal = document.getElementById("modal_historial_recaudos");
-    const tbody = document.getElementById("recaudos_historial_tabla_body");
-    
-    document.getElementById("md_recaudos_titulo").textContent = `👁️ Historial de Abonos: ${idCartera}`;
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando pagos desde Sheets...</td></tr>`;
-    modal.style.display = "flex";
-    
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          tbody.innerHTML = "";
-          if (res.DATOS.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No se registran abonos en el sistema para esta obligación.</td></tr>`;
-            return;
-          }
-          res.DATOS.forEach(function(r) {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><strong>${r.ID_RECAUDO}</strong></td>
-              <td>${r.FECHA ? r.FECHA.substring(0,10) : "N/A"}</td>
-              <td style="text-align:right; font-weight:700; color:#16a34a;">$${Number(r.VALOR || 0).toLocaleString('es-CO')} COP</td>
-              <td>${r.METODO_PAGO}</td>
-              <td>${r.ID_CUENTA_DESTINO}</td>
-              <td>${r.RESPONSABLE || "SISTEMA"}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        } else {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#dc2626;">Error: ${res.MENSAJE}</td></tr>`;
-        }
-      })
-      .withFailureHandler(function(err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#dc2626;">Error de red: ${err.message}</td></tr>`;
-      })
-      .CAR_OBTENER_HISTORIAL_RECAUDOS_WEB(idCartera, TOKEN_SESION_PROY);
-  }
-
-  function cerrarModalHistorialRecaudos() {
-    document.getElementById("modal_historial_recaudos").style.display = "none";
   }
 </script>
 </body>

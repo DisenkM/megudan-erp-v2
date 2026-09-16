@@ -1,10 +1,4 @@
-<!-- ============================================================
-* INTERFAZ: F3_WEB_LOGIN (VERSIÓN v7.0 - COCHERA DE DIAGNÓSTICO EN VIVO)
-* MODULO: SEGURIDAD (ACCESO PUBLICO / WEB PORTAL)
-* RESPONSABILIDAD: Portal de inicio de sesión, auto-registro público y recuperación de contraseña del ERP
-* CONEXIÓN BACKEND: 23_SEGURIDAD.gs, 24_LOGS.gs y 25_WEB.gs
-* ESTADO: 100% Accesible, Dinámico, Seguro y Adaptativo
-============================================================ -->
+<!-- (VERSIÓN 8.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -16,78 +10,81 @@
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; color: #f3f4f6;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 20px; color: #f8fafc;
     }
     .login-container {
-      width: 100%; max-width: 440px; padding: 20px;
+      width: 100%; max-width: 440px; margin: 0 auto;
     }
     .card {
-      background-color: #2563eb;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px; padding: 35px 30px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px; padding: 36px 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
-    .brand { text-align: center; margin-bottom: 25px; }
-    .brand h2 { margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; }
-    .brand p { margin: 5px 0 0; font-size: 12px; color: #9ca3af; font-weight: 500; }
-    
-    /* Tabs */
+    .brand { text-align: center; margin-bottom: 28px; }
+    .brand-logo-icon {
+      width: 52px; height: 52px; margin: 0 auto 12px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 900; color: #ffffff;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+    .brand h2 { margin: 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; }
+    .brand p { margin: 6px 0 0; font-size: 12px; color: #94a3b8; font-weight: 500; }
+
     .tabs-login {
-      display: flex; border-bottom: 2px solid rgba(255, 255, 255, 0.05);
-      margin-bottom: 25px; gap: 10px;
+      display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 24px; gap: 8px;
     }
     .tab {
-      background: none; border: none; padding: 10px 5px;
-      font-size: 13px; font-weight: 700; color: #9ca3af;
+      background: none; border: none; padding: 10px 4px;
+      font-size: 13px; font-weight: 700; color: #94a3b8;
       cursor: pointer; transition: all 0.2s; position: relative;
       flex: 1; text-align: center;
     }
-    .tab:hover { color: #f3f4f6; }
-    .tab.active { color: #2563eb; }
+    .tab:hover { color: #f8fafc; }
+    .tab.active { color: #38bdf8; }
     .tab.active::after {
-      content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
-      height: 2px; background-color: #2563eb;
+      content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 2px; background: #38bdf8; box-shadow: 0 0 8px #38bdf8;
+      border-radius: 2px;
     }
-    
-    /* Fields */
+
     .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-    .field label { font-size: 11px; font-weight: 700; color: #d1d5db; text-transform: uppercase; letter-spacing: 0.5px; }
-    
+    .field label { font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; }
     .input {
-      background-color: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px; padding: 11px 14px; font-size: 13px; color: #ffffff;
+      background: rgba(15, 23, 42, 0.6); border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #ffffff;
       outline: none; transition: all 0.2s; width: 100%;
     }
     .input:focus {
-      border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-      background-color: rgba(15, 23, 42, 0.8);
+      border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      background: rgba(15, 23, 42, 0.85);
     }
-    .input::placeholder { color: #6b7280; }
-    
-    /* Buttons */
+    .input::placeholder { color: #64748b; }
+
     .btn {
-      background-color: #2563eb; color: #ffffff; width: 100%;
-      border: none; border-radius: 6px; padding: 11px;
-      font-size: 13px; font-weight: 700; cursor: pointer;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff; width: 100%; border: none; border-radius: 10px; padding: 12px;
+      font-size: 14px; font-weight: 800; cursor: pointer;
       transition: all 0.2s; text-align: center; margin-top: 10px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
     }
-    .btn:hover { background-color: #1d4ed8; }
-    .btn:disabled { background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
-    
-    /* Alertas */
+    .btn:hover { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); transform: translateY(-1px); }
+    .btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+
     .msg-box {
-      display: none; padding: 12px 14px; border-radius: 6px;
+      display: none; padding: 12px 16px; border-radius: 10px;
       margin-bottom: 20px; font-size: 12px; font-weight: 600; line-height: 1.5;
     }
-    .msg-success { background-color: rgba(22, 163, 74, 0.15); color: #4ade80; border: 1px solid rgba(22, 163, 74, 0.3); }
-    .msg-error { background-color: rgba(220, 38, 38, 0.15); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.3); }
-    .msg-info { background-color: rgba(37, 99, 235, 0.15); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3); }
-    
+    .msg-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .msg-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .msg-info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
     .form-panel { display: none; }
     .form-panel.active { display: block; }
   </style>
@@ -96,23 +93,24 @@
 <div class="login-container">
   <div class="card">
     <div class="brand">
+      <div class="brand-logo-icon">M</div>
       <h2>MEGUDAN ERP</h2>
-      <p>Control de Operaciones y Seguridad</p>
+      <p>Control de Operaciones y Seguridad Dual</p>
     </div>
-    
+
     <div id="alert-box" class="msg-box"></div>
-    
+
     <div class="tabs-login">
       <button id="tab-sigin" class="tab active" onclick="mostrarPanel('signin')">Ingresar</button>
       <button id="tab-signup" class="tab" onclick="mostrarPanel('signup')">Registrarse</button>
-      <button id="tab-recovery" class="tab" onclick="mostrarPanel('recovery')">Recuperar Clave</button>
+      <button id="tab-recovery" class="tab" onclick="mostrarPanel('recovery')">Recuperar</button>
     </div>
-    
-    <!-- Panel de Login -->
+
+    <!-- Panel Signin -->
     <div id="panel-signin" class="form-panel active">
       <div class="field">
         <label for="credencial">Usuario o Correo *</label>
-        <input type="text" id="credencial" class="input" placeholder="Ej: admin o administrador@megudan.com">
+        <input type="text" id="credencial" class="input" placeholder="Ej: admin o usuario@megudan.com">
       </div>
       <div class="field">
         <label for="contrasena">Contraseña *</label>
@@ -120,14 +118,14 @@
       </div>
       <button id="btn-login" class="btn" onclick="ejecutarLogin()">Ingresar al ERP</button>
     </div>
-    
-    <!-- Panel de Registro -->
+
+    <!-- Panel Signup -->
     <div id="panel-signup" class="form-panel">
-      <p style="font-size:12px; color:#9ca3af; line-height:1.5; margin-bottom:15px;">
-        Crea tu cuenta de operador en el ERP. Tu registro se guardará con estado <strong>PENDIENTE</strong> para aprobación del administrador.
+      <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-bottom:16px;">
+        Crea tu cuenta de operador en el ERP. Se registrará con estado <strong>PENDIENTE</strong> para aprobación administrativa.
       </p>
       <div class="field">
-        <label for="reg_usuario">Nombre de Usuario (Login) *</label>
+        <label for="reg_usuario">Usuario (Login) *</label>
         <input type="text" id="reg_usuario" class="input" placeholder="Ej: m_perez">
       </div>
       <div class="field">
@@ -139,41 +137,41 @@
         <input type="email" id="reg_correo" class="input" placeholder="Ej: mperez@megudan.com">
       </div>
       <div class="field">
-        <label for="reg_contrasena">Contraseña de Acceso *</label>
-        <input type="password" id="reg_contrasena" class="input" placeholder="Mín. 8 caracteres (1 mayúscula, 1 número)">
+        <label for="reg_contrasena">Contraseña *</label>
+        <input type="password" id="reg_contrasena" class="input" placeholder="Mín. 8 caract. (1 Mayús, 1 Núm)">
       </div>
       <button id="btn-register" class="btn" onclick="ejecutarRegistro()">Registrarse</button>
     </div>
-    
-    <!-- Panel de Recuperación -->
+
+    <!-- Panel Recovery -->
     <div id="panel-recovery" class="form-panel">
-      <p style="font-size:12px; color:#9ca3af; line-height:1.5; margin-bottom:15px;">
-        Ingrese su dirección de correo corporativo para recibir una contraseña temporal de un solo uso en su bandeja de entrada.
+      <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-bottom:16px;">
+        Ingresa tu correo corporativo para recibir una contraseña temporal de acceso.
       </p>
       <div class="field">
-        <label for="correo-rec">Correo electrónico *</label>
-        <input type="email" id="correo-rec" class="input" placeholder="ejemplo@megudan.com">
+        <label for="correo-rec">Correo Corporativo *</label>
+        <input type="email" id="correo-rec" class="input" placeholder="correo@megudan.com">
       </div>
-      <button id="btn-recovery" class="btn" onclick="ejecutarRecuperacion()">Enviar Contraseña Temporal</button>
+      <button id="btn-recovery" class="btn" onclick="ejecutarRecuperacion()">Enviar Clave Temporal</button>
     </div>
   </div>
 </div>
 
 <script>
-  const WEB_APP_URL = "<?= WEB_APP_URL ?>"; // ◄ Inyectado por el Servidor para enrutar de forma absoluta
-  
+  var WEB_APP_URL = "<?= WEB_APP_URL ?>";
+
   document.addEventListener("DOMContentLoaded", function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const msg = urlParams.get("mensaje");
+    var urlParams = new URLSearchParams(window.location.search);
+    var msg = urlParams.get("mensaje");
     if (msg) {
       mostrarAlerta(msg, "info");
     }
   });
 
   function mostrarPanel(panel) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".form-panel").forEach(p => p.classList.remove("active"));
-
+    document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
+    document.querySelectorAll(".form-panel").forEach(function(p) { p.classList.remove("active"); });
+    
     if (panel === "signin") {
       document.getElementById("tab-sigin").classList.add("active");
       document.getElementById("panel-signin").classList.add("active");
@@ -188,7 +186,7 @@
   }
 
   function mostrarAlerta(texto, tipo) {
-    const box = document.getElementById("alert-box");
+    var box = document.getElementById("alert-box");
     box.textContent = texto;
     box.className = "msg-box msg-" + tipo;
     box.style.display = "block";
@@ -199,12 +197,12 @@
   }
 
   function ejecutarLogin() {
-    const user = document.getElementById("credencial").value.trim();
-    const pass = document.getElementById("contrasena").value;
-    const btn = document.getElementById("btn-login");
+    var user = document.getElementById("credencial").value.trim();
+    var pass = document.getElementById("contrasena").value;
+    var btn = document.getElementById("btn-login");
 
     if (!user || !pass) {
-      mostrarAlerta("Por favor complete todos los campos mandatorios.", "error");
+      mostrarAlerta("Por favor complete todos los campos obligatorios.", "error");
       return;
     }
 
@@ -217,7 +215,7 @@
         if (!autenticacion) {
           btn.disabled = false;
           btn.textContent = "Ingresar al ERP";
-          mostrarAlerta("Error de red o autorización pendiente. Recargue la página.", "error");
+          mostrarAlerta("Error de autenticación. Recargue la página.", "error");
           return;
         }
         if (!autenticacion.EXITO) {
@@ -228,31 +226,23 @@
         }
 
         mostrarAlerta("Credenciales validadas. Redirigiendo...", "success");
-        
-        const sesion = autenticacion.SESION;
+        var sesion = autenticacion.SESION;
         if (!sesion) {
           btn.disabled = false;
           btn.textContent = "Ingresar al ERP";
-          mostrarAlerta("La sesión no pudo ser inicializada en el servidor.", "error");
+          mostrarAlerta("La sesión no pudo ser inicializada.", "error");
           return;
         }
 
-        let urlBase = WEB_APP_URL;
-        if (!urlBase) {
-          urlBase = window.location.origin + window.location.pathname;
-        }
-        const url = urlBase + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
-        
-        // 🚀 Intenta redireccionar de inmediato (a veces se permite porque es el primer callback de red asíncrono)
-        try { 
-          window.top.location.replace(url); 
-          
-          // Por si el replace falla silenciosamente, mostramos el botón después de 1 segundo
+        var urlBase = WEB_APP_URL || (window.location.origin + window.location.pathname);
+        var url = urlBase + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
+
+        try {
+          window.top.location.replace(url);
           setTimeout(function() {
             mostrarBotonRedireccionDirecta(url);
           }, 1000);
-        } catch (e) { 
-          // Si el sandbox de iframe bloquea la redirección desatendida, desplegamos un botón gigante con interacción directa!
+        } catch (e) {
           mostrarBotonRedireccionDirecta(url);
         }
       })
@@ -265,112 +255,75 @@
   }
 
   function mostrarBotonRedireccionDirecta(url) {
-    const card = document.querySelector(".card");
-    if (!card) return;
-    card.innerHTML = `
-      <div style="text-align: center; padding: 25px 0;">
-        <div style="font-size: 54px; margin-bottom: 20px; animation: bounce 2s infinite;">🔓</div>
-        <h2 style="color: #ffffff; margin-top: 0; margin-bottom: 12px; font-weight: 800; font-size: 22px;">¡Acceso Autorizado!</h2>
-        <p style="font-size: 13px; color: #9ca3af; line-height: 1.6; margin-bottom: 25px; max-width: 320px; margin-left: auto; margin-right: auto;">
-          Tu sesión se ha creado con éxito. Clic en el botón inferior para entrar al ERP Megudan de forma segura.
-        </p>
-        <button class="btn" style="background-color: #10b981; font-weight: 800; padding: 14px 20px; font-size: 14px; border-radius: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);" onclick="window.top.location.replace('${url}')">
-          🚀 ENTRAR AL PANEL DE CONTROL
-        </button>
-      </div>
-      <style>
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-      </style>
-    `;
+    var card = document.querySelector(".card");
+    card.innerHTML = '<div style="text-align:center; padding: 10px 0;"><h3 style="color:#ffffff; margin-bottom:10px;">¡Sesión Autorizada!</h3><p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Haz clic en el botón inferior para ingresar al Panel de Control:</p><button class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:800; padding:14px 20px; font-size:14px;" onclick="window.top.location.replace(\'' + url + '\')">🚀 ENTRAR AL PANEL DE CONTROL</button></div>';
   }
 
   function ejecutarRegistro() {
-    const usuario = document.getElementById("reg_usuario").value.trim();
-    const nombre = document.getElementById("reg_nombre").value.trim();
-    const correo = document.getElementById("reg_correo").value.trim();
-    const contrasena = document.getElementById("reg_contrasena").value;
-    const btn = document.getElementById("btn-register");
+    var usr = document.getElementById("reg_usuario").value.trim();
+    var nom = document.getElementById("reg_nombre").value.trim();
+    var mail = document.getElementById("reg_correo").value.trim();
+    var pass = document.getElementById("reg_contrasena").value;
+    var btn = document.getElementById("btn-register");
 
-    if (!usuario || !nombre || !correo || !contrasena) {
-      mostrarAlerta("Por favor complete todos los campos obligatorios (*).", "error");
+    if (!usr || !nom || !mail || !pass) {
+      mostrarAlerta("Complete todos los campos del registro.", "error");
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = "Registrando...";
-    mostrarAlerta("Creando tu cuenta en el ERP de MEGUDAN...", "info");
-
-    const datos = {
-      USUARIO: usuario,
-      NOMBRE: nombre,
-      CORREO: correo,
-      CONTRASENA_PLANA: contrasena
-    };
+    btn.textContent = "Guardando registro...";
 
     google.script.run
       .withSuccessHandler(function(res) {
         btn.disabled = false;
         btn.textContent = "Registrarse";
-        if (!res) {
-          mostrarAlerta("Error de comunicación de red con el servidor.", "error");
-          return;
-        }
-        if (res.EXITO) {
+        if (res && res.EXITO) {
           mostrarAlerta(res.MENSAJE, "success");
           document.getElementById("reg_usuario").value = "";
           document.getElementById("reg_nombre").value = "";
           document.getElementById("reg_correo").value = "";
           document.getElementById("reg_contrasena").value = "";
-          setTimeout(function() {
-            mostrarPanel("signin");
-          }, 4500);
+          setTimeout(function() { mostrarPanel("signin"); }, 4000);
         } else {
-          mostrarAlerta(res.MENSAJE, "error");
+          mostrarAlerta(res ? res.MENSAJE : "Error al registrar", "error");
         }
       })
       .withFailureHandler(function(err) {
         btn.disabled = false;
         btn.textContent = "Registrarse";
-        mostrarAlerta("Error al registrar: " + err.message, "error");
+        mostrarAlerta("Error: " + err.message, "error");
       })
-      .SEG_REGISTRAR_USUARIO_PUBLICO(datos);
+      .SEG_REGISTRAR_USUARIO_PUBLICO({ USUARIO: usr, NOMBRE: nom, CORREO: mail, CONTRASENA_PLANA: pass });
   }
 
   function ejecutarRecuperacion() {
-    const correo = document.getElementById("correo-rec").value.trim();
-    const btn = document.getElementById("btn-recovery");
+    var correo = document.getElementById("correo-rec").value.trim();
+    var btn = document.getElementById("btn-recovery");
 
     if (!correo) {
-      mostrarAlerta("Debe proporcionar un correo.", "error");
+      mostrarAlerta("Digite su correo corporativo.", "error");
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = "Procesando...";
-    mostrarAlerta("Verificando correo electrónico...", "info");
+    btn.textContent = "Enviando solicitud...";
 
     google.script.run
       .withSuccessHandler(function(res) {
         btn.disabled = false;
-        btn.textContent = "Enviar Contraseña Temporal";
-        if (!res) {
-          mostrarAlerta("Error de comunicación de red con el servidor.", "error");
-          return;
-        }
-        if (res.EXITO) {
+        btn.textContent = "Enviar Clave Temporal";
+        if (res && res.EXITO) {
           mostrarAlerta(res.MENSAJE, "success");
           document.getElementById("correo-rec").value = "";
         } else {
-          mostrarAlerta(res.MENSAJE, "error");
+          mostrarAlerta(res ? res.MENSAJE : "Error en solicitud", "error");
         }
       })
       .withFailureHandler(function(err) {
         btn.disabled = false;
-        btn.textContent = "Enviar Contraseña Temporal";
-        mostrarAlerta("Error de de servidor: " + err.message, "error");
+        btn.textContent = "Enviar Clave Temporal";
+        mostrarAlerta("Error: " + err.message, "error");
       })
       .SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo);
   }
