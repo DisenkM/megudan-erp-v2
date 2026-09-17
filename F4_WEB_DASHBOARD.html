@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 27.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 28.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -611,7 +611,7 @@
       .WEB_OBTENER_COMPILACION_VISTA(modulo, TOKEN_SESION);
   }
 
-  function inyectarHTMLConScripts(container, html) {
+    function inyectarHTMLConScripts(container, html) {
     var originalAddEventListener = document.addEventListener;
     document.addEventListener = function(type, listener, options) {
       if (type === "DOMContentLoaded") {
@@ -631,10 +631,9 @@
       
       var code = oldScript.innerHTML;
       
-      // Substitución segura preservando identificadores
-            code = code.replace(/^(\s*)(const|let|var)\s+(TOKEN_SESION|TOKEN_SESION_LOCAL|TOKEN_SESION_PROY|ID_USUARIO|USUARIO|WEB_APP_URL|USUARIO_ACTUAL)\b.*/gm, "var  = window. || window.TOKEN_SESION;");
-      code = code.replace(/^(\s*)const\s+/gm, "$1var ");
-      code = code.replace(/^(\s*)let\s+/gm, "$1var ");
+      // Convert const and let at statement start to var so re-declarations in SPA do not throw
+      code = code.replace(/^(\s*)const\s+/gm, "var ");
+      code = code.replace(/^(\s*)let\s+/gm, "var ");
       
       try {
         newScript.appendChild(document.createTextNode(code));
