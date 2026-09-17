@@ -1,0 +1,214 @@
+<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos & Impresión PDF | MEGUDAN ERP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+      background-color: #f8fafc; color: #1e293b;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1300px; margin: 0 auto; }
+
+    .header {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.3);
+    }
+    .header-info { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+      font-size: 32px; width: 60px; height: 60px;
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+
+    .message { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
+    .input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+
+    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+    .button-primary { background-color: #0284c7; color: white; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); }
+    .button-primary:hover { background-color: #0369a1; }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+    .button-success { background-color: #16a34a; color: white; }
+
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+    .badge-active { background-color: #dcfce7; color: #15803d; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-info">
+      <div class="header-icon">📄</div>
+      <div>
+        <h1>Generación & Representación Impresa de Documentos PDF</h1>
+        <p>ERP Operativo · Impresión Oficial de Facturas de Venta, Cotizaciones y Pedidos con almacenamiento en Google Drive</p>
+      </div>
+    </div>
+  </header>
+
+  <div id="DOC_ALERT" class="message"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">🧾 Transacciones Elegibles para Exportación PDF</h2>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="text" id="doc_buscador" class="input" style="width:280px;" placeholder="Buscar por ID, N° soporte o cliente..." oninput="filtrarDocumentosPdf()">
+        <button class="button button-secondary" onclick="cargarVentasParaPdf()">↻ Actualizar Lista</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Transacción</th>
+            <th>Fecha</th>
+            <th>Cliente / Tercero</th>
+            <th>Tipo Documento</th>
+            <th>N° Soporte</th>
+            <th>Monto Total</th>
+            <th style="text-align:center;">Acción de Generación</th>
+          </tr>
+        </thead>
+        <tbody id="tabla_documentos_pdf_body">
+          <tr><td colspan="7" style="text-align:center; padding:24px; color:#64748b;">Consultando transacciones en Sheets...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  var TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
+  var LISTA_VENTAS_PDF_CACHE = [];
+
+  document.addEventListener("DOMContentLoaded", function() {
+    cargarVentasParaPdf();
+  });
+
+  function mostrarAlertaDoc(msg, tipo) {
+    var el = document.getElementById("DOC_ALERT");
+    if (!el) return;
+    el.textContent = msg;
+    el.className = "message message-" + tipo;
+    el.style.display = "block";
+    setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
+  }
+
+  function cargarVentasParaPdf() {
+    var tbody = document.getElementById("tabla_documentos_pdf_body");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:#64748b;">Cargando transacciones desde Google Sheets...</td></tr>';
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          LISTA_VENTAS_PDF_CACHE = res.DATOS;
+          renderizarTablaDocumentos(LISTA_VENTAS_PDF_CACHE);
+        } else {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:#dc2626;">Error al consultar: ' + (res ? res.MENSAJE : 'Sin respuesta') + '</td></tr>';
+        }
+      })
+      .withFailureHandler(function(err) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:#dc2626;">Fallo de red: ' + err.message + '</td></tr>';
+      })
+      .VEN_LISTAR_VENTAS_WEB(TOKEN_SESION_PROY);
+  }
+
+  function renderizarTablaDocumentos(lista) {
+    var tbody = document.getElementById("tabla_documentos_pdf_body");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:#64748b;">No hay transacciones registradas para exportar en PDF.</td></tr>';
+      return;
+    }
+
+    lista.forEach(function(v) {
+      var tr = document.createElement("tr");
+      var btnActionHtml = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento('\'' + v.ID_VENTA + '\'')">🖨️ Generar PDF Drive</button>';
+      
+      tr.innerHTML = '<td><code>' + v.ID_VENTA + '</code></td>' +
+                     '<td>' + (v.FECHA ? String(v.FECHA).substring(0,10) : 'Hoy') + '</td>' +
+                     '<td><strong>' + (v.RAZON_SOCIAL_CLIENTE || v.ID_CLIENTE || 'General') + '</strong></td>' +
+                     '<td><span class="badge badge-active">' + (v.TIPO_DOCUMENTO || 'FACTURA') + '</span></td>' +
+                     '<td><code>' + (v.NUM_DOCUMENTO || v.ID_VENTA) + '</code></td>' +
+                     '<td><strong>$' + Number(v.TOTAL || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
+                     '<td style="text-align:center;" id="cell_action_' + v.ID_VENTA + '">' + btnActionHtml + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filtrarDocumentosPdf() {
+    var q = document.getElementById("doc_buscador").value.trim().toUpperCase();
+    if (!q) {
+      renderizarTablaDocumentos(LISTA_VENTAS_PDF_CACHE);
+      return;
+    }
+    var filtrados = LISTA_VENTAS_PDF_CACHE.filter(function(v) {
+      return String(v.ID_VENTA).toUpperCase().indexOf(q) !== -1 ||
+             String(v.ID_CLIENTE).toUpperCase().indexOf(q) !== -1 ||
+             String(v.NUM_DOCUMENTO).toUpperCase().indexOf(q) !== -1;
+    });
+    renderizarTablaDocumentos(filtrados);
+  }
+
+  function generarPdfDocumento(idVenta) {
+    var cellAction = document.getElementById("cell_action_" + idVenta);
+    if (cellAction) {
+      cellAction.innerHTML = '<span style="font-size:12px; color:#0284c7; font-weight:700;">⏳ Generando PDF en Drive...</span>';
+    }
+    mostrarAlertaDoc("Construyendo representación impresa PDF e indexando en Google Drive...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.URL_PDF) {
+          mostrarAlertaDoc(res.MENSAJE, "success");
+          if (cellAction) {
+            cellAction.innerHTML = '<a href="' + res.URL_PDF + '" target="_blank" class="button button-success" style="padding:6px 12px; font-size:11px;">📄 Ver / Abrir PDF</a>';
+          }
+        } else {
+          mostrarAlertaDoc("Error al generar PDF: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
+          if (cellAction) {
+            cellAction.innerHTML = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento('\'' + idVenta + '\'')">🖨️ Reintentar PDF</button>';
+          }
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlertaDoc("Fallo del servidor: " + err.message, "error");
+        if (cellAction) {
+          cellAction.innerHTML = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento('\'' + idVenta + '\'')">🖨️ Reintentar PDF</button>';
+        }
+      })
+      .DOC_GENERAR_PDF_VENTA_WEB(idVenta, TOKEN_SESION_PROY);
+  }
+</script>
+</body>
+</html>

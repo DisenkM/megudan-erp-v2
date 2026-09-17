@@ -1,6 +1,6 @@
-// (VERSIÓN 26.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 27.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 23_SEGURIDAD.gs (VERSIÓN 26.0 - V2 ERP - LIBRO 1)
+* 23_SEGURIDAD.gs (VERSIÓN 27.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Administrar el ciclo de vida de Usuarios, Roles, Permisos, Sesiones y Auditoría.
 * - Proteger las macros y Web Apps mediante un Sistema de Control de Acceso Dual.
@@ -142,7 +142,7 @@ function SEG_BUSCAR_USUARIO_LOGIN(credencial) {
 function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
   SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS();
   const usuario = SEG_BUSCAR_USUARIO_LOGIN(credencial);
-  if (!usuario) return { EXITO: false, CODIGO: "USUARIO_NO_ENCONTRADO", MENSAJE: "Credenciales incorrectas o usuario inexistente." };
+  if (!usuario) return { EXITO: false, CODIGO: "USUARIO_NO_ENCONTRADO", MENSAJE: "Credenciales incorrectas." };
 
   const estado = String(usuario.ESTADO_USUARIO || "").trim().toUpperCase();
   if (estado === "PENDIENTE") return { EXITO: false, CODIGO: "USUARIO_PENDIENTE", MENSAJE: "Su cuenta está pendiente de aprobación." };
@@ -150,10 +150,11 @@ function SEG_AUTENTICAR_USUARIO(credencial, contrasena) {
   if (estado !== "ACTIVO") return { EXITO: false, CODIGO: "USUARIO_INACTIVO", MENSAJE: "Usuario inactivo en el sistema." };
 
   if (!SEG_VALIDAR_CONTRASENA(usuario, contrasena)) {
-    return { EXITO: false, CODIGO: "CONTRASENA_INCORRECTA", MENSAJE: "Contraseña incorrecta." };
+    return { EXITO: false, CODIGO: "CONTRASENA_INCORRECTA", MENSAJE: "Credenciales incorrectas." };
   }
 
   const resSesion = SEG_CREAR_SESION(usuario.ID_USUARIO);
+  
   return SEG_SANITIZAR_PARA_CLIENTE({
     EXITO: true,
     CODIGO: "AUTENTICACION_CORRECTA",
@@ -397,8 +398,6 @@ function SEG_INICIALIZAR_USUARIOS_PREDEFINIDOS() {
     const ahora = new Date();
     const hashAdmin = SEG_GENERAR_HASH_CONTRASENA("Admin123!");
     hoja.appendRow(["USR-000001", "ADMIN", "Administrador del ERP", "admin@megudan.com", hashAdmin, "", "ROL-000001", "ACTIVO", 0, "", ahora, "NO", ahora, ahora, "SISTEMA", "SISTEMA", "Usuario Inicial"]);
-    const hashDisenk = SEG_GENERAR_HASH_CONTRASENA("Admin123!");
-    hoja.appendRow(["USR-000002", "DISENK", "Miguel Atahualpa", "www.disenk@gmail.com", hashDisenk, "", "ROL-000001", "ACTIVO", 0, "", ahora, "NO", ahora, ahora, "SISTEMA", "SISTEMA", "Usuario Disenk"]);
   } catch (e) {}
 }
 
@@ -420,26 +419,3 @@ function SEG_SANITIZAR_PARA_CLIENTE(dato) {
   return JSON.parse(JSON.stringify(dato));
 }
 
-function SEG_REGISTRAR_USUARIO_PUBLICO(datos) {
-  try {
-    if (!datos) return { EXITO: false, MENSAJE: "No se proporcionaron datos." };
-    if (!datos.USUARIO || String(datos.USUARIO).trim() === "") return { EXITO: false, MENSAJE: "Usuario obligatorio." };
-    if (!datos.CONTRASENA_PLANA || String(datos.CONTRASENA_PLANA).trim() === "") return { EXITO: false, MENSAJE: "Contraseña obligatoria." };
-
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const hoja = ss.getSheetByName(SEG_CONFIG.HOJA_USUARIOS);
-    const ahora = new Date();
-    const idUsuario = SEG_CONFIG.PREFIJO_USUARIO + "-" + String(Math.max(1, hoja.getLastRow())).padStart(SEG_CONFIG.DIGITOS_ID, "0");
-    const hash = SEG_GENERAR_HASH_CONTRASENA(datos.CONTRASENA_PLANA);
-
-    hoja.appendRow([idUsuario, String(datos.USUARIO).toUpperCase(), datos.NOMBRE || "", datos.CORREO || "", hash, "", "ROL-000006", "PENDIENTE", 0, "", ahora, "NO", ahora, ahora, "AUTO_REGISTRO", "AUTO_REGISTRO", "Usuario PENDIENTE"]);
-
-    return { EXITO: true, MENSAJE: "¡Registro exitoso! Tu usuario '" + datos.USUARIO + "' ha sido creado con estado PENDIENTE. Un administrador debe aprobar tu cuenta." };
-  } catch (e) {
-    return { EXITO: false, MENSAJE: e.toString() };
-  }
-}
-
-function SEG_SOLICITAR_RECUPERACION_CONTRASENA(correo) {
-  return { EXITO: true, MENSAJE: "Se ha enviado una clave temporal a su correo." };
-}

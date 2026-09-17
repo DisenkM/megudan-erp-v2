@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 10.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 11.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -234,7 +234,10 @@
           return;
         }
 
-        var urlBase = WEB_APP_URL || (window.location.origin + window.location.pathname);
+        var urlBase = WEB_APP_URL;
+        if (!urlBase || urlBase.indexOf("http") !== 0) {
+          urlBase = window.location.href.split("?")[0].split("#")[0];
+        }
         var url = urlBase + "?ruta=dashboard&token=" + sesion.TOKEN_SESION;
 
         mostrarBotonRedireccionDirecta(url);
@@ -252,7 +255,8 @@
     card.innerHTML = '<div style="text-align:center; padding: 10px 0;"><h3 style="color:#ffffff; margin-bottom:10px;">¡Sesión Autorizada!</h3><p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Haz clic en el botón inferior para ingresar al Panel de Control:</p><a id="btn_redirect_top" href="' + url + '" target="_top" class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:800; padding:14px 20px; font-size:14px; text-decoration:none; display:inline-block;">🚀 ENTRAR AL PANEL DE CONTROL</a></div>';
     
     try {
-      document.getElementById("btn_redirect_top").click();
+      var btnLink = document.getElementById("btn_redirect_top");
+      if (btnLink) btnLink.click();
     } catch (e) {}
   }
 

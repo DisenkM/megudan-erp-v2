@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 7.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,16 +7,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Clientes & Terceros | MEGUDAN ERP</title>
   <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-surface: #ffffff;
+      --bg-app: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
       font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-      background-color: #f8fafc; color: #1e293b;
+      background-color: var(--bg-app); color: var(--text-main);
     }
-    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1300px; margin: 0 auto; }
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1400px; margin: 0 auto; }
 
+    /* Header Banner */
     .header {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
       color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
       display: flex; align-items: center; justify-content: space-between; gap: 20px;
       box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
@@ -31,34 +41,62 @@
     .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
     .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
 
+    /* KPI Cards */
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+      background: white; border: 1px solid var(--border-color); border-radius: 14px;
+      padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 15px -2px rgba(0,0,0,0.03);
+    }
+    .kpi-data { display: flex; flex-direction: column; gap: 4px; }
+    .kpi-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 22px; font-weight: 900; color: var(--text-main); }
+    .kpi-icon { font-size: 28px; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+
+    /* Tabs Navigation */
+    .tabs-container { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--border-color); overflow-x: auto; padding-bottom: 2px; }
+    .tab-btn {
+      padding: 12px 22px; border: none; background: none; font-size: 13px; font-weight: 700;
+      color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 800; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Alerts */
     .message { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
     .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
     .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
     .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
-    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    /* Cards & Forms */
+    .card { background-color: white; border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
     .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
 
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .form-row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
-    .input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; background-color: #ffffff; }
+    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 16px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; }
 
     .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-    .button-primary { background-color: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
-    .button-primary:hover { background-color: #1d4ed8; }
+    .button-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+    .button-primary:hover { background-color: var(--primary-hover); }
     .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
     .button-secondary:hover { background-color: #f8fafc; }
-    .button-success { background-color: #16a34a; color: white; }
+    .button-success { background-color: #16a34a; color: white; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2); }
     .button-danger { background-color: #dc2626; color: white; }
 
-    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color); background: white; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
     td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
@@ -67,9 +105,15 @@
     .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
     .badge-active { background-color: #dcfce7; color: #15803d; }
     .badge-inactive { background-color: #fee2e2; color: #dc2626; }
+    .badge-pending { background-color: #fef3c7; color: #d97706; }
+    .badge-blue { background-color: #dbeafe; color: #1e40af; }
 
-    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; }
-    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
+    .close-btn:hover { color: #0f172a; }
   </style>
 </head>
 <body>
@@ -78,218 +122,321 @@
     <div class="header-info">
       <div class="header-icon">👥</div>
       <div>
-        <h1>Ficha Única de Clientes & Terceros</h1>
-        <p>ERP Operativo · Gestión de Clientes, Proveedores, Responsabilidades RUT DIAN y Cartera Comercial</p>
+        <h1>Ficha Única de Clientes, Proveedores & Terceros</h1>
+        <p>MEGUDAN ERP V2 · Directorio Unificado, Responsabilidades RUT DIAN, Cartera CxC e Historial Comercial</p>
       </div>
     </div>
   </header>
 
+  <!-- KPI METRICS ROW -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Total Clientes Activos</span>
+        <span class="kpi-value" id="kpi_total_clientes">0</span>
+      </div>
+      <div class="kpi-icon" style="background:#eff6ff; color:#2563eb;">👥</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Proveedores Registrados</span>
+        <span class="kpi-value" id="kpi_total_provs">0</span>
+      </div>
+      <div class="kpi-icon" style="background:#faf5ff; color:#7c3aed;">🏢</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Cartera Pendiente (CxC)</span>
+        <span class="kpi-value" style="color:#dc2626;" id="kpi_cartera_total">-bash</span>
+      </div>
+      <div class="kpi-icon" style="background:#fef2f2; color:#dc2626;">💳</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Cupos de Crédito Asignados</span>
+        <span class="kpi-value" style="color:#16a34a;" id="kpi_cupo_credito">-bash</span>
+      </div>
+      <div class="kpi-icon" style="background:#ecfdf5; color:#16a34a;">📈</div>
+    </div>
+  </div>
+
   <div id="CLI_ALERT" class="message"></div>
 
-  <!-- BUSCADOR RÁPIDO Y BARRA DE ACCIONES -->
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
-      <div style="display:flex; gap:10px; flex:1; max-width:500px;">
-        <input type="text" id="buscarTercero" class="input" placeholder="Buscar por NIT, Cédula, Razón Social o ID..." onkeypress="if(event.key==='Enter') buscarTercero()">
-        <button class="button button-primary" onclick="buscarTercero()">🔍 Buscar</button>
-      </div>
-      <div class="toolbar" style="margin:0;">
-        <button class="button button-secondary" onclick="nuevoTercero()">🆕 Nuevo</button>
-        <button class="button button-primary" onclick="guardarTercero()">💾 Guardar</button>
-        <button class="button button-secondary" onclick="actualizarTercero()">🔄 Actualizar</button>
-        <button class="button button-danger" onclick="inactivarTercero()">🚫 Inactivar</button>
-      </div>
-    </div>
+  <!-- MULTI-TAB NAVIGATION -->
+  <div class="tabs-container">
+    <button class="tab-btn active" id="btn-tab-directorio" onclick="usrCambiarPestana('directorio')">📋 Directorio Unificado</button>
+    <button class="tab-btn" id="btn-tab-formulario" onclick="usrCambiarPestana('formulario')">📝 Formulario de Registro / Edición</button>
+    <button class="tab-btn" id="btn-tab-cartera" onclick="usrCambiarPestana('cartera')">💳 Cartera & Cuentas por Cobrar</button>
+    <button class="tab-btn" id="btn-tab-segmentacion" onclick="usrCambiarPestana('segmentacion')">📊 Segmentación & Análisis Tributario</button>
   </div>
 
-  <!-- FORMULARIO PRINCIPAL DE REGISTRO -->
-  <div class="card">
-    <h3 class="card-title">🏢 Datos de Identificación del Tercero</h3>
-    
-    <div class="form-row-3" style="margin-top:16px;">
-      <div class="field">
-        <label>ID Cliente / Consecutivo</label>
-        <input type="text" id="ID_CLIENTE" class="input" readonly placeholder="Automático (Ej: CLI-000001)" style="background:#f1f5f9; font-weight:800; color:#2563eb;">
-      </div>
-      <div class="field">
-        <label>Tipo de Persona *</label>
-        <select id="TIPO_PERSONA" class="input" onchange="alternarTipoPersona(this.value)">
-          <option value="PERSONA_JURIDICA" selected>Persona Jurídica / Empresa</option>
-          <option value="PERSONA_NATURAL">Persona Natural / Individuo</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Tipo de Documento *</label>
-        <select id="TIPO_DOCUMENTO" class="input" onchange="alCambiarTipoDoc(this.value)">
-          <option value="NIT" selected>NIT - Número Identificación Tributaria</option>
-          <option value="CC">CC - Cédula de Ciudadanía</option>
-          <option value="CE">CE - Cédula de Extranjería</option>
-          <option value="PASAPORTE">Pasaporte</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="field">
-        <label>Número de Documento / NIT *</label>
-        <div style="display:flex; gap:10px;">
-          <input type="text" id="NUMERO_DOCUMENTO" class="input" placeholder="Ej: 900123456" oninput="calcularDVFrontend(this.value)">
-          <input type="text" id="DIGITO_VERIFICACION" class="input" style="width:70px; text-align:center; font-weight:800; background:#f1f5f9;" readonly placeholder="DV">
+  <!-- PESTAÑA 1: DIRECTORIO DE TERCEROS -->
+  <div id="panel-directorio" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">👥 Directorio Maestro de Clientes & Proveedores</h2>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <select id="dir_filtro_tipo" class="input" style="width:180px;" onchange="cargarListaClientes()">
+            <option value="TODOS" selected>Todos los Terceros</option>
+            <option value="CLIENTE">Solo Clientes</option>
+            <option value="PROVEEDOR">Solo Proveedores</option>
+          </select>
+          <input type="text" id="buscarTerceroInput" class="input" style="width:280px;" placeholder="Buscar por NIT, ID o Razón Social..." oninput="filtrarDirectorioLocal()">
+          <button class="button button-primary" onclick="nuevoTercero()">+ Nuevo Registro</button>
+          <button class="button button-secondary" onclick="cargarListaClientes()">↻ Recargar</button>
         </div>
       </div>
-      <div class="field" id="sec_razon_social">
-        <label>Razón Social / Nombre Empresa *</label>
-        <input type="text" id="RAZON_SOCIAL" class="input" placeholder="Ej: CONSTRUCCIONES Y GUADUA SAS">
-      </div>
-    </div>
-
-    <!-- Nombres para Persona Natural -->
-    <div id="sec_persona_natural" class="form-row-4" style="display:none;">
-      <div class="field">
-        <label>Primer Nombre *</label>
-        <input type="text" id="PRIMER_NOMBRE" class="input" placeholder="Ej: Juan">
-      </div>
-      <div class="field">
-        <label>Segundo Nombre</label>
-        <input type="text" id="SEGUNDO_NOMBRE" class="input" placeholder="Ej: Alejandro">
-      </div>
-      <div class="field">
-        <label>Primer Apellido *</label>
-        <input type="text" id="PRIMER_APELLIDO" class="input" placeholder="Ej: Pérez">
-      </div>
-      <div class="field">
-        <label>Segundo Apellido</label>
-        <input type="text" id="SEGUNDO_APELLIDO" class="input" placeholder="Ej: Gómez">
-      </div>
-    </div>
-
-    <div class="form-row-3">
-      <div class="field">
-        <label>Nombre Comercial / Fantasía</label>
-        <input type="text" id="NOMBRE_COMERCIAL" class="input" placeholder="Ej: Muebles de Guadua Pitalito">
-      </div>
-      <div class="field">
-        <label>Clasificación Comercial *</label>
-        <select id="TIPO_CLIENTE" class="input">
-          <option value="MAYORISTA" selected>Cliente Mayorista / Empresarial</option>
-          <option value="MINORISTA">Cliente Detalle / Minorista</option>
-          <option value="OBRA_PROYECTO">Constructora / Contratista de Obra</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Estado del Cliente *</label>
-        <select id="ESTADO_CLIENTE" class="input">
-          <option value="ACTIVO" selected>ACTIVO</option>
-          <option value="INACTIVO">INACTIVO</option>
-          <option value="BLOQUEADO">BLOQUEADO</option>
-        </select>
-      </div>
-    </div>
-
-    <h4 style="margin:24px 0 12px; font-size:13px; font-weight:800; color:#475569; text-transform:uppercase;">📍 Datos de Ubicación y Contacto</h4>
-    <div class="form-row-3">
-      <div class="field">
-        <label>Dirección Principal *</label>
-        <input type="text" id="DIRECCION" class="input" placeholder="Ej: Cra 4 # 12-45">
-      </div>
-      <div class="field">
-        <label>Ciudad / Municipio *</label>
-        <input type="text" id="CIUDAD" class="input" value="Pitalito">
-      </div>
-      <div class="field">
-        <label>Departamento *</label>
-        <input type="text" id="DEPARTAMENTO" class="input" value="Huila">
-      </div>
-    </div>
-
-    <div class="form-row-3">
-      <div class="field">
-        <label>Teléfono Fijo / Móvil</label>
-        <input type="text" id="TELEFONO" class="input" placeholder="Ej: 6088360000">
-      </div>
-      <div class="field">
-        <label>Celular / WhatsApp *</label>
-        <input type="text" id="CELULAR" class="input" placeholder="Ej: 3118172601">
-      </div>
-      <div class="field">
-        <label>Correo Electrónico (Facturación Electrónica) *</label>
-        <input type="email" id="CORREO" class="input" placeholder="facturas@cliente.com">
-      </div>
-    </div>
-
-    <h4 style="margin:24px 0 12px; font-size:13px; font-weight:800; color:#475569; text-transform:uppercase;">🏛️ Responsabilidades RUT / DIAN & Condiciones Comerciales</h4>
-    
-    <div class="checkbox-group" style="margin-bottom:20px;">
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="05"> 05 - Improrrenta Régimen Ordinario</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="07"> 07 - Agente Retención en la Fuente</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="14"> 14 - Informante de Exógena</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="42"> 42 - Obligado a llevar contabilidad</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="48" checked> 48 - Impuesto Sobre Ventas - IVA</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="52" checked> 52 - Facturador Electrónico</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="55"> 55 - Beneficiarios Finales</label>
-      <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="R-99-PN"> R-99-PN - No Aplica / Persona Natural</label>
-    </div>
-    <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="48,52">
-
-    <div class="form-row-4">
-      <div class="field">
-        <label>Forma de Pago Acordada *</label>
-        <select id="FORMA_PAGO" class="input">
-          <option value="CONTADO" selected>Contado</option>
-          <option value="CREDITO">Crédito</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Plazo de Crédito (Días)</label>
-        <input type="number" id="PLAZO_PAGO_DIAS" class="input" value="30" min="0">
-      </div>
-      <div class="field">
-        <label>Cupo / Límite de Crédito (COP)</label>
-        <input type="number" id="LIMITE_CREDITO" class="input" value="50000000" min="0">
-      </div>
-      <div class="field">
-        <label>País *</label>
-        <input type="text" id="PAIS" class="input" value="COLOMBIA">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Documento / NIT</th>
+              <th>Razón Social / Nombre</th>
+              <th>Ubicación</th>
+              <th>Teléfono</th>
+              <th>Correo Facturación</th>
+              <th>Forma Pago</th>
+              <th>Estado</th>
+              <th style="text-align:center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="terceros_tabla_body">
+            <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando base de datos de terceros desde Sheets...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- TABLA HISTÓRICA DE CLIENTES REGISTRADOS -->
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">👥 Listado de Clientes Registrados en la Base de Datos</h2>
-      <button class="button button-secondary" onclick="cargarListaClientes()">↻ Actualizar Tabla</button>
+  <!-- PESTAÑA 2: FORMULARIO DETALLADO -->
+  <div id="panel-formulario" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title" id="form_title_heading">📝 Captura y Edición de Ficha Comercial</h3>
+        <div style="display:flex; gap:10px;">
+          <button class="button button-secondary" onclick="nuevoTercero()">🧹 Limpiar Formulario</button>
+          <button class="button button-success" onclick="guardarTercero()">💾 Guardar Registro</button>
+        </div>
+      </div>
+
+      <input type="hidden" id="ID_CLIENTE" value="">
+
+      <!-- Fila 1: Clasificación de Tercero -->
+      <div class="form-row-3">
+        <div class="field">
+          <label>Rol de Tercero *</label>
+          <select id="TIPO_TERCERO" class="input">
+            <option value="CLIENTE" selected>CLIENTE COMERCIAL</option>
+            <option value="PROVEEDOR">PROVEEDOR DE INSUMOS</option>
+            <option value="AMBOS">AMBOS (CLIENTE & PROVEEDOR)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tipo de Persona *</label>
+          <select id="TIPO_PERSONA" class="input" onchange="alternarTipoPersona(this.value)">
+            <option value="PERSONA_JURIDICA" selected>PERSONA JURÍDICA / EMPRESA</option>
+            <option value="PERSONA_NATURAL">PERSONA NATURAL / INDIVIDUO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tipo de Documento *</label>
+          <select id="TIPO_DOCUMENTO" class="input" onchange="alCambiarTipoDoc(this.value)">
+            <option value="NIT" selected>NIT (Número Identificación Tributaria)</option>
+            <option value="CC">CC (Cédula de Ciudadanía)</option>
+            <option value="CE">CE (Cédula de Extranjería)</option>
+            <option value="PASAPORTE">PASAPORTE</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fila 2: Documento y Nombres -->
+      <div class="form-row">
+        <div class="field">
+          <label>Número Documento / NIT *</label>
+          <input type="text" id="NUMERO_DOCUMENTO" class="input" placeholder="Ej: 900182948" oninput="alCambiarNumeroDoc(this.value)">
+        </div>
+        <div class="field">
+          <label>Dígito de Verificación DIAN (DV)</label>
+          <input type="text" id="DIGITO_VERIFICACION" class="input" readonly style="background:#f1f5f9; text-align:center; font-weight:800;" placeholder="0-9">
+        </div>
+      </div>
+
+      <!-- Razón Social -->
+      <div id="sec_razon_social" class="field" style="margin-bottom:16px;">
+        <label>Razón Social / Nombre Completo *</label>
+        <input type="text" id="RAZON_SOCIAL" class="input" placeholder="Ej: MEGUDAN CONSTRUCCIONES SAS">
+      </div>
+
+      <!-- Persona Natural -->
+      <div id="sec_persona_natural" class="form-row-4" style="display:none; margin-bottom:16px;">
+        <div class="field"><label>Primer Nombre *</label><input type="text" id="PRIMER_NOMBRE" class="input"></div>
+        <div class="field"><label>Segundo Nombre</label><input type="text" id="SEGUNDO_NOMBRE" class="input"></div>
+        <div class="field"><label>Primer Apellido *</label><input type="text" id="PRIMER_APELLIDO" class="input"></div>
+        <div class="field"><label>Segundo Apellido</label><input type="text" id="SEGUNDO_APELLIDO" class="input"></div>
+      </div>
+
+      <!-- Ubicación y Contacto -->
+      <div class="form-row-3">
+        <div class="field"><label>Nombre Comercial / Establecimiento</label><input type="text" id="NOMBRE_COMERCIAL" class="input"></div>
+        <div class="field"><label>Dirección Principal *</label><input type="text" id="DIRECCION" class="input" placeholder="Ej: Calle 4 # 12-30"></div>
+        <div class="field"><label>Ciudad / Municipio *</label><input type="text" id="CIUDAD" class="input" value="Pitalito"></div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="field"><label>Departamento *</label><input type="text" id="DEPARTAMENTO" class="input" value="Huila"></div>
+        <div class="field"><label>Teléfono / Celular / WhatsApp *</label><input type="text" id="CELULAR" class="input" placeholder="Ej: 3110000000"></div>
+        <div class="field"><label>Correo Electrónico (Facturación) *</label><input type="email" id="CORREO" class="input" placeholder="ejemplo@correo.com"></div>
+      </div>
+
+      <!-- Responsabilidades Fiscales -->
+      <h4 style="margin-top:20px; margin-bottom:10px; font-size:12px; font-weight:800; color:#475569; text-transform:uppercase;">🏛️ Responsabilidades RUT (Estatuto Tributario Colombia)</h4>
+      <div class="checkbox-group">
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="05" onchange="compilarResponsabilidadesRUT()"> 05 - Impuesto Renta Régimen Ordinario</label>
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="07" onchange="compilarResponsabilidadesRUT()"> 07 - Retención en la Fuente</label>
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="14" onchange="compilarResponsabilidadesRUT()"> 14 - Informante de Exógena</label>
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="42" onchange="compilarResponsabilidadesRUT()"> 42 - Contabilidad Obligada</label>
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="48" checked onchange="compilarResponsabilidadesRUT()"> 48 - Impuesto Sobre Ventas - IVA</label>
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="52" checked onchange="compilarResponsabilidadesRUT()"> 52 - Facturador Electrónico</label>
+        <label class="checkbox-item"><input type="checkbox" name="responsabilidad_rut" value="R-99-PN" onchange="compilarResponsabilidadesRUT()"> R-99-PN - No Aplica / Persona Natural</label>
+      </div>
+      <input type="hidden" id="RESPONSABILIDAD_FISCAL" value="48,52">
+
+      <!-- Condiciones Comerciales -->
+      <div class="form-row-4">
+        <div class="field">
+          <label>Forma de Pago Acordada *</label>
+          <select id="FORMA_PAGO" class="input">
+            <option value="CONTADO" selected>CONTADO</option>
+            <option value="CREDITO">CRÉDITO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Plazo Crédito (Días)</label>
+          <input type="number" id="PLAZO_PAGO_DIAS" class="input" min="0" value="30">
+        </div>
+        <div class="field">
+          <label>Cupo Crédito Autorizado (COP)</label>
+          <input type="number" id="LIMITE_CREDITO" class="input" min="0" value="50000000">
+        </div>
+        <div class="field">
+          <label>Estado del Registro *</label>
+          <select id="ESTADO_CLIENTE" class="input">
+            <option value="ACTIVO" selected>ACTIVO</option>
+            <option value="INACTIVO">INACTIVO</option>
+            <option value="BLOQUEADO">BLOQUEADO</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>ID Cliente</th>
-            <th>Documento / NIT</th>
-            <th>Razón Social / Nombre</th>
-            <th>Ciudad</th>
-            <th>Teléfono / Celular</th>
-            <th>Correo</th>
-            <th>Forma Pago</th>
-            <th>Estado</th>
-            <th style="text-align:center;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tabla_clientes_body">
-          <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando lista de clientes...</td></tr>
-        </tbody>
-      </table>
+  </div>
+
+  <!-- PESTAÑA 3: CARTERA & CXC -->
+  <div id="panel-cartera" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">💳 Estado de Cartera & Cuentas por Cobrar de Clientes</h2>
+        <button class="button button-secondary" onclick="cargarCarteraClientes()">↻ Actualizar Cartera</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID CxC</th>
+              <th>Cliente Propietario</th>
+              <th>N° Venta / Soporte</th>
+              <th>Fecha Vencimiento</th>
+              <th>Valor Documento</th>
+              <th>Abonos Recibidos</th>
+              <th>Saldo Pendiente</th>
+              <th>Estado</th>
+              <th style="text-align:center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="cartera_clientes_body">
+            <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando obligaciones de cartera...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 4: SEGMENTACIÓN & TRIBUTARIO -->
+  <div id="panel-segmentacion" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📊 Clasificación Comercial & Perfil Fiscal DIAN</h2>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+        <div style="background:#f8fafc; padding:20px; border-radius:14px; border:1px solid #e2e8f0;">
+          <h4 style="margin-top:0; color:#1e40af;">🏷️ Segmentación por Volumen y Frecuencia</h4>
+          <p style="font-size:12px; color:#64748b; line-height:1.5;">
+            El sistema categoriza automáticamente los terceros según la recurrencia de compras y el riesgo crediticio:
+          </p>
+          <ul style="font-size:12px; color:#334155; line-height:1.8; margin-bottom:0;">
+            <li><strong>Mayoristas & Constructoras:</strong> Cupos extendidos con facturación AIU.</li>
+            <li><strong>Clientes Minoristas / Ocasionales:</strong> Ventas de contado sin cupo comercial.</li>
+            <li><strong>Proveedores Calificados:</strong> Verificados con retención en la fuente e IVA.</li>
+          </ul>
+        </div>
+        <div style="background:#faf5ff; padding:20px; border-radius:14px; border:1px solid #ebd5ff;">
+          <h4 style="margin-top:0; color:#6b21a8;">🏛️ Parámetros de Retención en la Fuente DIAN</h4>
+          <p style="font-size:12px; color:#581c87; line-height:1.5;">
+            Normativa aplicable a facturación de venta y compras según responsabilidades del RUT:
+          </p>
+
+          <ul style="font-size:12px; color:#4a1d96; line-height:1.8; margin-bottom:0;">
+            <li><strong>ReteFuente General (Compras/Servicios):</strong> Tarifa base 2.5% o 3.5%.</li>
+            <li><strong>ReteIVA (15% del IVA):</strong> Aplicado a grandes contribuyentes y autorretenedores.</li>
+            <li><strong>ReteICA Pitalito:</strong> Tarifa territorial 8/1000 en actividades de construcción.</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  var TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
+  var TOKEN_SESION_PROY = window.TOKEN_SESION_PROY || window.TOKEN_SESION || "<?= TOKEN_SESION ?>";
   var CLIENTES_CACHE_LISTA = [];
 
   document.addEventListener("DOMContentLoaded", function() {
     cargarListaClientes();
   });
+
+  function usrCambiarPestana(pestana) {
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
+    
+    var elTab = document.getElementById("panel-" + pestana);
+    var elBtn = document.getElementById("btn-tab-" + pestana);
+    if (elTab) elTab.classList.add("active");
+    if (elBtn) elBtn.classList.add("active");
+
+    if (pestana === "directorio") cargarListaClientes();
+    else if (pestana === "cartera") cargarCarteraClientes();
+  }
+
+  var aliasMap = {
+    NIT_CC: "NUMERO_DOCUMENTO",
+    DV: "DIGITO_VERIFICACION",
+    ID_PROVEEDOR: "ID_CLIENTE",
+    ESTADO: "ESTADO_CLIENTE",
+    CONDICION_PAGO: "FORMA_PAGO",
+    CUPO_CREDITO: "LIMITE_CREDITO"
+  };
+
+  function traductorAlias(datos) {
+    if (!datos) return datos;
+    Object.keys(aliasMap).forEach(function(key) {
+      var targetKey = aliasMap[key];
+      if (datos[key] !== undefined && datos[targetKey] === undefined) datos[targetKey] = datos[key];
+      if (datos[targetKey] !== undefined && datos[key] === undefined) datos[key] = datos[targetKey];
+    });
+    return datos;
+  }
+
+  function traducirAlias(datos) { return traductorAlias(datos); }
 
   function mostrarAlerta(msg, tipo) {
     var el = document.getElementById("CLI_ALERT");
@@ -301,34 +448,27 @@
   }
 
   function alternarTipoPersona(val) {
-    var secRazon = document.getElementById("sec_razon_social");
     var secNat = document.getElementById("sec_persona_natural");
-    if (val === "PERSONA_NATURAL") {
-      secNat.style.display = "grid";
-    } else {
-      secNat.style.display = "none";
-    }
+    if (val === "PERSONA_NATURAL") secNat.style.display = "grid";
+    else secNat.style.display = "none";
   }
 
   function alCambiarTipoDoc(val) {
-    var dvInput = document.getElementById("DIGITO_VERIFICACION");
-    if (val === "NIT") {
-      calcularDVFrontend(document.getElementById("NUMERO_DOCUMENTO").value);
-    } else {
-      if (dvInput) dvInput.value = "";
-    }
+    if (val === "NIT") calcularDVFrontend(document.getElementById("NUMERO_DOCUMENTO").value);
+    else document.getElementById("DIGITO_VERIFICACION").value = "";
+  }
+
+  function alCambiarNumeroDoc(val) {
+    if (document.getElementById("TIPO_DOCUMENTO").value === "NIT") calcularDVFrontend(val);
   }
 
   function calcularDVFrontend(nit) {
-    if (document.getElementById("TIPO_DOCUMENTO").value !== "NIT") return;
-    var strNit = String(nit || "").replace(/\D/g, "");
+    if (!nit) { document.getElementById("DIGITO_VERIFICACION").value = ""; return; }
+    var strNit = String(nit).replace(/\D/g, "");
     if (!strNit) { document.getElementById("DIGITO_VERIFICACION").value = ""; return; }
     var vpri = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
-    var z = strNit.length;
-    var y = 0;
-    for (var i = 0; i < z; i++) {
-      y += parseInt(strNit.charAt(z - 1 - i), 10) * vpri[i];
-    }
+    var z = strNit.length; var y = 0;
+    for (var i = 0; i < z; i++) { y += parseInt(strNit.charAt(z - 1 - i), 10) * vpri[i]; }
     var x = y % 11;
     var dv = x > 1 ? String(11 - x) : String(x);
     document.getElementById("DIGITO_VERIFICACION").value = dv;
@@ -336,15 +476,14 @@
 
   function compilarResponsabilidadesRUT() {
     var seleccionados = [];
-    document.querySelectorAll('input[name="responsabilidad_rut"]:checked').forEach(function(cb) {
-      seleccionados.push(cb.value);
-    });
+    document.querySelectorAll('input[name="responsabilidad_rut"]:checked').forEach(function(cb) { seleccionados.push(cb.value); });
     document.getElementById("RESPONSABILIDAD_FISCAL").value = seleccionados.join(",");
   }
 
   function nuevoTercero() {
     limpiarFormulario();
-    mostrarAlerta("Formulario listo para registrar un nuevo cliente.", "info");
+    usrCambiarPestana("formulario");
+    mostrarAlerta("Formulario preparado para registrar un nuevo tercero.", "info");
   }
 
   function limpiarFormulario() {
@@ -358,209 +497,75 @@
     document.getElementById("SEGUNDO_APELLIDO").value = "";
     document.getElementById("NOMBRE_COMERCIAL").value = "";
     document.getElementById("DIRECCION").value = "";
-    document.getElementById("TELEFONO").value = "";
     document.getElementById("CELULAR").value = "";
     document.getElementById("CORREO").value = "";
-    document.getElementById("PLAZO_PAGO_DIAS").value = "30";
-    document.getElementById("LIMITE_CREDITO").value = "50000000";
-    document.getElementById("TIPO_PERSONA").value = "PERSONA_JURIDICA";
-    document.getElementById("TIPO_DOCUMENTO").value = "NIT";
-    document.getElementById("ESTADO_CLIENTE").value = "ACTIVO";
-    alternarTipoPersona("PERSONA_JURIDICA");
+    document.getElementById("form_title_heading").textContent = "📝 Captura y Edición de Ficha Comercial";
   }
 
-  function obtenerDatosFormulario() {
-    compilarResponsabilidadesRUT();
-    return {
-      ID_CLIENTE: document.getElementById("ID_CLIENTE").value,
+  function guardarTercero() {
+    var idCli = document.getElementById("ID_CLIENTE").value;
+    var datos = {
+      ID_CLIENTE: idCli,
       TIPO_PERSONA: document.getElementById("TIPO_PERSONA").value,
       TIPO_DOCUMENTO: document.getElementById("TIPO_DOCUMENTO").value,
       NUMERO_DOCUMENTO: document.getElementById("NUMERO_DOCUMENTO").value.trim(),
+      NIT_CC: document.getElementById("NUMERO_DOCUMENTO").value.trim(),
       DIGITO_VERIFICACION: document.getElementById("DIGITO_VERIFICACION").value,
+      DV: document.getElementById("DIGITO_VERIFICACION").value,
       RAZON_SOCIAL: document.getElementById("RAZON_SOCIAL").value.trim(),
       PRIMER_NOMBRE: document.getElementById("PRIMER_NOMBRE").value.trim(),
       SEGUNDO_NOMBRE: document.getElementById("SEGUNDO_NOMBRE").value.trim(),
       PRIMER_APELLIDO: document.getElementById("PRIMER_APELLIDO").value.trim(),
       SEGUNDO_APELLIDO: document.getElementById("SEGUNDO_APELLIDO").value.trim(),
       NOMBRE_COMERCIAL: document.getElementById("NOMBRE_COMERCIAL").value.trim(),
-      TIPO_CLIENTE: document.getElementById("TIPO_CLIENTE").value,
-      ESTADO_CLIENTE: document.getElementById("ESTADO_CLIENTE").value,
       DIRECCION: document.getElementById("DIRECCION").value.trim(),
       CIUDAD: document.getElementById("CIUDAD").value.trim(),
       DEPARTAMENTO: document.getElementById("DEPARTAMENTO").value.trim(),
-      PAIS: document.getElementById("PAIS").value.trim(),
-      TELEFONO: document.getElementById("TELEFONO").value.trim(),
+      PAIS: "COLOMBIA",
       CELULAR: document.getElementById("CELULAR").value.trim(),
       CORREO: document.getElementById("CORREO").value.trim(),
       RESPONSABILIDAD_FISCAL: document.getElementById("RESPONSABILIDAD_FISCAL").value,
       FORMA_PAGO: document.getElementById("FORMA_PAGO").value,
-      PLAZO_PAGO_DIAS: Number(document.getElementById("PLAZO_PAGO_DIAS").value || 0),
-      LIMITE_CREDITO: Number(document.getElementById("LIMITE_CREDITO").value || 0)
+      PLAZO_PAGO_DIAS: Number(document.getElementById("PLAZO_PAGO_DIAS").value || 30),
+      LIMITE_CREDITO: Number(document.getElementById("LIMITE_CREDITO").value || 50000000),
+      ESTADO_CLIENTE: document.getElementById("ESTADO_CLIENTE").value
     };
-  }
 
-  function guardarTercero() {
-    var datos = obtenerDatosFormulario();
-    if (!datos.NUMERO_DOCUMENTO) {
-      mostrarAlerta("El número de documento / NIT es obligatorio.", "error");
-      return;
-    }
-    if (datos.TIPO_PERSONA === "PERSONA_JURIDICA" && !datos.RAZON_SOCIAL) {
-      mostrarAlerta("La Razón Social es obligatoria para Personas Jurídicas.", "error");
-      return;
-    }
-    if (datos.TIPO_PERSONA === "PERSONA_NATURAL" && (!datos.PRIMER_NOMBRE || !datos.PRIMER_APELLIDO)) {
-      mostrarAlerta("Primer Nombre y Primer Apellido son obligatorios.", "error");
+    if (!datos.NUMERO_DOCUMENTO || (!datos.RAZON_SOCIAL && datos.TIPO_PERSONA === "PERSONA_JURIDICA")) {
+      mostrarAlerta("Por favor complete el número de documento y la razón social.", "error");
       return;
     }
 
-    mostrarAlerta("Guardando cliente en Google Sheets...", "info");
+    datos = traductorAlias(datos);
+    mostrarAlerta("Guardando información en Google Sheets...", "info");
+    var fnServer = idCli ? "CLI_ACTUALIZAR_CLIENTE" : "CLI_GUARDAR_CLIENTE";
 
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
-          mostrarAlerta(res.MENSAJE || "¡Cliente guardado exitosamente!", "success");
-          if (res.ID_CLIENTE) document.getElementById("ID_CLIENTE").value = res.ID_CLIENTE;
-          cargarListaClientes();
-        } else {
-          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        mostrarAlerta("Fallo de red: " + err.message, "error");
-      })
-      .CLI_GUARDAR_CLIENTE(datos, TOKEN_SESION_PROY);
-  }
-
-  function actualizarTercero() {
-    var datos = obtenerDatosFormulario();
-    if (!datos.ID_CLIENTE) {
-      mostrarAlerta("Debe cargar o buscar un cliente primero.", "error");
-      return;
-    }
-    mostrarAlerta("Actualizando registro...", "info");
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          mostrarAlerta(res.MENSAJE || "¡Cliente actualizado con éxito!", "success");
-          cargarListaClientes();
-        } else {
-          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        mostrarAlerta("Fallo de red: " + err.message, "error");
-      })
-      .CLI_ACTUALIZAR_CLIENTE(datos, TOKEN_SESION_PROY);
-  }
-
-  function buscarTercero() {
-    var q = document.getElementById("buscarTercero").value.trim();
-    if (!q) {
-      mostrarAlerta("Ingrese un NIT, ID o Razón Social para buscar.", "error");
-      return;
-    }
-    mostrarAlerta("Buscando en la base de datos...", "info");
-
-    google.script.run
-      .withSuccessHandler(function(cliente) {
-        if (cliente) {
-          cargarClienteFormulario(cliente);
-          mostrarAlerta("Cliente " + cliente.ID_CLIENTE + " cargado exitosamente.", "success");
-        } else {
-          mostrarAlerta("No se encontró ningún cliente con ese criterio.", "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        mostrarAlerta("Error de búsqueda: " + err.message, "error");
-      })
-      .CLI_BUSCAR_CLIENTE(q, TOKEN_SESION_PROY);
-  }
-
-  function inactivarTercero() {
-    var idCli = document.getElementById("ID_CLIENTE").value;
-    if (!idCli) {
-      mostrarAlerta("Debe seleccionar o buscar un cliente primero.", "error");
-      return;
-    }
-    if (!confirm("¿Está seguro de inactivar el cliente " + idCli + "?")) return;
-
-    mostrarAlerta("Inactivando cliente...", "info");
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          mostrarAlerta(res.MENSAJE, "success");
+          mostrarAlerta(res.MENSAJE || "¡Registro guardado exitosamente!", "success");
           limpiarFormulario();
-          cargarListaClientes();
+          usrCambiarPestana("directorio");
         } else {
-          mostrarAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
+          mostrarAlerta("Error al guardar: " + (res ? res.MENSAJE : "Sin respuesta del servidor"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        mostrarAlerta("Error de red: " + err.message, "error");
-      })
-      .CLI_ELIMINAR_CLIENTE(idCli, TOKEN_SESION_PROY);
-  }
-
-  function cargarClienteFormulario(c) {
-    limpiarFormulario();
-    document.getElementById("ID_CLIENTE").value = c.ID_CLIENTE || "";
-    document.getElementById("TIPO_PERSONA").value = c.TIPO_PERSONA || "PERSONA_JURIDICA";
-    document.getElementById("TIPO_DOCUMENTO").value = c.TIPO_DOCUMENTO || "NIT";
-    document.getElementById("NUMERO_DOCUMENTO").value = c.NUMERO_DOCUMENTO || c.NIT_CC || "";
-    document.getElementById("DIGITO_VERIFICACION").value = c.DIGITO_VERIFICACION || c.DV || "";
-    document.getElementById("RAZON_SOCIAL").value = c.RAZON_SOCIAL || "";
-    document.getElementById("PRIMER_NOMBRE").value = c.PRIMER_NOMBRE || "";
-    document.getElementById("SEGUNDO_NOMBRE").value = c.SEGUNDO_NOMBRE || "";
-    document.getElementById("PRIMER_APELLIDO").value = c.PRIMER_APELLIDO || "";
-    document.getElementById("SEGUNDO_APELLIDO").value = c.SEGUNDO_APELLIDO || "";
-    document.getElementById("NOMBRE_COMERCIAL").value = c.NOMBRE_COMERCIAL || "";
-    document.getElementById("DIRECCION").value = c.DIRECCION || "";
-    document.getElementById("CIUDAD").value = c.CIUDAD || "Pitalito";
-    document.getElementById("DEPARTAMENTO").value = c.DEPARTAMENTO || "Huila";
-    document.getElementById("TELEFONO").value = c.TELEFONO || "";
-    document.getElementById("CELULAR").value = c.CELULAR || "";
-    document.getElementById("CORREO").value = c.CORREO || "";
-    document.getElementById("FORMA_PAGO").value = c.FORMA_PAGO || "CONTADO";
-    document.getElementById("PLAZO_PAGO_DIAS").value = c.PLAZO_PAGO_DIAS || "30";
-    document.getElementById("LIMITE_CREDITO").value = c.LIMITE_CREDITO || "50000000";
-    document.getElementById("ESTADO_CLIENTE").value = c.ESTADO_CLIENTE || "ACTIVO";
-
-    alternarTipoPersona(c.TIPO_PERSONA || "PERSONA_JURIDICA");
+        mostrarAlerta("Fallo de red: " + err.message, "error");
+      })[fnServer](datos, TOKEN_SESION_PROY);
   }
 
   function cargarListaClientes() {
-    var tbody = document.getElementById("tabla_clientes_body");
+    var tbody = document.getElementById("terceros_tabla_body");
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Consultando base de datos de clientes...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando base de datos de terceros...</td></tr>';
 
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
-          tbody.innerHTML = "";
           CLIENTES_CACHE_LISTA = res.DATOS;
-          if (res.DATOS.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">No hay clientes registrados.</td></tr>';
-            return;
-          }
-          res.DATOS.forEach(function(c) {
-            var tr = document.createElement("tr");
-            var badgeEst = c.ESTADO_CLIENTE === 'ACTIVO' ? 'badge-active' : 'badge-inactive';
-            tr.innerHTML = '<td><code>' + c.ID_CLIENTE + '</code></td>' +
-                           '<td>' + (c.NUMERO_DOCUMENTO || c.NIT_CC || 'N/A') + (c.DIGITO_VERIFICACION ? '-' + c.DIGITO_VERIFICACION : '') + '</td>' +
-                           '<td><strong>' + (c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || 'Sin nombre') + '</strong></td>' +
-                           '<td>' + (c.CIUDAD || 'Pitalito') + '</td>' +
-                           '<td>' + (c.CELULAR || c.TELEFONO || 'N/A') + '</td>' +
-                           '<td>' + (c.CORREO || 'N/A') + '</td>' +
-                           '<td>' + (c.FORMA_PAGO || 'CONTADO') + '</td>' +
-                           '<td><span class="badge ' + badgeEst + '">' + (c.ESTADO_CLIENTE || 'ACTIVO') + '</span></td>' +
-                           '<td style="text-align:center;">' +
-                             '<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="cargarClienteFormularioById('' + c.ID_CLIENTE + '')">✏️ Cargar</button>' +
-                           '</td>';
-            tbody.appendChild(tr);
-          });
+          actualizarKPIs(res.DATOS);
+          renderizarTablaTerceros(res.DATOS);
         } else {
           tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Error: ' + (res ? res.MENSAJE : "Sin respuesta") + '</td></tr>';
         }
@@ -571,14 +576,120 @@
       .CLI_LISTAR_CLIENTES_WEB(TOKEN_SESION_PROY);
   }
 
-  function cargarClienteFormularioById(idCli) {
-    var encontrado = CLIENTES_CACHE_LISTA.find(function(c) { return String(c.ID_CLIENTE).trim() === String(idCli).trim(); });
-    if (encontrado) {
-      cargarClienteFormulario(encontrado);
-      mostrarAlerta("Cliente " + idCli + " cargado en el formulario.", "success");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  function actualizarKPIs(lista) {
+    var totalCli = lista.length;
+    var cupoTotal = 0;
+    lista.forEach(function(c) { cupoTotal += Number(c.LIMITE_CREDITO || c.CUPO_CREDITO || 0); });
+    document.getElementById("kpi_total_clientes").textContent = totalCli;
+    document.getElementById("kpi_cupo_credito").textContent = "$" + Math.round(cupoTotal).toLocaleString('es-CO');
+  }
+
+  function renderizarTablaTerceros(lista) {
+    var tbody = document.getElementById("terceros_tabla_body");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">No hay terceros registrados.</td></tr>';
+      return;
     }
+    lista.forEach(function(c) {
+      c = traductorAlias(c);
+      var tr = document.createElement("tr");
+      var badgeEst = (c.ESTADO_CLIENTE === 'ACTIVO' || c.ESTADO === 'ACTIVO') ? 'badge-active' : 'badge-inactive';
+      var idCod = encodeURIComponent(String(c.ID_CLIENTE || c.ID_PROVEEDOR).trim());
+      
+      tr.innerHTML = '<td><code>' + (c.ID_CLIENTE || c.ID_PROVEEDOR) + '</code></td>' +
+                     '<td>' + (c.NUMERO_DOCUMENTO || c.NIT_CC || 'N/A') + (c.DIGITO_VERIFICACION ? '-' + c.DIGITO_VERIFICACION : '') + '</td>' +
+                     '<td><strong>' + (c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || 'Sin nombre') + '</strong></td>' +
+                     '<td>' + (c.CIUDAD || 'Pitalito') + '</td>' +
+                     '<td>' + (c.CELULAR || c.TELEFONO || 'N/A') + '</td>' +
+                     '<td>' + (c.CORREO || c.EMAIL || 'N/A') + '</td>' +
+                     '<td>' + (c.FORMA_PAGO || c.CONDICION_PAGO || 'CONTADO') + '</td>' +
+                     '<td><span class="badge ' + badgeEst + '">' + (c.ESTADO_CLIENTE || c.ESTADO || 'ACTIVO') + '</span></td>' +
+                     '<td style="text-align:center;">' +
+                     '<button class="button button-secondary" style="padding:4px 10px; font-size:11px;" onclick="cargarClientePorId(\x27' + idCod + '\x27)">✏️ Editar</button>' +
+                     '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function cargarClientePorId(idCod) {
+    var idCli = decodeURIComponent(idCod);
+    var enc = CLIENTES_CACHE_LISTA.find(function(c) { return String(c.ID_CLIENTE || c.ID_PROVEEDOR).trim() === String(idCli).trim(); });
+    if (enc) {
+      enc = traductorAlias(enc);
+      document.getElementById("ID_CLIENTE").value = enc.ID_CLIENTE || "";
+      document.getElementById("TIPO_PERSONA").value = enc.TIPO_PERSONA || "PERSONA_JURIDICA";
+      alternarTipoPersona(enc.TIPO_PERSONA || "PERSONA_JURIDICA");
+      document.getElementById("TIPO_DOCUMENTO").value = enc.TIPO_DOCUMENTO || "NIT";
+      document.getElementById("NUMERO_DOCUMENTO").value = enc.NUMERO_DOCUMENTO || enc.NIT_CC || "";
+      document.getElementById("DIGITO_VERIFICACION").value = enc.DIGITO_VERIFICACION || enc.DV || "";
+      document.getElementById("RAZON_SOCIAL").value = enc.RAZON_SOCIAL || "";
+      document.getElementById("PRIMER_NOMBRE").value = enc.PRIMER_NOMBRE || "";
+      document.getElementById("SEGUNDO_NOMBRE").value = enc.SEGUNDO_NOMBRE || "";
+      document.getElementById("PRIMER_APELLIDO").value = enc.PRIMER_APELLIDO || "";
+      document.getElementById("SEGUNDO_APELLIDO").value = enc.SEGUNDO_APELLIDO || "";
+      document.getElementById("NOMBRE_COMERCIAL").value = enc.NOMBRE_COMERCIAL || "";
+      document.getElementById("DIRECCION").value = enc.DIRECCION || "";
+      document.getElementById("CIUDAD").value = enc.CIUDAD || "Pitalito";
+      document.getElementById("DEPARTAMENTO").value = enc.DEPARTAMENTO || "Huila";
+      document.getElementById("CELULAR").value = enc.CELULAR || enc.TELEFONO || "";
+      document.getElementById("CORREO").value = enc.CORREO || enc.EMAIL || "";
+      document.getElementById("FORMA_PAGO").value = enc.FORMA_PAGO || enc.CONDICION_PAGO || "CONTADO";
+      document.getElementById("PLAZO_PAGO_DIAS").value = enc.PLAZO_PAGO_DIAS || 30;
+      document.getElementById("LIMITE_CREDITO").value = enc.LIMITE_CREDITO || enc.CUPO_CREDITO || 50000000;
+      document.getElementById("ESTADO_CLIENTE").value = enc.ESTADO_CLIENTE || enc.ESTADO || "ACTIVO";
+      document.getElementById("form_title_heading").textContent = "✏️ Editando Ficha Comercial de: " + (enc.RAZON_SOCIAL || idCli);
+      usrCambiarPestana("formulario");
+    }
+  }
+
+  function cargarCarteraClientes() {
+    var tbody = document.getElementById("cartera_clientes_body");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Consultando obligaciones en Sheets...</td></tr>';
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          tbody.innerHTML = "";
+          var totalCart = 0;
+          if (res.DATOS.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">No hay obligaciones pendientes de cartera.</td></tr>';
+            document.getElementById("kpi_cartera_total").textContent = "-bash COP";
+            return;
+          }
+          res.DATOS.forEach(function(c) {
+            totalCart += Number(c.SALDO || 0);
+            var tr = document.createElement("tr");
+            var badgeClass = c.ESTADO === 'PAGADO' ? 'badge-active' : 'badge-pending';
+            tr.innerHTML = '<td><code>' + c.ID_CARTERA + '</code></td>' +
+                           '<td><strong>' + (c.ID_CLIENTE || 'Cliente') + '</strong></td>' +
+                           '<td>' + c.ID_VENTA + '</td>' +
+                           '<td>' + (c.FECHA_VENCIMIENTO ? String(c.FECHA_VENCIMIENTO).substring(0,10) : 'N/A') + '</td>' +
+                           '<td>$' + Number(c.VALOR_DOCUMENTO || 0).toLocaleString('es-CO') + '</td>' +
+                           '<td>$' + Number(c.ABONOS || 0).toLocaleString('es-CO') + '</td>' +
+                           '<td><strong style="color:#dc2626;">$' + Number(c.SALDO || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
+                           '<td><span class="badge ' + badgeClass + '">' + c.ESTADO + '</span></td>' +
+                           '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="usrCambiarPestana('cartera')">👁️ Ver</button></td>';
+            tbody.appendChild(tr);
+          });
+          document.getElementById("kpi_cartera_total").textContent = "$" + Math.round(totalCart).toLocaleString('es-CO');
+        }
+      })
+      .CAR_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
+  }
+
+  function filtrarDirectorioLocal() {
+    var q = document.getElementById("buscarTerceroInput").value.trim().toUpperCase();
+    if (!q) { renderizarTablaTerceros(CLIENTES_CACHE_LISTA); return; }
+    var filtrados = CLIENTES_CACHE_LISTA.filter(function(c) {
+      return (c.RAZON_SOCIAL || "").toUpperCase().indexOf(q) !== -1 ||
+             (c.NUMERO_DOCUMENTO || c.NIT_CC || "").toUpperCase().indexOf(q) !== -1 ||
+             (c.ID_CLIENTE || c.ID_PROVEEDOR || "").toUpperCase().indexOf(q) !== -1;
+    });
+    renderizarTablaTerceros(filtrados);
   }
 </script>
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,95 +10,96 @@
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background-color: #f8fafc; color: #0f172a;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+      background-color: #f8fafc; color: #1e293b;
     }
-    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
-    
+    .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1350px; margin: 0 auto; }
+
     .header {
-      background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-      color: white; padding: 22px 25px; border-radius: 12px; margin-bottom: 22px;
-      display: flex; align-items: center; gap: 16px;
-      box-shadow: 0 10px 15px -3px rgba(6, 95, 70, 0.2);
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3);
     }
-    .header-icon { font-size: 32px; }
-    .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
-    
-    .tabs-container { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+    .header-info { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+      font-size: 32px; width: 60px; height: 60px;
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
+
+    .tabs-container { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
     .tab-btn {
-      padding: 12px 20px; border: none; background: none; font-size: 13px; font-weight: 700;
-      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+      padding: 12px 24px; border: none; background: none; font-size: 13px; font-weight: 700;
+      color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
     }
     .tab-btn:hover { color: #059669; }
     .tab-btn.active { color: #059669; border-bottom-color: #059669; }
-    
+
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
-    
-    .card {
-      background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
-    }
-    .card-title { margin: 0 0 15px; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
-    
+
+    .message { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .card { background-color: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    .card-title { margin: 0 0 16px; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    
-    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; }
-    .input {
-      width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;
-      font-size: 13px; outline: none; transition: all 0.2s;
-    }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
     .input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15); }
-    
-    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
-    th { background: #f8fafc; padding: 10px 14px; font-weight: 800; color: #475569; border-bottom: 1.5px solid #e2e8f0; text-transform: uppercase; font-size: 10px; }
-    td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .button-primary { background-color: #059669; color: white; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); }
+    .button-primary:hover { background-color: #047857; }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
     tr:hover td { background-color: #f8fafc; }
-    
-    .badge { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-    .badge-success { background: #dcfce7; color: #166534; }
-    .badge-warning { background: #fef3c7; color: #92400e; }
-    
-    .button {
-      padding: 9px 16px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700;
-      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
-    }
-    .button-primary { background: #059669; color: white; }
-    .button-primary:hover { background: #047857; }
-    .button-secondary { background: white; border: 1.5px solid #cbd5e1; color: #334155; }
-    .button-secondary:hover { background: #f8fafc; }
-    
-    .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; font-weight: 700; display: none; }
-    .message-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .message-success { background: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
-    .message-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-    
-    .summary-box {
-      background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 15px;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .summary-item { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #166534; }
-    .summary-item.total { font-size: 16px; font-weight: 900; color: #047857; border-top: 1.5px dashed #86efac; padding-top: 8px; margin-top: 4px; }
+
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+    .badge-success { background-color: #dcfce7; color: #15803d; }
+    .badge-warning { background-color: #fef3c7; color: #d97706; }
+
+    .summary-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .summary-item { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #475569; }
+    .summary-item.total { font-size: 15px; font-weight: 800; color: #0f172a; border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 4px; }
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
+    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
+    .close-btn:hover { color: #0f172a; }
   </style>
 </head>
 <body>
 <div class="app">
   <header class="header">
-    <div class="header-icon">👥</div>
-    <div>
-      <h1>Nómina Específica & Control Laboral Colombiano</h1>
-      <p>ERP Operativo · Liquidación CST, Recargos, Horas Extras, Auxilio de Transporte, Provisiones & Historial</p>
+    <div class="header-info">
+      <div class="header-icon">👥</div>
+      <div>
+        <h1>Nómina Específica & Control Laboral Colombiano</h1>
+        <p>ERP Operativo · Liquidación CST, Recargos, Horas Extras, Auxilio de Transporte, Provisiones & Historial</p>
+      </div>
     </div>
   </header>
 
   <div id="NOM_ALERT" class="message"></div>
 
-  <!-- Navegación de Pestañas -->
   <div class="tabs-container">
     <button class="tab-btn active" id="btn-tab-empleados" onclick="cambiarNomPestana('empleados')">👥 Empleados & Contratos</button>
     <button class="tab-btn" id="btn-tab-liquidar" onclick="cambiarNomPestana('liquidar')">🧮 Calculadora & Liquidación</button>
@@ -124,10 +125,11 @@
               <th>Contrato / ARL</th>
               <th>Aux. Trans.</th>
               <th>Estado</th>
+              <th style="text-align:center;">Acción</th>
             </tr>
           </thead>
           <tbody id="tabla_empleados_body">
-            <tr><td colspan="8" style="text-align:center; padding:20px; color:#64748b;">Cargando personal de nómina...</td></tr>
+            <tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Cargando personal de nómina...</td></tr>
           </tbody>
         </table>
       </div>
@@ -137,23 +139,20 @@
   <!-- PESTAÑA 2: LIQUIDACIÓN ESPECÍFICA -->
   <div id="panel-liquidar" class="tab-panel">
     <div class="grid-2">
-      <!-- Columna Izquierda: Formulario de Novedades -->
       <div class="card">
         <h3 class="card-title">🧮 Captura de Novedades de la Quincena/Mes</h3>
-        
         <div class="field">
           <label>Seleccionar Empleado *</label>
-          <select id="nom_id_empleado" class="input" onchange="actualizarCálculosEnVivo()"></select>
+          <select id="nom_id_empleado" class="input" onchange="actualizarCalculosEnVivo()"></select>
         </div>
-        
         <div class="grid-2">
           <div class="field">
             <label>Período *</label>
-            <input type="month" id="nom_periodo" class="input" value="2026-09" onchange="actualizarCálculosEnVivo()">
+            <input type="month" id="nom_periodo" class="input" value="2026-09" onchange="actualizarCalculosEnVivo()">
           </div>
           <div class="field">
             <label>Días Trabajados *</label>
-            <input type="number" id="nom_dias_trabajados" class="input" min="1" max="30" value="30" oninput="actualizarCálculosEnVivo()">
+            <input type="number" id="nom_dias_trabajados" class="input" min="1" max="30" value="30" oninput="actualizarCalculosEnVivo()">
           </div>
         </div>
 
@@ -162,27 +161,29 @@
           <div class="grid-3">
             <div class="field">
               <label>H. Extra Diurna (25%)</label>
-              <input type="number" id="nom_hed" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <input type="number" id="nom_hed" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
             <div class="field">
-              <label>H. Extra Noct. (75%)</label>
-              <input type="number" id="nom_hen" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <label>H. Extra Nocturna (75%)</label>
+              <input type="number" id="nom_hen" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
             <div class="field">
-              <label>Rec. Nocturno (35%)</label>
-              <input type="number" id="nom_rn" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <label>Recargo Nocturno (35%)</label>
+              <input type="number" id="nom_rn" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="field">
+              <label>Recargo Dominical (75%)</label>
+              <input type="number" id="nom_rd" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
             <div class="field">
-              <label>Rec. Dom/Fest (75%)</label>
-              <input type="number" id="nom_rd" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <label>H. Extra Dom. Diurna (100%)</label>
+              <input type="number" id="nom_hedd" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
             <div class="field">
-              <label>Extra Dom Diurna (100%)</label>
-              <input type="number" id="nom_hedd" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
-            </div>
-            <div class="field">
-              <label>Extra Dom Noct (150%)</label>
-              <input type="number" id="nom_hend" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <label>H. Extra Dom. Noct. (150%)</label>
+              <input type="number" id="nom_hend" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
           </div>
         </div>
@@ -192,58 +193,56 @@
           <div class="grid-2">
             <div class="field">
               <label>Comisiones (Salarial)</label>
-              <input type="number" id="nom_comisiones" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <input type="number" id="nom_comisiones" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
             <div class="field">
               <label>Bonos Art. 128 (No Salarial)</label>
-              <input type="number" id="nom_bonos_no_salariales" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+              <input type="number" id="nom_bonos_no_salariales" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
             </div>
           </div>
         </div>
 
         <div class="field">
           <label>Otras Deducciones (Préstamos / Embargos)</label>
-          <input type="number" id="nom_otras_deducciones" class="input" min="0" value="0" oninput="actualizarCálculosEnVivo()">
+          <input type="number" id="nom_otras_deducciones" class="input" min="0" value="0" oninput="actualizarCalculosEnVivo()">
         </div>
 
         <button class="button button-primary" style="width:100%; justify-content:center;" onclick="guardarLiquidacionCompleta()">💾 Liquidar & Procesar Pago de Nómina</button>
       </div>
 
-      <!-- Columna Derecha: Desglose Matemático Automatizado -->
       <div class="card">
         <h3 class="card-title">📊 Pre-Liquidación & Provisiones de Ley</h3>
-        
         <div class="summary-box" style="margin-bottom:15px;">
-          <div class="summary-item"><span>Sueldo Base Devengado:</span><span id="disp_sueldo_dev">$0 COP</span></div>
-          <div class="summary-item"><span>Total Recargos y Horas Extras:</span><span id="disp_total_recargos">$0 COP</span></div>
-          <div class="summary-item"><span>Comisiones Salariales:</span><span id="disp_comisiones">$0 COP</span></div>
-          <div class="summary-item"><span>Auxilio de Transporte (< 2 SMMLV):</span><span id="disp_aux_trans">$0 COP</span></div>
-          <div class="summary-item"><span>Bonos No Salariales (Art. 128):</span><span id="disp_bonos">$0 COP</span></div>
-          <div class="summary-item total"><span>TOTAL DEVENGADO:</span><span id="disp_total_devengado">$0 COP</span></div>
+          <div class="summary-item"><span>Sueldo Base Devengado:</span><span id="disp_sueldo_dev">-bash COP</span></div>
+          <div class="summary-item"><span>Total Recargos y Horas Extras:</span><span id="disp_total_recargos">-bash COP</span></div>
+          <div class="summary-item"><span>Comisiones Salariales:</span><span id="disp_comisiones">-bash COP</span></div>
+          <div class="summary-item"><span>Auxilio de Transporte (< 2 SMMLV):</span><span id="disp_aux_trans">-bash COP</span></div>
+          <div class="summary-item"><span>Bonos No Salariales (Art. 128):</span><span id="disp_bonos">-bash COP</span></div>
+          <div class="summary-item total"><span>TOTAL DEVENGADO:</span><span id="disp_total_devengado">-bash COP</span></div>
         </div>
 
         <div class="summary-box" style="background:#fef2f2; border-color:#fecaca; margin-bottom:15px;">
-          <div class="summary-item" style="color:#991b1b;"><span>Deducción Salud (4% IBC):</span><span id="disp_ded_salud">-$0 COP</span></div>
-          <div class="summary-item" style="color:#991b1b;"><span>Deducción Pensión (4% IBC):</span><span id="disp_ded_pension">-$0 COP</span></div>
-          <div class="summary-item" style="color:#991b1b;"><span>Fondo Solidaridad (1% si >4 SMMLV):</span><span id="disp_ded_fsp">-$0 COP</span></div>
-          <div class="summary-item" style="color:#991b1b;"><span>Otras Deducciones:</span><span id="disp_ded_otras">-$0 COP</span></div>
-          <div class="summary-item total" style="color:#b91c1c; border-color:#fca5a5;"><span>TOTAL DEDUCCIONES:</span><span id="disp_total_deducciones">-$0 COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Deducción Salud (4% IBC):</span><span id="disp_ded_salud">--bash COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Deducción Pensión (4% IBC):</span><span id="disp_ded_pension">--bash COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Fondo Solidaridad Pensional (FSP):</span><span id="disp_ded_fsp">--bash COP</span></div>
+          <div class="summary-item" style="color:#991b1b;"><span>Otras Deducciones:</span><span id="disp_ded_otras">--bash COP</span></div>
+          <div class="summary-item total" style="color:#991b1b; border-color:#fca5a5;"><span>TOTAL DEDUCCIONES:</span><span id="disp_total_deducciones">--bash COP</span></div>
         </div>
 
         <div style="background:#f0fdf4; border:2px solid #16a34a; border-radius:10px; padding:15px; text-align:center; margin-bottom:15px;">
           <span style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;">NETO REAL A PAGAR AL TRABAJADOR</span>
-          <h2 style="margin:5px 0 0; color:#15803d; font-size:24px; font-weight:900;" id="disp_neto_pagar">$0 COP</h2>
+          <h2 style="margin:5px 0 0; color:#15803d; font-size:24px; font-weight:900;" id="disp_neto_pagar">-bash COP</h2>
         </div>
 
         <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:12px;">
           <strong style="font-size:11px; text-transform:uppercase; color:#6b21a8; display:block; margin-bottom:8px;">🏦 Carga Prestacional & Aportes Empresa</strong>
           <div style="font-size:11px; display:grid; grid-template-columns: 1fr 1fr; gap:6px; color:#581c87;">
-            <div>Cesantías (8.33%): <strong id="disp_cesantias">$0</strong></div>
-            <div>Int. Cesantías (1%): <strong id="disp_int_cesantias">$0</strong></div>
-            <div>Prima Serv. (8.33%): <strong id="disp_prima">$0</strong></div>
-            <div>Vacaciones (4.17%): <strong id="disp_vacaciones">$0</strong></div>
-            <div>ARL Aporte: <strong id="disp_arl">$0</strong></div>
-            <div>Caja Comp. (4%): <strong id="disp_caja">$0</strong></div>
+            <div>Cesantías (8.33%): <strong id="disp_cesantias">-bash</strong></div>
+            <div>Int. Cesantías (1%): <strong id="disp_int_cesantias">-bash</strong></div>
+            <div>Prima Serv. (8.33%): <strong id="disp_prima">-bash</strong></div>
+            <div>Vacaciones (4.17%): <strong id="disp_vacaciones">-bash</strong></div>
+            <div>ARL Aporte: <strong id="disp_arl">-bash</strong></div>
+            <div>Caja Comp. (4%): <strong id="disp_caja">-bash</strong></div>
           </div>
         </div>
       </div>
@@ -261,6 +260,7 @@
           <button class="button button-secondary" onclick="cargarHistorialNomina()">↻ Actualizar</button>
         </div>
       </div>
+
       <div class="table-container">
         <table>
           <thead>
@@ -286,8 +286,108 @@
   </div>
 </div>
 
+<!-- MODAL REGISTRO / EDICIÓN DE EMPLEADO -->
+<div id="modal_empleado" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="emp_modal_title">👥 Registrar Empleado en Planta</h3>
+      <span class="close-btn" onclick="cerrarModalEmpleado()">&times;</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <input type="hidden" id="emp_id_empleado">
+      
+      <div class="grid-2">
+        <div class="field">
+          <label>N° Documento / CC *</label>
+          <input type="text" id="emp_documento" class="input" placeholder="Ej: 1083922357">
+        </div>
+        <div class="field">
+          <label>Tipo Documento *</label>
+          <select id="emp_tipo_documento" class="input">
+            <option value="CC" selected>Cédula de Ciudadanía (CC)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+            <option value="NIT">NIT / RUT</option>
+            <option value="PASAPORTE">Pasaporte</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nombres y Apellidos Completos *</label>
+        <input type="text" id="emp_nombres_apellidos" class="input" placeholder="Ej: Pedro Pérez Gómez">
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Cargo *</label>
+          <input type="text" id="emp_cargo" class="input" placeholder="Ej: Operario de Fábrica">
+        </div>
+        <div class="field">
+          <label>Salario Base Mensual (COP) *</label>
+          <input type="number" id="emp_salario_base" class="input" min="0" value="1423500">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Tipo de Contrato *</label>
+          <select id="emp_tipo_contrato" class="input">
+            <option value="INDEFINIDO" selected>Término Indefinido</option>
+            <option value="FIJO">Término Fijo</option>
+            <option value="OBRA_LABOR">Obra o Labor</option>
+            <option value="APRENDIZAJE">Aprendizaje SENA</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nivel Riesgo ARL *</label>
+          <select id="emp_nivel_arl" class="input">
+            <option value="RIESGO_1" selected>Nivel I (0.522%) - Adm/Oficina</option>
+            <option value="RIESGO_2">Nivel II (1.044%) - Comercio</option>
+            <option value="RIESGO_3">Nivel III (2.436%) - Operativo</option>
+            <option value="RIESGO_4">Nivel IV (4.350%) - Transporte</option>
+            <option value="RIESGO_5">Nivel V (6.960%) - Construcción</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Aplica Auxilio de Transporte *</label>
+          <select id="emp_tiene_aux_transporte" class="input">
+            <option value="SI" selected>SÍ (Menor o igual a 2 SMMLV)</option>
+            <option value="NO">NO (Supera 2 SMMLV / Vive en sitio)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Estado Empleado *</label>
+          <select id="emp_estado" class="input">
+            <option value="ACTIVO" selected>ACTIVO</option>
+            <option value="INACTIVO">INACTIVO</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Banco Dispersión</label>
+          <input type="text" id="emp_banco" class="input" placeholder="Ej: Bancolombia / Nequi">
+        </div>
+        <div class="field">
+          <label>N° Cuenta Bancaria</label>
+          <input type="text" id="emp_cuenta_bancaria" class="input" placeholder="Ej: 35463960">
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button class="button button-secondary" onclick="cerrarModalEmpleado()">Cancelar</button>
+        <button class="button button-primary" id="btn_guardar_emp" onclick="guardarEmpleado()">💾 Guardar Empleado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  var TOKEN_SESION_LOCAL = "<?= TOKEN_SESION ?>";
+  var TOKEN_SESION_LOCAL = window.TOKEN_SESION_LOCAL || window.TOKEN_SESION || "<?= TOKEN_SESION ?>";
   var EMPLEADOS_CACHE = {};
   var SMMLV_2026 = 1423500;
   var AUX_TRANSPORTE_2026 = 162000;
@@ -304,7 +404,7 @@
     var elBtn = document.getElementById("btn-tab-" + target);
     if (elTab) elTab.classList.add("active");
     if (elBtn) elBtn.classList.add("active");
-    
+
     if (target === "historial") cargarHistorialNomina();
   }
 
@@ -317,27 +417,88 @@
     setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
+  function abrirModalEmpleado(emp) {
+    document.getElementById("emp_id_empleado").value = emp ? emp.ID_EMPLEADO : "";
+    document.getElementById("emp_documento").value = emp ? emp.DOCUMENTO : "";
+    document.getElementById("emp_tipo_documento").value = emp ? (emp.TIPO_DOCUMENTO || "CC") : "CC";
+    document.getElementById("emp_nombres_apellidos").value = emp ? emp.NOMBRES_APELLIDOS : "";
+    document.getElementById("emp_cargo").value = emp ? (emp.CARGO || "") : "";
+    document.getElementById("emp_salario_base").value = emp ? Number(emp.SALARIO_BASE || 1423500) : 1423500;
+    document.getElementById("emp_tipo_contrato").value = emp ? (emp.TIPO_CONTRATO || "INDEFINIDO") : "INDEFINIDO";
+    document.getElementById("emp_nivel_arl").value = emp ? (emp.NIVEL_ARL || "RIESGO_1") : "RIESGO_1";
+    document.getElementById("emp_tiene_aux_transporte").value = emp ? (emp.TIENE_AUX_TRANSPORTE || "SI") : "SI";
+    document.getElementById("emp_banco").value = emp ? (emp.BANCO || "") : "";
+    document.getElementById("emp_cuenta_bancaria").value = emp ? (emp.CUENTA_BANCARIA || "") : "";
+    document.getElementById("emp_estado").value = emp ? (emp.ESTADO || "ACTIVO") : "ACTIVO";
+    
+    document.getElementById("emp_modal_title").textContent = emp ? "✏️ Editar Empleado" : "👥 Registrar Empleado en Planta";
+    document.getElementById("modal_empleado").style.display = "flex";
+  }
+
+  function cerrarModalEmpleado() {
+    document.getElementById("modal_empleado").style.display = "none";
+  }
+
+  function guardarEmpleado() {
+    var datos = {
+      ID_EMPLEADO: document.getElementById("emp_id_empleado").value,
+      DOCUMENTO: document.getElementById("emp_documento").value.trim(),
+      TIPO_DOCUMENTO: document.getElementById("emp_tipo_documento").value,
+      NOMBRES_APELLIDOS: document.getElementById("emp_nombres_apellidos").value.trim(),
+      CARGO: document.getElementById("emp_cargo").value.trim(),
+      SALARIO_BASE: Number(document.getElementById("emp_salario_base").value || 1423500),
+      TIPO_CONTRATO: document.getElementById("emp_tipo_contrato").value,
+      NIVEL_ARL: document.getElementById("emp_nivel_arl").value,
+      TIENE_AUX_TRANSPORTE: document.getElementById("emp_tiene_aux_transporte").value,
+      BANCO: document.getElementById("emp_banco").value.trim(),
+      CUENTA_BANCARIA: document.getElementById("emp_cuenta_bancaria").value.trim(),
+      ESTADO: document.getElementById("emp_estado").value
+    };
+
+    if (!datos.DOCUMENTO || !datos.NOMBRES_APELLIDOS) {
+      alert("Por favor ingrese el número de documento y los nombres completos.");
+      return;
+    }
+
+    mostrarNomAlerta("Guardando información del empleado en Sheets...", "info");
+    cerrarModalEmpleado();
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarNomAlerta(res.MENSAJE, "success");
+          cargarEmpleadosNomina();
+        } else {
+          mostrarNomAlerta("Error al guardar: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarNomAlerta("Fallo de red: " + err.message, "error");
+      })
+      .NOM_GUARDAR_EMPLEADO_WEB(datos, TOKEN_SESION_LOCAL);
+  }
+
   function cargarEmpleadosNomina() {
     var tbody = document.getElementById("tabla_empleados_body");
     var selectLiq = document.getElementById("nom_id_empleado");
     if (!tbody) return;
-    
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
           tbody.innerHTML = "";
           if (selectLiq) selectLiq.innerHTML = "<option value=''>Seleccione un empleado...</option>";
           EMPLEADOS_CACHE = {};
-          
+
           if (res.DATOS.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding:20px; color:#64748b;'>No hay empleados registrados.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:20px; color:#64748b;'>No hay empleados registrados.</td></tr>";
             return;
           }
-          
+
           res.DATOS.forEach(function(e) {
             EMPLEADOS_CACHE[e.ID_EMPLEADO] = e;
+            var strEscaped = JSON.stringify(e).replace(/"/g, '&quot;');
             var tr = document.createElement("tr");
-            
             tr.innerHTML = "<td><code>" + e.ID_EMPLEADO + "</code></td>" +
                            "<td>" + e.DOCUMENTO + " (" + (e.TIPO_DOCUMENTO || 'CC') + ")</td>" +
                            "<td><strong>" + e.NOMBRES_APELLIDOS + "</strong></td>" +
@@ -345,7 +506,8 @@
                            "<td>$" + Number(e.SALARIO_BASE || 0).toLocaleString('es-CO') + "</td>" +
                            "<td>" + (e.TIPO_CONTRATO || 'INDEFINIDO') + " / " + (e.NIVEL_ARL || 'RIESGO 1') + "</td>" +
                            "<td><span class='badge " + (e.TIENE_AUX_TRANSPORTE === 'SI' ? 'badge-success' : 'badge-warning') + "'>" + (e.TIENE_AUX_TRANSPORTE || 'NO') + "</span></td>" +
-                           "<td><span class='badge badge-success'>" + (e.ESTADO || 'ACTIVO') + "</span></td>";
+                           "<td><span class='badge badge-success'>" + (e.ESTADO || 'ACTIVO') + "</span></td>" +
+                           "<td style='text-align:center;'><button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='abrirModalEmpleado(" + strEscaped + ")'>✏️ Editar</button></td>";
             tbody.appendChild(tr);
 
             if (selectLiq) {
@@ -357,79 +519,84 @@
           });
         }
       })
+      .withFailureHandler(function(err) {
+        mostrarNomAlerta("Error al cargar empleados: " + err.message, "error");
+      })
       .NOM_LISTAR_EMPLEADOS_WEB(TOKEN_SESION_LOCAL);
   }
 
-  function actualizarCálculosEnVivo() {
+  function actualizarCalculosEnVivo() {
     var idEmp = document.getElementById("nom_id_empleado").value;
     if (!idEmp || !EMPLEADOS_CACHE[idEmp]) return;
-    
+
     var emp = EMPLEADOS_CACHE[idEmp];
     var salarioBase = Number(emp.SALARIO_BASE || SMMLV_2026);
     var dias = Number(document.getElementById("nom_dias_trabajados").value || 30);
-    var vHora = salarioBase / 230; // Jornada laboral
-    
+    var vHora = salarioBase / 230;
+
     var sueldoDev = (salarioBase / 30) * dias;
-    
-    // Horas Extras
+
     var hed = Number(document.getElementById("nom_hed").value || 0) * (vHora * 1.25);
     var hen = Number(document.getElementById("nom_hen").value || 0) * (vHora * 1.75);
     var rn = Number(document.getElementById("nom_rn").value || 0) * (vHora * 0.35);
     var rd = Number(document.getElementById("nom_rd").value || 0) * (vHora * 0.75);
     var hedd = Number(document.getElementById("nom_hedd").value || 0) * (vHora * 2.00);
     var hend = Number(document.getElementById("nom_hend").value || 0) * (vHora * 2.50);
-    
+
     var totalRecargos = hed + hen + rn + rd + hedd + hend;
     var comisiones = Number(document.getElementById("nom_comisiones").value || 0);
     var bonos = Number(document.getElementById("nom_bonos_no_salariales").value || 0);
-    
-    var devSalarial = sueldoDev + totalRecargos + comisiones;
-    
-    // Auxilio de Transporte
+
+    var totalDevSalarial = sueldoDev + totalRecargos + comisiones;
+
     var auxTrans = 0;
-    if (salarioBase <= (SMMLV_2026 * 2)) {
+    if (salarioBase <= (SMMLV_2026 * 2) && emp.TIENE_AUX_TRANSPORTE !== "NO") {
       auxTrans = (AUX_TRANSPORTE_2026 / 30) * dias;
     }
-    
-    var totalDevengado = devSalarial + bonos + auxTrans;
-    
-    // Deducciones
-    var ibc = devSalarial;
+
+    var totalDevengado = totalDevSalarial + bonos + auxTrans;
+
+    var ibc = totalDevSalarial;
     var dedSalud = ibc * 0.04;
     var dedPension = ibc * 0.04;
     var dedFsp = (ibc >= (SMMLV_2026 * 4)) ? (ibc * 0.01) : 0;
     var dedOtras = Number(document.getElementById("nom_otras_deducciones").value || 0);
-    
+
     var totalDeducciones = dedSalud + dedPension + dedFsp + dedOtras;
     var neto = totalDevengado - totalDeducciones;
-    
-    // Provisiones
-    var basePrest = devSalarial + auxTrans;
+
+    var basePrest = totalDevSalarial + auxTrans;
     var cesantias = basePrest * 0.0833;
-    var intCes = cesantias * 0.12;
+    var intCesantias = cesantias * 0.12;
     var prima = basePrest * 0.0833;
     var vacaciones = sueldoDev * 0.0417;
-    var arl = ibc * 0.00522;
+
+    var arlTarifa = 0.00522;
+    if (emp.NIVEL_ARL === "RIESGO_2") arlTarifa = 0.01044;
+    else if (emp.NIVEL_ARL === "RIESGO_3") arlTarifa = 0.02436;
+    else if (emp.NIVEL_ARL === "RIESGO_4") arlTarifa = 0.04350;
+    else if (emp.NIVEL_ARL === "RIESGO_5") arlTarifa = 0.06960;
+
+    var arl = ibc * arlTarifa;
     var caja = ibc * 0.04;
-    
-    // Renderizado DOM
+
     document.getElementById("disp_sueldo_dev").textContent = "$" + Math.round(sueldoDev).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_total_recargos").textContent = "$" + Math.round(totalRecargos).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_comisiones").textContent = "$" + Math.round(comisiones).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_aux_trans").textContent = "$" + Math.round(auxTrans).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_bonos").textContent = "$" + Math.round(bonos).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_total_devengado").textContent = "$" + Math.round(totalDevengado).toLocaleString('es-CO') + " COP";
-    
+
     document.getElementById("disp_ded_salud").textContent = "-$" + Math.round(dedSalud).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_ded_pension").textContent = "-$" + Math.round(dedPension).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_ded_fsp").textContent = "-$" + Math.round(dedFsp).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_ded_otras").textContent = "-$" + Math.round(dedOtras).toLocaleString('es-CO') + " COP";
     document.getElementById("disp_total_deducciones").textContent = "-$" + Math.round(totalDeducciones).toLocaleString('es-CO') + " COP";
-    
+
     document.getElementById("disp_neto_pagar").textContent = "$" + Math.round(neto).toLocaleString('es-CO') + " COP";
-    
+
     document.getElementById("disp_cesantias").textContent = "$" + Math.round(cesantias).toLocaleString('es-CO');
-    document.getElementById("disp_int_cesantias").textContent = "$" + Math.round(intCes).toLocaleString('es-CO');
+    document.getElementById("disp_int_cesantias").textContent = "$" + Math.round(intCesantias).toLocaleString('es-CO');
     document.getElementById("disp_prima").textContent = "$" + Math.round(prima).toLocaleString('es-CO');
     document.getElementById("disp_vacaciones").textContent = "$" + Math.round(vacaciones).toLocaleString('es-CO');
     document.getElementById("disp_arl").textContent = "$" + Math.round(arl).toLocaleString('es-CO');
@@ -442,7 +609,7 @@
       alert("Por favor seleccione un empleado de la lista.");
       return;
     }
-    
+
     var emp = EMPLEADOS_CACHE[idEmp];
     var datos = {
       ID_EMPLEADO: idEmp,
@@ -462,17 +629,20 @@
       BONOS_NO_SALARIALES: Number(document.getElementById("nom_bonos_no_salariales").value || 0),
       OTRAS_DEDUCCIONES: Number(document.getElementById("nom_otras_deducciones").value || 0)
     };
-    
+
     mostrarNomAlerta("Procesando liquidación completa de nómina en Sheets...", "info");
-    
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
           mostrarNomAlerta(res.MENSAJE, "success");
           cambiarNomPestana("historial");
         } else {
-          mostrarNomAlerta("Error: " + res.MENSAJE, "error");
+          mostrarNomAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
         }
+      })
+      .withFailureHandler(function(err) {
+        mostrarNomAlerta("Fallo de red: " + err.message, "error");
       })
       .NOM_LIQUIDAR_NOMINA_COMPLETA_WEB(datos, TOKEN_SESION_LOCAL);
   }
@@ -481,9 +651,9 @@
     var tbody = document.getElementById("tabla_historial_body");
     var periodo = document.getElementById("hist_filtro_periodo").value;
     if (!tbody) return;
-    
+
     tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:20px; color:#64748b;'>Cargando historial de nómina para " + periodo + "...</td></tr>";
-    
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
@@ -492,7 +662,7 @@
             tbody.innerHTML = "<tr><td colspan='10' style='text-align:center; padding:20px; color:#64748b;'>No hay registros de liquidación para el período " + periodo + ".</td></tr>";
             return;
           }
-          
+
           res.DATOS.forEach(function(n) {
             var tr = document.createElement("tr");
             tr.innerHTML = "<td><code>" + n.ID_NOMINA + "</code></td>" +
@@ -508,6 +678,9 @@
             tbody.appendChild(tr);
           });
         }
+      })
+      .withFailureHandler(function(err) {
+        mostrarNomAlerta("Error al cargar historial: " + err.message, "error");
       })
       .NOM_OBTENER_HISTORIAL_PAGOS_WEB(periodo, TOKEN_SESION_LOCAL);
   }

@@ -1,4 +1,4 @@
-<!-- (VERSIÓN 21.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 27.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -127,7 +127,6 @@
     .viewport { flex: 1; padding: 24px 32px; display: flex; flex-direction: column; overflow-y: auto; }
     
     .home-container { display: flex; flex-direction: column; gap: 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
-
     .welcome-card {
       background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px;
       padding: 32px 32px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 24px;
@@ -141,42 +140,30 @@
       border-radius: 18px; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15); border: 1px solid #bfdbfe;
     }
-
+    
     /* Notes & Apuntes Module */
     .notes-section {
       background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px;
       padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03);
     }
-    .notes-header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1.5px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;
-      flex-wrap: wrap; gap: 12px;
-    }
-    .notes-title { font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; margin: 0; }
+    .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .notes-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
     .notes-actions { display: flex; gap: 10px; align-items: center; }
-
-    .notes-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px; margin-top: 16px;
-    }
+    
+    .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     .note-card {
-      background: #fffbe0; border: 1.5px solid #fef08a; border-radius: 12px;
-      padding: 18px; display: flex; flex-direction: column; gap: 10px;
-      position: relative; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      transition: all 0.2s ease; position: relative;
     }
-    .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
-    .note-card.pinned { background: #eff6ff; border-color: #bfdbfe; }
-    .note-card.tag-operativo { background: #f0fdf4; border-color: #bbf7d0; }
-    .note-card.tag-pendiente { background: #fef2f2; border-color: #fecaca; }
-
-    .note-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .note-tag {
-      font-size: 10px; font-weight: 800; text-transform: uppercase;
-      padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.06); color: #334155;
-    }
-    .note-content { font-size: 13px; color: #1e293b; line-height: 1.5; outline: none; white-space: pre-wrap; word-break: break-word; }
-    .note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; margin-top: auto; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); }
-    .note-btn-del { border: none; background: none; color: #ef4444; cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 4px; }
+    .note-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .note-card.tag-operativo { border-left: 4px solid #10b981; }
+    .note-card.tag-pendiente { border-left: 4px solid #ef4444; }
+    .note-header-row { display: flex; justify-content: space-between; align-items: center; }
+    .note-tag { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #e2e8f0; color: #475569; text-transform: uppercase; }
+    .note-content { font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; margin-top: 5px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-btn-del { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
     .note-btn-del:hover { background: rgba(239, 68, 68, 0.1); }
 
     .input-note-new {
@@ -301,9 +288,13 @@
 </div>
 
 <script>
+  /* ALIAS GLOBALES DE TOKEN EN WINDOW PARA TODAS LAS SUB-VISTAS */
   var TOKEN_SESION = "<?= TOKEN_SESION ?>";
+  var TOKEN_SESION_LOCAL = TOKEN_SESION;
+  var TOKEN_SESION_PROY = TOKEN_SESION;
   var ID_USUARIO = "<?= ID_USUARIO ?>";
   var USUARIO = "<?= USUARIO ?>";
+  var USUARIO_ACTUAL = USUARIO;
   var WEB_APP_URL = "<?= WEB_APP_URL ?>";
 
   document.addEventListener("DOMContentLoaded", function() {
@@ -359,6 +350,7 @@
       "PLANEACION": { icon: "🗓️", label: "Planeación & Noticias", route: "planeacion" },
       "OBRAS": { icon: "🏗️", label: "Obras / Proyectos", route: "obras" },
       "NOMINA": { icon: "👥", label: "Nómina Operativa", route: "nomina" },
+      "DOCUMENTOS": { icon: "📄", label: "Documentos & PDFs", route: "documentos" },
       "SEGURIDAD": { icon: "🔐", label: "Gestión Seguridad", route: "seguridad" }
     };
 
@@ -482,7 +474,7 @@
   }
 
   /* =========================================================
-   * CONTROL DE SESIÓN Y REDIRECCIÓN
+   * CONTROL DE SESIÓN Y REDIRECCIÓN ANTI-BLOCKING DE CHROME
    * ========================================================= */
   var tiempoInactividadCliente = 0;
   var MAXIMO_TIEMPO_INACTIVIDAD = 1800;
@@ -499,7 +491,6 @@
     if (TOKEN_SESION === "SHEETS_CONTEXT") return;
     tiempoInactividadCliente++;
     if (tiempoInactividadCliente >= MAXIMO_TIEMPO_INACTIVIDAD) {
-      alert("Su sesión ha sido cerrada automáticamente por inactividad de 30 minutos.");
       ejecutarCierrePorInactividad();
     }
   }, 1000);
@@ -507,7 +498,7 @@
   function ejecutarCierrePorInactividad() {
     google.script.run
       .withSuccessHandler(function() {
-        redireccionarAlLoginConMensaje("Su sesión ha expirado por inactividad.");
+        redireccionarAlLoginConMensaje("Su sesión ha expirado por inactividad de 30 minutos.");
       })
       .withFailureHandler(function() {
         redireccionarAlLoginConMensaje("Sesión terminada.");
@@ -516,8 +507,27 @@
   }
 
   function redireccionarAlLoginConMensaje(mensaje) {
-    var loginUrl = (WEB_APP_URL || (window.location.origin + window.location.pathname)) + "?ruta=login&mensaje=" + encodeURIComponent(mensaje);
-    try { window.top.location.replace(loginUrl); } catch (e) { window.location.replace(loginUrl); }
+    var urlBase = WEB_APP_URL;
+    if (!urlBase || urlBase.indexOf("http") !== 0) {
+      urlBase = window.location.href.split("?")[0].split("#")[0];
+    }
+    var loginUrl = urlBase + "?ruta=login&mensaje=" + encodeURIComponent(mensaje || "Sesión terminada.");
+    
+    var modalId = "modal_session_expired_overlay";
+    var existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    var modalOverlay = document.createElement("div");
+    modalOverlay.id = modalId;
+    modalOverlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;";
+    modalOverlay.innerHTML = '<div style="background:#1e293b; border:1px solid rgba(255,255,255,0.15); padding:32px; border-radius:16px; text-align:center; max-width:420px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); color:#ffffff;"><div style="font-size:48px; margin-bottom:12px;">⚠️</div><h3 style="margin:0 0 10px; font-size:18px; font-weight:800; color:#f87171;">Sesión Finalizada o Inválida</h3><p style="color:#94a3b8; font-size:13px; line-height:1.5; margin-bottom:24px;">' + (mensaje || 'Por favor inicie sesión nuevamente.') + '</p><a id="btn_redirect_top_login" href="' + loginUrl + '" target="_top" style="background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#ffffff; padding:12px 24px; border-radius:10px; text-decoration:none; font-weight:800; display:inline-block; font-size:14px; box-shadow:0 4px 14px rgba(37,99,235,0.4);">🔑 Ir al Inicio de Sesión</a></div>';
+    
+    document.body.appendChild(modalOverlay);
+
+    try {
+      var btnLink = document.getElementById("btn_redirect_top_login");
+      if (btnLink) btnLink.click();
+    } catch (e) {}
   }
 
   function vigilarSesionERP() {
@@ -533,7 +543,7 @@
             return;
           }
           if (!res.VALIDA) {
-            redireccionarAlLoginConMensaje("Su sesión ha expirado por inactividad.");
+            redireccionarAlLoginConMensaje("Su sesión ha expirado.");
           } else {
             dot.className = "status-dot";
             timeText.textContent = "Sesión Activa";
@@ -581,7 +591,8 @@
       "finanzas": "📊 Finanzas, Contabilidad y Reportes",
       "planeacion": "🗓️ Planeación Estratégica, Presupuestos y Noticias",
       "obras": "🏗️ Gestión de Obras y Proyectos",
-      "nomina": "👥 Nómina Básica Operativa"
+      "nomina": "👥 Nómina Básica Operativa",
+      "documentos": "📄 Generación e Impresión de Documentos PDF"
     };
 
     title.textContent = titulosModulos[modulo] || "Módulo ERP";
@@ -619,12 +630,20 @@
       });
       
       var code = oldScript.innerHTML;
-      code = code.replace(/^\s*(const|let)\s+(TOKEN_SESION|ID_USUARIO|USUARIO|WEB_APP_URL)\b.*/gm, "// $1 $2 (Heredado)");
-      code = code.replace(/^\s*const\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/gm, "var $1");
-      code = code.replace(/^\s*let\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/gm, "var $1");
       
-      newScript.appendChild(document.createTextNode(code));
-      oldScript.parentNode.replaceChild(newScript, oldScript);
+      // Substitución segura preservando identificadores
+            code = code.replace(/^(\s*)(const|let|var)\s+(TOKEN_SESION|TOKEN_SESION_LOCAL|TOKEN_SESION_PROY|ID_USUARIO|USUARIO|WEB_APP_URL|USUARIO_ACTUAL)\b.*/gm, "var  = window. || window.TOKEN_SESION;");
+      code = code.replace(/^(\s*)const\s+/gm, "$1var ");
+      code = code.replace(/^(\s*)let\s+/gm, "$1var ");
+      
+      try {
+        newScript.appendChild(document.createTextNode(code));
+        if (oldScript.parentNode) {
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        }
+      } catch (errScript) {
+        console.error("❌ [SPA Error Script Injection]:", errScript);
+      }
     });
 
     document.addEventListener = originalAddEventListener;

@@ -1,11 +1,11 @@
-// (VERSIÓN 18.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 24.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 25_WEB.gs (VERSIÓN 18.0 - V2 ERP - LIBRO 1)
+* 25_WEB.gs (VERSIÓN 24.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
 * - Enrutador maestro HTTP GET (WEB_doGet) para la Web App SPA.
 * - Servir la compilación asíncrona de sub-vistas del iFrame/Div en memoria.
-* - Garantizar el redireccionamiento seguro de inicio y cierre de sesión.
-* - Inyectar de forma transparente el Polyfill/Shim de comunicación RPC.
+* - Redirección limpia compatible con el Sandbox de Google Chrome (sin navegación de marco no autorizada).
+* - Prevenir errores HTTP 403 mediante normalización de URLs absolutas.
 **************************************************************/
 
 const WEB_CONFIG = {
@@ -21,7 +21,8 @@ const WEB_CONFIG = {
   PLANEACION_FORM: "F11_PLA_VIEW",
   OBRAS_FORM: "F10_OBR_VIEW",
   NOMINA_FORM: "F12_NOM_VIEW",
-  TITULO_ERP: "MEGUDAN ERP V2"
+  DOCUMENTOS_FORM: "F19_DOC_VIEW",
+  TITULO_ERP: "MEGUDAN ERP"
 };
 
 function WEB_doGet(e) {
@@ -29,10 +30,6 @@ function WEB_doGet(e) {
     const parametros = e && e.parameter ? e.parameter : {};
     const ruta = String(parametros.ruta || "login").trim().toLowerCase();
     const token = String(parametros.token || "").trim();
-    
-    if (ruta === "login" || !token) {
-      return WEB_MOSTRAR_LOGIN(parametros);
-    }
     
     if (ruta === "dashboard") {
       return WEB_MOSTRAR_DASHBOARD(parametros);
@@ -52,7 +49,7 @@ function WEB_MOSTRAR_LOGIN(parametros) {
     plantilla.WEB_APP_URL = webAppUrl;
     
     return plantilla.evaluate()
-      .setTitle(WEB_CONFIG.TITULO_ERP + " | Iniciar Sesión")
+      .setTitle("MEGUDAN ERP | Iniciar sesión")
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   } catch (error) {
     return HtmlService.createHtmlOutput("<h2>Error de Carga</h2><p>No se pudo cargar la vista de login.</p>");
@@ -80,7 +77,7 @@ function WEB_MOSTRAR_DASHBOARD(parametros) {
     plantilla.WEB_APP_URL = webAppUrl;
     
     return plantilla.evaluate()
-      .setTitle(WEB_CONFIG.TITULO_ERP + " | Panel Principal")
+      .setTitle("MEGUDAN ERP | Panel Principal")
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   } catch (error) {
     return WEB_MOSTRAR_ERROR("Error de sistema al cargar panel: " + error.toString());
@@ -93,13 +90,14 @@ function WEB_REDIRECCION_LOGIN(mensaje) {
   const mensajeSeguro = String(mensaje || "Debe iniciar sesión.");
   const urlDestino = webAppUrl ? (webAppUrl + "?ruta=login&mensaje=" + encodeURIComponent(mensajeSeguro)) : ("?ruta=login&mensaje=" + encodeURIComponent(mensajeSeguro));
   
-  const html = `<!DOCTYPE html><html><head><base target="_top"><script>try { window.top.location.replace("${urlDestino}"); } catch (e) { window.location.replace("${urlDestino}"); }</script></head><body>Redirigiendo al inicio de sesión...</body></html>`;
-  return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Redirigiendo").setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  const html = '<!DOCTYPE html><html><head><base target="_top"><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:sans-serif;background:#0f172a;color:#ffffff;display:flex;align-items:center;justify-content:center;min-height:100vh;}.card{background:#1e293b;border:1px solid rgba(255,255,255,0.1);padding:32px;border-radius:16px;text-align:center;max-width:400px;box-shadow:0 20px 40px rgba(0,0,0,0.5);}.btn{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:800;display:inline-block;margin-top:16px;font-size:14px;}</style></head><body><div class="card"><h3 style="margin-top:0;color:#f87171;">⚠️ Control de Sesión</h3><p style="color:#94a3b8;font-size:13px;line-height:1.5;">' + mensajeSeguro + '</p><a href="' + urlDestino + '" target="_top" class="btn">🔑 Volver al Inicio de Sesión</a></div></body></html>';
+  
+  return HtmlService.createHtmlOutput(html).setTitle("MEGUDAN ERP | Redirigiendo").setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function WEB_MOSTRAR_ERROR(mensaje) {
-  const html = `<!DOCTYPE html><html><head><base target="_top"><title>Error de Sistema</title></head><body><div style="font-family:'Segoe UI',sans-serif; padding:40px; text-align:center;"><h2 style="color:#dc2626;">⚠️ Control de Acceso</h2><p>${mensaje}</p></div></body></html>`;
-  return HtmlService.createHtmlOutput(html).setTitle(WEB_CONFIG.TITULO_ERP + " | Error");
+  const html = '<!DOCTYPE html><html><head><base target="_top"><title>Error de Sistema</title></head><body><div style="font-family:sans-serif; padding:40px; text-align:center;"><h2 style="color:#dc2626;">⚠️ Control de Acceso</h2><p>' + mensaje + '</p></div></body></html>';
+  return HtmlService.createHtmlOutput(html).setTitle("MEGUDAN ERP | Error");
 }
 
 function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
@@ -120,6 +118,7 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
       case "planeacion": archivoHtml = WEB_CONFIG.PLANEACION_FORM; break;
       case "obras": archivoHtml = WEB_CONFIG.OBRAS_FORM; break;
       case "nomina": archivoHtml = WEB_CONFIG.NOMINA_FORM; break;
+      case "documentos": archivoHtml = WEB_CONFIG.DOCUMENTOS_FORM; break;
       case "seguridad":
         const acceso = SEG_VALIDAR_ACCESO(tokenSesion, "SEGURIDAD", "VER");
         if (!acceso || acceso.AUTORIZADO !== true) throw new Error("ACCESO DENEGADO: No cuenta con permisos.");
@@ -146,3 +145,4 @@ function WEB_OBTENER_COMPILACION_VISTA(ruta, tokenSesion) {
 function OBTENER_VISTA_HTML(nombreVista, tokenSesion) {
   return WEB_OBTENER_COMPILACION_VISTA(nombreVista, tokenSesion);
 }
+
