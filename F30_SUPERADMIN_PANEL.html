@@ -1,0 +1,423 @@
+<!-- (VERSIÓN 2.0 - V2 ERP - PROVISIONADOR MULTIEMPRESA) -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel SuperAdmin | Provisionador Multi-Empresa ERP</title>
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #10b981;
+      --bg-app: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+      background-color: var(--bg-app); color: var(--text-main);
+      min-height: 100vh; padding: 24px;
+    }
+    .container { max-width: 1300px; margin: 0 auto; }
+    
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff; padding: 28px 32px; border-radius: 18px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+    }
+    .header-info { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+      font-size: 32px; width: 60px; height: 60px;
+      background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0; font-size: 13px; color: #94a3b8; font-weight: 500; }
+
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px;
+      padding: 20px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .stat-title { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 22px; font-weight: 900; color: var(--text-main); margin-top: 4px; }
+    .stat-icon { font-size: 24px; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+
+    .message {
+      padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none; line-height: 1.5;
+    }
+    .message-info { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .message-success { background-color: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; }
+    .message-error { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .card {
+      background-color: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .card-title { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+
+    .tabs-container { display: flex; gap: 8px; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 24px; }
+    .tab-btn {
+      padding: 10px 18px; font-size: 13px; font-weight: 700; color: var(--text-muted);
+      border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--accent); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1;
+      border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s;
+    }
+    .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+    .button {
+      padding: 11px 20px; border: none; border-radius: 10px; font-size: 13px;
+      font-weight: 800; cursor: pointer; transition: all 0.2s; display: inline-flex;
+      align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+    }
+    .button-primary { background-color: var(--accent); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+    .button-primary:hover { background-color: var(--accent-hover); }
+    .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
+    .button-secondary:hover { background-color: #f8fafc; }
+    .button-success { background-color: #16a34a; color: white; }
+
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+    .badge-active { background-color: #dcfce7; color: #15803d; }
+    .badge-inactive { background-color: #fee2e2; color: #dc2626; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div class="header-info">
+      <div class="header-icon">🏢</div>
+      <div>
+        <h1>Panel SuperAdmin · Provisionador SaaS Multi-Empresa</h1>
+        <p>ERP EMPRESARIAL V2 · Despliegue de Instancias ERP e Identidades Independientes por Compañía</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- TARJETAS DE MÉTRICAS DE TENANTS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div>
+        <div class="stat-title">Empresas Provisionadas</div>
+        <div class="stat-value" id="kpi_total_empresas">0</div>
+      </div>
+      <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">🏢</div>
+    </div>
+    <div class="stat-card">
+      <div>
+        <div class="stat-title">Instancias Activas</div>
+        <div class="stat-value" id="kpi_empresas_activas">0</div>
+      </div>
+      <div class="stat-icon" style="background:#ecfdf5; color:#16a34a;">🟢</div>
+    </div>
+    <div class="stat-card">
+      <div>
+        <div class="stat-title">Carpeta Matriz Google Drive</div>
+        <div class="stat-value" style="font-size:14px; color:#2563eb;">MEGUDAN_ERP_EMPRESAS_CLIENTES</div>
+      </div>
+      <div class="stat-icon" style="background:#fef3c7; color:#d97706;">📁</div>
+    </div>
+  </div>
+
+  <div id="PROV_ALERT" class="message"></div>
+
+  <!-- BARRAS DE PESTAÑAS -->
+  <div class="tabs-container">
+    <button class="tab-btn active" id="btn-tab-empresas" onclick="cambiarPestanaProv('empresas')">📋 Directorio de Empresas (Tenants)</button>
+    <button class="tab-btn" id="btn-tab-nueva" onclick="cambiarPestanaProv('nueva')">🚀 Provisionar Nueva Empresa</button>
+  </div>
+
+  <!-- PESTAÑA 1: DIRECTORIO DE EMPRESAS REGISTRADAS -->
+  <div id="panel-empresas" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🏢 Directorio Central de Empresas Registradas</h2>
+        <div style="display:flex; gap:10px;">
+          <button class="button button-primary" onclick="nuevoProvisionamiento()">+ Provisionar Nueva Empresa</button>
+          <button class="button button-secondary" onclick="cargarEmpresasProvisionadas()">↻ Recargar Tabla</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Tenant</th>
+              <th>NIT / RUT</th>
+              <th>Razón Social / Empresa</th>
+              <th>Correo Admin</th>
+              <th>Teléfono / Ciudad</th>
+              <th>Estado</th>
+              <th>Fecha Registro</th>
+              <th style="text-align:center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="empresas_tabla_body">
+            <tr><td colspan="8" style="text-align:center; padding:24px; color:#64748b;">Cargando catálogo de empresas desde Sheets...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 2: FORMULARIO DE PROVISIONAMIENTO DE NUEVA EMPRESA -->
+  <div id="panel-nueva" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">📝 Registro y Clonación de Instancia ERP para Nueva Empresa</h3>
+      </div>
+      
+      <div class="form-row-3">
+        <div class="field">
+          <label>Número NIT / RUT *</label>
+          <input type="text" id="prov_nit" class="input" placeholder="Ej: 900123456" oninput="calcularDVProvisionador(this.value)">
+        </div>
+        <div class="field">
+          <label>Dígito Verificación (DV)</label>
+          <input type="text" id="prov_dv" class="input" readonly style="background:#f1f5f9; text-align:center; font-weight:800;" placeholder="0-9">
+        </div>
+        <div class="field">
+          <label>Razón Social Completa *</label>
+          <input type="text" id="prov_razon_social" class="input" placeholder="Ej: CONSTRUCTORA Y SERVICIOS ANDINOS SAS">
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="field">
+          <label>Nombre Comercial / Marca</label>
+          <input type="text" id="prov_nombre_comercial" class="input" placeholder="Ej: ANDINOS CONSTRUCCIONES">
+        </div>
+        <div class="field">
+          <label>Correo Electrónico Administrador Titular *</label>
+          <input type="email" id="prov_correo_admin" class="input" placeholder="admin@empresa.com">
+        </div>
+        <div class="field">
+          <label>Nombre Completo del Administrador</label>
+          <input type="text" id="prov_nombre_admin" class="input" placeholder="Ej: Carlos Mario Restrepo">
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="field">
+          <label>Teléfono de Contacto</label>
+          <input type="text" id="prov_telefono" class="input" placeholder="Ej: 3110000000">
+        </div>
+        <div class="field">
+          <label>Ciudad Domicilio *</label>
+          <input type="text" id="prov_ciudad" class="input" value="Pitalito">
+        </div>
+        <div class="field">
+          <label>Departamento *</label>
+          <input type="text" id="prov_departamento" class="input" value="Huila">
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:20px;">
+        <label>Dirección Física de la Sede Principal</label>
+        <input type="text" id="prov_direccion" class="input" placeholder="Ej: Calle 5 # 10-20 Barrio Centro">
+      </div>
+
+      <div style="background:#f8fafc; border:1.5px solid #e2e8f0; padding:16px; border-radius:12px; margin-bottom:20px;">
+        <h4 style="margin:0 0 8px; font-size:12px; font-weight:800; color:#0f172a; text-transform:uppercase;">⚡ Acciones Automáticas del Provisionador:</h4>
+        <ul style="margin:0; padding-left:20px; font-size:12px; color:#475569; line-height:1.6;">
+          <li>Clona la estructura maestra del Google Sheet ERP V2 en la carpeta de Google Drive <code>MEGUDAN_ERP_EMPRESAS_CLIENTES</code>.</li>
+          <li>Auto-configura la pestaña <code>CFG_EMPRESA</code> con los datos tributarios ingresados.</li>
+          <li>Siembra el usuario Administrador con acceso maestro en <code>USR_USUARIOS</code> (Contraseña temporal de fábrica: <code>Admin123!</code>).</li>
+          <li>Retorna el enlace directo para abrir el Google Sheet de la empresa desplegada.</li>
+        </ul>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px;">
+        <button class="button button-secondary" onclick="limpiarFormularioProvisionador()">Cancelar</button>
+        <button class="button button-primary" id="btn_deploy_tenant" onclick="ejecutarDeployNuevaEmpresa()">🚀 Crear e Instalar ERP Independiente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var TOKEN_SESION_PROY = window.TOKEN_SESION_PROY || window.TOKEN_SESION || "SHEETS_CONTEXT";
+  var PROCESANDO_DEPLOY = false;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    cargarEmpresasProvisionadas();
+  });
+
+  function cambiarPestanaProv(target) {
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
+    var panelEl = document.getElementById("panel-" + target);
+    var btnEl = document.getElementById("btn-tab-" + target);
+    if (panelEl) panelEl.classList.add("active");
+    if (btnEl) btnEl.classList.add("active");
+    if (target === "empresas") cargarEmpresasProvisionadas();
+  }
+
+  function mostrarAlertaProv(msg, tipo) {
+    var el = document.getElementById("PROV_ALERT");
+    if (!el) return;
+    el.textContent = msg;
+    el.className = "message message-" + tipo;
+    el.style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function calcularDVProvisionador(nit) {
+    if (!nit) { document.getElementById("prov_dv").value = ""; return; }
+    var strNit = String(nit).replace(/\D/g, "");
+    if (!strNit) { document.getElementById("prov_dv").value = ""; return; }
+    var vpri = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+    var z = strNit.length;
+    var y = 0;
+    for (var i = 0; i < z; i++) {
+      y += parseInt(strNit.charAt(z - 1 - i), 10) * vpri[i];
+    }
+    var x = y % 11;
+    var dv = x > 1 ? String(11 - x) : String(x);
+    document.getElementById("prov_dv").value = dv;
+  }
+
+  function nuevoProvisionamiento() {
+    limpiarFormularioProvisionador();
+    cambiarPestanaProv("nueva");
+  }
+
+  function limpiarFormularioProvisionador() {
+    document.getElementById("prov_nit").value = "";
+    document.getElementById("prov_dv").value = "";
+    document.getElementById("prov_razon_social").value = "";
+    document.getElementById("prov_nombre_comercial").value = "";
+    document.getElementById("prov_correo_admin").value = "";
+    document.getElementById("prov_nombre_admin").value = "";
+    document.getElementById("prov_telefono").value = "";
+    document.getElementById("prov_direccion").value = "";
+  }
+
+  function cargarEmpresasProvisionadas() {
+    var tbody = document.getElementById("empresas_tabla_body");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:24px; color:#64748b;">Consultando catálogo de empresas desde Sheets...</td></tr>';
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          tbody.innerHTML = "";
+          var lista = res.DATOS;
+          document.getElementById("kpi_total_empresas").textContent = lista.length;
+          document.getElementById("kpi_empresas_activas").textContent = lista.filter(function(e) { return e.ESTADO_TENANT === 'ACTIVA'; }).length;
+
+          if (lista.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:24px; color:#64748b;">No hay empresas provisionadas aún en el sistema.</td></tr>';
+            return;
+          }
+
+          lista.forEach(function(e) {
+            var tr = document.createElement("tr");
+            var badgeEst = e.ESTADO_TENANT === 'ACTIVA' ? 'badge-active' : 'badge-inactive';
+            
+            var urlSheet = e.SPREADSHEET_URL ? '<a href="' + e.SPREADSHEET_URL + '" target="_blank" class="button button-secondary" style="padding:4px 10px; font-size:11px;">📂 Abrir Google Sheet</a>' : '<span style="color:#94a3b8;">Sin Link</span>';
+
+            tr.innerHTML = '<td><code>' + (e.ID_EMPRESA || 'EMP-001') + '</code></td>' +
+                           '<td>' + (e.NIT || 'N/A') + (e.DV ? '-' + e.DV : '') + '</td>' +
+                           '<td><strong>' + (e.RAZON_SOCIAL || 'Empresa') + '</strong></td>' +
+                           '<td>' + (e.CORREO_ADMINISTRADOR || 'N/A') + '</td>' +
+                           '<td>' + (e.TELEFONO || '') + ' (' + (e.CIUDAD || 'Pitalito') + ')</td>' +
+                           '<td><span class="badge ' + badgeEst + '">' + (e.ESTADO_TENANT || 'ACTIVA') + '</span></td>' +
+                           '<td>' + (e.FECHA_PROVISION ? String(e.FECHA_PROVISION).substring(0,10) : 'Hoy') + '</td>' +
+                           '<td style="text-align:center;">' + urlSheet + '</td>';
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:24px; color:#dc2626;">Error: ' + (res ? res.MENSAJE : "Sin respuesta") + '</td></tr>';
+        }
+      })
+      .withFailureHandler(function(err) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:24px; color:#dc2626;">Fallo de red: ' + err.message + '</td></tr>';
+      })
+      .PROV_LISTAR_EMPRESAS_REGISTRADAS_WEB(TOKEN_SESION_PROY);
+  }
+
+  function ejecutarDeployNuevaEmpresa() {
+    if (PROCESANDO_DEPLOY) return;
+
+    var datos = {
+      NIT: document.getElementById("prov_nit").value.trim(),
+      DV: document.getElementById("prov_dv").value.trim(),
+      RAZON_SOCIAL: document.getElementById("prov_razon_social").value.trim(),
+      NOMBRE_COMERCIAL: document.getElementById("prov_nombre_comercial").value.trim(),
+      CORREO_ADMINISTRADOR: document.getElementById("prov_correo_admin").value.trim(),
+      NOMBRE_ADMINISTRADOR: document.getElementById("prov_nombre_admin").value.trim(),
+      TELEFONO: document.getElementById("prov_telefono").value.trim(),
+      CIUDAD: document.getElementById("prov_ciudad").value.trim(),
+      DEPARTAMENTO: document.getElementById("prov_departamento").value.trim(),
+      DIRECCION: document.getElementById("prov_direccion").value.trim()
+    };
+
+    if (!datos.NIT || !datos.RAZON_SOCIAL || !datos.CORREO_ADMINISTRADOR) {
+      mostrarAlertaProv("Por favor complete el NIT, la Razón Social y el Correo del Administrador.", "error");
+      return;
+    }
+
+    PROCESANDO_DEPLOY = true;
+    var btn = document.getElementById("btn_deploy_tenant");
+    btn.disabled = true;
+    btn.textContent = "⚙️ Clonando plantilla e instalando ERP en Google Drive...";
+    mostrarAlertaProv("Iniciando clonación e instalación del ERP para " + datos.RAZON_SOCIAL + "...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        PROCESANDO_DEPLOY = false;
+        btn.disabled = false;
+        btn.textContent = "🚀 Crear e Instalar ERP Independiente";
+
+        if (res && res.EXITO) {
+          mostrarAlertaProv(res.MENSAJE + " ID: " + res.ID_EMPRESA, "success");
+          limpiarFormularioProvisionador();
+          cambiarPestanaProv("empresas");
+        } else {
+          mostrarAlertaProv("Error de despliegue: " + (res ? res.MENSAJE : "Sin respuesta del servidor"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        PROCESANDO_DEPLOY = false;
+        btn.disabled = false;
+        btn.textContent = "🚀 Crear e Instalar ERP Independiente";
+        mostrarAlertaProv("Fallo de red al desplegar: " + err.message, "error");
+      })
+      .PROV_CREAR_NUEVA_EMPRESA_ERP_WEB(datos, TOKEN_SESION_PROY);
+  }
+</script>
+</body>
+</html>

@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 7.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 11.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Clientes & Terceros | MEGUDAN ERP</title>
+  <title>Gestión de Clientes & Terceros | ERP Empresarial</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -123,7 +123,7 @@
       <div class="header-icon">👥</div>
       <div>
         <h1>Ficha Única de Clientes, Proveedores & Terceros</h1>
-        <p>MEGUDAN ERP V2 · Directorio Unificado, Responsabilidades RUT DIAN, Cartera CxC e Historial Comercial</p>
+        <p>ERP Operativo · Directorio Unificado, Responsabilidades RUT DIAN, Cartera CxC e Historial Comercial</p>
       </div>
     </div>
   </header>
@@ -176,10 +176,11 @@
       <div class="card-header">
         <h2 class="card-title">👥 Directorio Maestro de Clientes & Proveedores</h2>
         <div style="display:flex; gap:10px; align-items:center;">
-          <select id="dir_filtro_tipo" class="input" style="width:180px;" onchange="cargarListaClientes()">
-            <option value="TODOS" selected>Todos los Terceros</option>
-            <option value="CLIENTE">Solo Clientes</option>
-            <option value="PROVEEDOR">Solo Proveedores</option>
+          <select id="dir_filtro_tipo" class="input" style="width:220px;" onchange="filtrarDirectorioLocal()">
+            <option value="TODOS" selected>Todos los Terceros (Ver Todos)</option>
+            <option value="CLIENTE">🔵 Solo Clientes Comercial</option>
+            <option value="PROVEEDOR">🟣 Solo Proveedores Insumos</option>
+            <option value="AMBOS">🟢 Clientes & Proveedores (Dual)</option>
           </select>
           <input type="text" id="buscarTerceroInput" class="input" style="width:280px;" placeholder="Buscar por NIT, ID o Razón Social..." oninput="filtrarDirectorioLocal()">
           <button class="button button-primary" onclick="nuevoTercero()">+ Nuevo Registro</button>
@@ -191,6 +192,7 @@
           <thead>
             <tr>
               <th>ID</th>
+              <th>Rol / Clasificación</th>
               <th>Documento / NIT</th>
               <th>Razón Social / Nombre</th>
               <th>Ubicación</th>
@@ -265,7 +267,7 @@
       <!-- Razón Social -->
       <div id="sec_razon_social" class="field" style="margin-bottom:16px;">
         <label>Razón Social / Nombre Completo *</label>
-        <input type="text" id="RAZON_SOCIAL" class="input" placeholder="Ej: MEGUDAN CONSTRUCCIONES SAS">
+        <input type="text" id="RAZON_SOCIAL" class="input" placeholder="Ej: MI EMPRESA S.A.S.">
       </div>
 
       <!-- Persona Natural -->
@@ -280,7 +282,7 @@
       <div class="form-row-3">
         <div class="field"><label>Nombre Comercial / Establecimiento</label><input type="text" id="NOMBRE_COMERCIAL" class="input"></div>
         <div class="field"><label>Dirección Principal *</label><input type="text" id="DIRECCION" class="input" placeholder="Ej: Calle 4 # 12-30"></div>
-        <div class="field"><label>Ciudad / Municipio *</label><input type="text" id="CIUDAD" class="input" value="Pitalito"></div>
+        <div class="field"><label>Ciudad / Municipio *</label><input type="text" id="CIUDAD" class="input" value="Ciudad Principal"></div>
       </div>
 
       <div class="form-row-3">
@@ -504,8 +506,12 @@
 
   function guardarTercero() {
     var idCli = document.getElementById("ID_CLIENTE").value;
+    var tipoTercero = document.getElementById("TIPO_TERCERO") ? document.getElementById("TIPO_TERCERO").value : "CLIENTE";
+
     var datos = {
       ID_CLIENTE: idCli,
+      ID_PROVEEDOR: idCli,
+      TIPO_TERCERO: tipoTercero,
       TIPO_PERSONA: document.getElementById("TIPO_PERSONA").value,
       TIPO_DOCUMENTO: document.getElementById("TIPO_DOCUMENTO").value,
       NUMERO_DOCUMENTO: document.getElementById("NUMERO_DOCUMENTO").value.trim(),
@@ -528,7 +534,8 @@
       FORMA_PAGO: document.getElementById("FORMA_PAGO").value,
       PLAZO_PAGO_DIAS: Number(document.getElementById("PLAZO_PAGO_DIAS").value || 30),
       LIMITE_CREDITO: Number(document.getElementById("LIMITE_CREDITO").value || 50000000),
-      ESTADO_CLIENTE: document.getElementById("ESTADO_CLIENTE").value
+      ESTADO_CLIENTE: document.getElementById("ESTADO_CLIENTE").value,
+      ESTADO: document.getElementById("ESTADO_CLIENTE").value
     };
 
     if (!datos.NUMERO_DOCUMENTO || (!datos.RAZON_SOCIAL && datos.TIPO_PERSONA === "PERSONA_JURIDICA")) {
@@ -538,16 +545,26 @@
 
     datos = traductorAlias(datos);
     mostrarAlerta("Guardando información en Google Sheets...", "info");
-    var fnServer = idCli ? "CLI_ACTUALIZAR_CLIENTE" : "CLI_GUARDAR_CLIENTE";
+
+    var isProv = (tipoTercero === "PROVEEDOR") || (idCli && String(idCli).indexOf("PROV-") === 0);
+    var fnServer = "CLI_GUARDAR_CLIENTE";
+    if (idCli) {
+      fnServer = isProv ? "PROV_ACTUALIZAR_PROVEEDOR_WEB" : "CLI_ACTUALIZAR_CLIENTE";
+    } else {
+      fnServer = isProv ? "PROV_GUARDAR_PROVEEDOR_WEB" : "CLI_GUARDAR_CLIENTE";
+    }
 
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
+          if (tipoTercero === "AMBOS") {
+            google.script.run.PROV_GUARDAR_PROVEEDOR_WEB(datos, TOKEN_SESION_PROY);
+          }
           mostrarAlerta(res.MENSAJE || "¡Registro guardado exitosamente!", "success");
           limpiarFormulario();
           usrCambiarPestana("directorio");
         } else {
-          mostrarAlerta("Error al guardar: " + (res ? res.MENSAJE : "Sin respuesta del servidor"), "error");
+          mostrarAlerta("Error al guardar: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
         }
       })
       .withFailureHandler(function(err) {
@@ -558,30 +575,91 @@
   function cargarListaClientes() {
     var tbody = document.getElementById("terceros_tabla_body");
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando base de datos de terceros...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:24px; color:#64748b;"><div class="spinner" style="border-top-color:#2563eb;"></div> Consultando base de datos de Clientes y Proveedores...</td></tr>';
 
+    var listaUnificada = [];
+    var peticionesCompletadas = 0;
+
+    function finalizarCarga() {
+      peticionesCompletadas++;
+      if (peticionesCompletadas >= 2) {
+        var mapaDoc = {};
+        listaUnificada.forEach(function(item) {
+          item = traductorAlias(item);
+          var docKey = String(item.NUMERO_DOCUMENTO || item.NIT_CC || item.ID_CLIENTE || item.ID_PROVEEDOR || "").trim();
+          if (!docKey) return;
+
+          if (!mapaDoc[docKey]) {
+            mapaDoc[docKey] = item;
+          } else {
+            var existente = mapaDoc[docKey];
+            var tipoEx = String(existente.TIPO_TERCERO || "").toUpperCase();
+            var tipoNuevo = String(item.TIPO_TERCERO || "").toUpperCase();
+            if ((tipoEx === "CLIENTE" && tipoNuevo === "PROVEEDOR") || (tipoEx === "PROVEEDOR" && tipoNuevo === "CLIENTE")) {
+              mapaDoc[docKey].TIPO_TERCERO = "AMBOS";
+            }
+            if (item.ID_PROVEEDOR && !mapaDoc[docKey].ID_PROVEEDOR) mapaDoc[docKey].ID_PROVEEDOR = item.ID_PROVEEDOR;
+            if (item.ID_CLIENTE && !mapaDoc[docKey].ID_CLIENTE) mapaDoc[docKey].ID_CLIENTE = item.ID_CLIENTE;
+          }
+        });
+
+        CLIENTES_CACHE_LISTA = Object.values(mapaDoc);
+        actualizarKPIs(CLIENTES_CACHE_LISTA);
+        filtrarDirectorioLocal();
+      }
+    }
+
+    // 1. Cargar Clientes desde backend
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
-          CLIENTES_CACHE_LISTA = res.DATOS;
-          actualizarKPIs(res.DATOS);
-          renderizarTablaTerceros(res.DATOS);
-        } else {
-          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Error: ' + (res ? res.MENSAJE : "Sin respuesta") + '</td></tr>';
+          res.DATOS.forEach(function(c) {
+            if (!c.TIPO_TERCERO) c.TIPO_TERCERO = "CLIENTE";
+            listaUnificada.push(c);
+          });
         }
+        finalizarCarga();
       })
-      .withFailureHandler(function(err) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Fallo de red: ' + err.message + '</td></tr>';
-      })
+      .withFailureHandler(function() { finalizarCarga(); })
       .CLI_LISTAR_CLIENTES_WEB(TOKEN_SESION_PROY);
+
+    // 2. Cargar Proveedores desde backend
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO && res.DATOS) {
+          res.DATOS.forEach(function(p) {
+            p.ID_PROVEEDOR = p.ID_PROVEEDOR || p.ID_CLIENTE;
+            if (!p.TIPO_TERCERO) p.TIPO_TERCERO = "PROVEEDOR";
+            listaUnificada.push(p);
+          });
+        }
+        finalizarCarga();
+      })
+      .withFailureHandler(function() { finalizarCarga(); })
+      .PROV_LISTAR_PROVEEDORES_WEB(TOKEN_SESION_PROY);
   }
 
   function actualizarKPIs(lista) {
-    var totalCli = lista.length;
+    var totalCli = 0;
+    var totalProv = 0;
     var cupoTotal = 0;
-    lista.forEach(function(c) { cupoTotal += Number(c.LIMITE_CREDITO || c.CUPO_CREDITO || 0); });
-    document.getElementById("kpi_total_clientes").textContent = totalCli;
-    document.getElementById("kpi_cupo_credito").textContent = "$" + Math.round(cupoTotal).toLocaleString('es-CO');
+
+    lista.forEach(function(c) {
+      var tipo = String(c.TIPO_TERCERO || "CLIENTE").toUpperCase();
+      if (tipo === "CLIENTE") totalCli++;
+      else if (tipo === "PROVEEDOR") totalProv++;
+      else if (tipo === "AMBOS") { totalCli++; totalProv++; }
+
+      cupoTotal += Number(c.LIMITE_CREDITO || c.CUPO_CREDITO || 0);
+    });
+
+    var elCli = document.getElementById("kpi_total_clientes");
+    var elProv = document.getElementById("kpi_total_provs");
+    var elCupo = document.getElementById("kpi_cupo_credito");
+
+    if (elCli) elCli.textContent = totalCli;
+    if (elProv) elProv.textContent = totalProv;
+    if (elCupo) elCupo.textContent = "$" + Math.round(cupoTotal).toLocaleString('es-CO');
   }
 
   function renderizarTablaTerceros(lista) {
@@ -589,28 +667,64 @@
     if (!tbody) return;
     tbody.innerHTML = "";
     if (!lista || lista.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">No hay terceros registrados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:24px; color:#64748b;">No hay terceros registrados en la categoría seleccionada.</td></tr>';
       return;
     }
+
     lista.forEach(function(c) {
       c = traductorAlias(c);
       var tr = document.createElement("tr");
       var badgeEst = (c.ESTADO_CLIENTE === 'ACTIVO' || c.ESTADO === 'ACTIVO') ? 'badge-active' : 'badge-inactive';
       var idCod = encodeURIComponent(String(c.ID_CLIENTE || c.ID_PROVEEDOR).trim());
       
+      var tipoStr = String(c.TIPO_TERCERO || (c.ID_PROVEEDOR ? "PROVEEDOR" : "CLIENTE")).toUpperCase();
+      var badgeTipoHtml = '';
+      if (tipoStr === "PROVEEDOR") {
+        badgeTipoHtml = '<span class="badge" style="background:#f3e8ff; color:#6b21a8;">🟣 PROVEEDOR</span>';
+      } else if (tipoStr === "AMBOS") {
+        badgeTipoHtml = '<span class="badge badge-active">🟢 CLIENTE & PROVEEDOR</span>';
+      } else {
+        badgeTipoHtml = '<span class="badge" style="background:#e0f2fe; color:#0369a1;">🔵 CLIENTE</span>';
+      }
+
       tr.innerHTML = '<td><code>' + (c.ID_CLIENTE || c.ID_PROVEEDOR) + '</code></td>' +
+                     '<td>' + badgeTipoHtml + '</td>' +
                      '<td>' + (c.NUMERO_DOCUMENTO || c.NIT_CC || 'N/A') + (c.DIGITO_VERIFICACION ? '-' + c.DIGITO_VERIFICACION : '') + '</td>' +
                      '<td><strong>' + (c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || 'Sin nombre') + '</strong></td>' +
-                     '<td>' + (c.CIUDAD || 'Pitalito') + '</td>' +
+                     '<td>' + (c.CIUDAD || 'Ciudad Principal') + '</td>' +
                      '<td>' + (c.CELULAR || c.TELEFONO || 'N/A') + '</td>' +
                      '<td>' + (c.CORREO || c.EMAIL || 'N/A') + '</td>' +
                      '<td>' + (c.FORMA_PAGO || c.CONDICION_PAGO || 'CONTADO') + '</td>' +
                      '<td><span class="badge ' + badgeEst + '">' + (c.ESTADO_CLIENTE || c.ESTADO || 'ACTIVO') + '</span></td>' +
                      '<td style="text-align:center;">' +
-                     '<button class="button button-secondary" style="padding:4px 10px; font-size:11px;" onclick="cargarClientePorId(\x27' + idCod + '\x27)">✏️ Editar</button>' +
+                       '<button class="button button-secondary" style="padding:4px 10px; font-size:11px;" onclick="cargarClientePorId(\'' + idCod + '\')">✏️ Editar</button>' +
                      '</td>';
       tbody.appendChild(tr);
     });
+  }
+
+  function filtrarDirectorioLocal() {
+    var q = document.getElementById("buscarTerceroInput") ? document.getElementById("buscarTerceroInput").value.trim().toUpperCase() : "";
+    var filtroTipo = document.getElementById("dir_filtro_tipo") ? document.getElementById("dir_filtro_tipo").value : "TODOS";
+
+    var filtrados = CLIENTES_CACHE_LISTA.filter(function(c) {
+      var tipoItem = String(c.TIPO_TERCERO || (c.ID_PROVEEDOR ? "PROVEEDOR" : "CLIENTE")).toUpperCase();
+      
+      var cumpleTipo = true;
+      if (filtroTipo === "CLIENTE") cumpleTipo = (tipoItem === "CLIENTE" || tipoItem === "AMBOS");
+      else if (filtroTipo === "PROVEEDOR") cumpleTipo = (tipoItem === "PROVEEDOR" || tipoItem === "AMBOS");
+      else if (filtroTipo === "AMBOS") cumpleTipo = (tipoItem === "AMBOS");
+
+      if (!cumpleTipo) return false;
+
+      if (!q) return true;
+
+      return (c.RAZON_SOCIAL || "").toUpperCase().indexOf(q) !== -1 ||
+             (c.NUMERO_DOCUMENTO || c.NIT_CC || "").toUpperCase().indexOf(q) !== -1 ||
+             (c.ID_CLIENTE || c.ID_PROVEEDOR || "").toUpperCase().indexOf(q) !== -1;
+    });
+
+    renderizarTablaTerceros(filtrados);
   }
 
   function cargarClientePorId(idCod) {
@@ -631,7 +745,7 @@
       document.getElementById("SEGUNDO_APELLIDO").value = enc.SEGUNDO_APELLIDO || "";
       document.getElementById("NOMBRE_COMERCIAL").value = enc.NOMBRE_COMERCIAL || "";
       document.getElementById("DIRECCION").value = enc.DIRECCION || "";
-      document.getElementById("CIUDAD").value = enc.CIUDAD || "Pitalito";
+      document.getElementById("CIUDAD").value = enc.CIUDAD || "Ciudad Principal";
       document.getElementById("DEPARTAMENTO").value = enc.DEPARTAMENTO || "Huila";
       document.getElementById("CELULAR").value = enc.CELULAR || enc.TELEFONO || "";
       document.getElementById("CORREO").value = enc.CORREO || enc.EMAIL || "";
@@ -639,6 +753,10 @@
       document.getElementById("PLAZO_PAGO_DIAS").value = enc.PLAZO_PAGO_DIAS || 30;
       document.getElementById("LIMITE_CREDITO").value = enc.LIMITE_CREDITO || enc.CUPO_CREDITO || 50000000;
       document.getElementById("ESTADO_CLIENTE").value = enc.ESTADO_CLIENTE || enc.ESTADO || "ACTIVO";
+      if (document.getElementById("TIPO_TERCERO")) {
+        var tipoEncontrado = enc.TIPO_TERCERO || (String(enc.ID_PROVEEDOR || enc.ID_CLIENTE || "").indexOf("PROV-") === 0 ? "PROVEEDOR" : "CLIENTE");
+        document.getElementById("TIPO_TERCERO").value = tipoEncontrado;
+      }
       document.getElementById("form_title_heading").textContent = "✏️ Editando Ficha Comercial de: " + (enc.RAZON_SOCIAL || idCli);
       usrCambiarPestana("formulario");
     }
@@ -670,7 +788,7 @@
                            '<td>$' + Number(c.ABONOS || 0).toLocaleString('es-CO') + '</td>' +
                            '<td><strong style="color:#dc2626;">$' + Number(c.SALDO || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
                            '<td><span class="badge ' + badgeClass + '">' + c.ESTADO + '</span></td>' +
-                           '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="usrCambiarPestana('cartera')">👁️ Ver</button></td>';
+                           '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="usrCambiarPestana(\'cartera\')">👁️ Ver</button></td>';
             tbody.appendChild(tr);
           });
           document.getElementById("kpi_cartera_total").textContent = "$" + Math.round(totalCart).toLocaleString('es-CO');
@@ -679,16 +797,6 @@
       .CAR_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
   }
 
-  function filtrarDirectorioLocal() {
-    var q = document.getElementById("buscarTerceroInput").value.trim().toUpperCase();
-    if (!q) { renderizarTablaTerceros(CLIENTES_CACHE_LISTA); return; }
-    var filtrados = CLIENTES_CACHE_LISTA.filter(function(c) {
-      return (c.RAZON_SOCIAL || "").toUpperCase().indexOf(q) !== -1 ||
-             (c.NUMERO_DOCUMENTO || c.NIT_CC || "").toUpperCase().indexOf(q) !== -1 ||
-             (c.ID_CLIENTE || c.ID_PROVEEDOR || "").toUpperCase().indexOf(q) !== -1;
-    });
-    renderizarTablaTerceros(filtrados);
-  }
-</script>
+  </script>
 </body>
 </html>

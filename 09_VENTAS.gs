@@ -1,299 +1,350 @@
+// (VERSIÓN 2.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 09_VENTAS.gs (VERSIÓN 3.0 - V2 ERP - LIBRO 1)
+* 09_VENTAS.gs (VERSIÓN 2.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
-* - Capturar, procesar y guardar las transacciones de ventas y pedidos de clientes.
-* - Calcular de forma exacta bases gravables, IVA tradicional e IVA sobre AIU (Colombia).
-* - Afectar asíncronamente existencias de inventario (INV_MOVIMIENTOS) y generar cartera (CAR_CUENTAS).
-* - Exponer métodos seguros e interactivos para la Web App (SPA) mediante RPC.
+* - Módulo Core de Ventas, Facturación Comercial, Cotizaciones y Remisiones.
+* - Registro en Sheets de VEN_CABECERA y VEN_DETALLE con soporte de AIU y Retenciones.
+* - Afectación automática de Cartera (CAR_CUENTAS_COBRAR) y Descuento de Stock en Kardex (INV_SALDOS).
+* - Integración RPC asíncrona unificada para la interfaz Web App F7_VEN_VIEW.
 **************************************************************/
 
 const VEN_CONFIG = {
   HOJA_CABECERA: "VEN_CABECERA",
   HOJA_DETALLE: "VEN_DETALLE",
-  PREFIJO_ID: "VEN",
+  HOJA_CARTERA: "CAR_CUENTAS_COBRAR",
+  PREFIJO_VENTA: "VEN",
+  PREFIJO_FACTURA: "FAC",
+  PREFIJO_REMISION: "REM",
+  PREFIJO_COTIZACION: "COT",
   DIGITOS_ID: 6
 };
 
+function VEN_OBTENER_HOJA(nombreHoja) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja = ss.getSheetByName(nombreHoja);
+  if (!hoja) {
+    hoja = ss.insertSheet(nombreHoja);
+  }
+  if (hoja.getLastColumn() === 0 || hoja.getLastRow() === 0) {
+    if (nombreHoja === VEN_CONFIG.HOJA_CABECERA) {
+      hoja.appendRow([
+        "ID_VENTA", "FECHA", "ID_CLIENTE", "RAZON_SOCIAL_CLIENTE", "TIPO_DOCUMENTO", 
+        "NUM_DOCUMENTO", "ID_OBRA", "FORMA_PAGO", "PLAZO_DIAS", "SUBTOTAL", 
+        "VALOR_AIU", "TOTAL_IVA", "TOTAL_RETENCIONES", "TOTAL", "ESTADO", 
+        "FECHA_CREACION", "USUARIO_CREACION", "OBSERVACIONES"
+      ]);
+      hoja.getRange(1, 1, 1, 18).setFontWeight("bold").setBackground("#0f172a").setFontColor("#ffffff");
+    } else if (nombreHoja === VEN_CONFIG.HOJA_DETALLE) {
+      hoja.appendRow([
+        "ID_DETALLE", "ID_VENTA", "ID_PRODUCTO", "CODIGO", "DESCRIPCION", 
+        "CANTIDAD", "PRECIO_UNITARIO", "TARIFA_IVA", "VALOR_IVA", "SUBTOTAL"
+      ]);
+      hoja.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#0f172a").setFontColor("#ffffff");
+    } else if (nombreHoja === VEN_CONFIG.HOJA_CARTERA) {
+      hoja.appendRow([
+        "ID_CARTERA", "ID_VENTA", "ID_CLIENTE", "FECHA_EMISION", "FECHA_VENCIMIENTO",
+        "VALOR_DOCUMENTO", "ABONOS", "SALDO", "ESTADO"
+      ]);
+      hoja.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#0f172a").setFontColor("#ffffff");
+    }
+  }
+  return hoja;
+}
+
 /**
- * Endpoint RPC seguro para guardar una venta desde el Frontend SPA
+ * RPC: Cargar catálogos combinados (Clientes, Proveedores, Productos, Obras) para la vista de Ventas
  */
-function VEN_GUARDAR_VENTA_WEB(cabecera, detalles, tokenSesion) {
+function VEN_OBTENER_CATALOGOS_COMBINADOS_WEB(tokenSesion) {
   try {
-    const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "VENTAS", "CREAR");
-    const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-    
-    cabecera.USUARIO = usuarioEjecutor;
-    const resultado = VEN_GUARDAR_VENTA(cabecera, detalles, tokenSesion);
-    
-    // Loguear acción de auditoría
-    SEG_REGISTRAR_AUDITORIA({
-      ID_USUARIO: auth.SESION ? auth.SESION.ID_USUARIO : "USR-000001",
-      USUARIO: usuarioEjecutor,
-      MODULO: "VENTAS",
-      SUBMODULO: "FACTURACION",
-      ACCION: "CREAR",
-      TIPO_REGISTRO: "VENTAS",
-      ID_REGISTRO: resultado.idVenta,
-      DESCRIPCION: "Venta registrada exitosamente. Documento N°: " + (cabecera.NUM_DOCUMENTO || "") + " por un total de: " + resultado.total + " COP.",
-      RESULTADO: "EXITOSO"
+    const result = {
+      CLIENTES: [],
+      PRODUCTOS: [],
+      OBRAS: []
+    };
+
+    // 1. Obtener Clientes y Proveedores
+    try {
+      if (typeof CLI_LISTAR_CLIENTES_WEB === "function") {
+        const resCli = CLI_LISTAR_CLIENTES_WEB(tokenSesion);
+        if (resCli && resCli.DATOS) result.CLIENTES = result.CLIENTES.concat(resCli.DATOS);
+      }
+    } catch (e1) {}
+
+    try {
+      if (typeof PROV_LISTAR_PROVEEDORES_WEB === "function") {
+        const resProv = PROV_LISTAR_PROVEEDORES_WEB(tokenSesion);
+        if (resProv && resProv.DATOS) {
+          resProv.DATOS.forEach(p => {
+            p.ID_CLIENTE = p.ID_CLIENTE || p.ID_PROVEEDOR;
+            result.CLIENTES.push(p);
+          });
+        }
+      }
+    } catch (e2) {}
+
+    // Deduplicar Clientes por ID/Documento
+    const mapCli = {};
+    result.CLIENTES.forEach(c => {
+      const k = String(c.ID_CLIENTE || c.ID_PROVEEDOR || c.NUMERO_DOCUMENTO || "").trim();
+      if (k && !mapCli[k]) mapCli[k] = c;
     });
-    
+    result.CLIENTES = Object.values(mapCli);
+
+    // 2. Obtener Productos
+    try {
+      if (typeof PROD_LISTAR_PRODUCTOS_WEB === "function") {
+        const resProd = PROD_LISTAR_PRODUCTOS_WEB(tokenSesion);
+        if (resProd && resProd.DATOS) result.PRODUCTOS = resProd.DATOS;
+      }
+    } catch (e3) {}
+
+    if (result.PRODUCTOS.length === 0) {
+      try {
+        const ss = SpreadsheetApp.getActiveSpreadsheet();
+        const hojaProd = ss.getSheetByName("PROD_MAESTRO");
+        if (hojaProd && hojaProd.getLastRow() >= 2) {
+          const encP = hojaProd.getRange(1, 1, 1, hojaProd.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+          const regP = hojaProd.getRange(2, 1, hojaProd.getLastRow() - 1, encP.length).getValues();
+          result.PRODUCTOS = regP.map(fila => {
+            const obj = {};
+            encP.forEach((col, idx) => { obj[col] = fila[idx] !== undefined ? fila[idx] : ""; });
+            return obj;
+          });
+        }
+      } catch (e4) {}
+    }
+
+    // 3. Obtener Obras
+    try {
+      if (typeof OBR_LISTAR_OBRAS_WEB === "function") {
+        const resObras = OBR_LISTAR_OBRAS_WEB(tokenSesion);
+        if (resObras && resObras.DATOS) result.OBRAS = resObras.DATOS;
+      }
+    } catch (e5) {}
+
     return {
       EXITO: true,
-      DATOS: SEG_SANITIZAR_PARA_CLIENTE(resultado),
-      MENSAJE: "¡Venta guardada y procesada exitosamente en Sheets! ID Interno: " + resultado.idVenta
+      DATOS: typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(result) : JSON.parse(JSON.stringify(result)),
+      MENSAJE: "Catálogos de ventas obtenidos exitosamente."
     };
   } catch (error) {
-    if (typeof LOG_REGISTRAR_ERROR === "function") {
-      LOG_REGISTRAR_ERROR("VEN_GUARDAR_VENTA_WEB", "VENTAS", error);
-    }
-    return {
-      EXITO: false,
-      MENSAJE: "No se pudo registrar la venta: " + error.toString()
-    };
+    return { EXITO: false, DATOS: { CLIENTES: [], PRODUCTOS: [], OBRAS: [] }, MENSAJE: error.toString() };
   }
 }
 
 /**
- * Endpoint RPC seguro para listar las ventas registradas
+ * RPC: Listar todas las ventas/facturas emitidas para la interfaz Web App
  */
 function VEN_LISTAR_VENTAS_WEB(tokenSesion) {
   try {
-    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "VENTAS", "VER");
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const hoja = ss.getSheetByName(VEN_CONFIG.HOJA_CABECERA);
-    if (!hoja) return { EXITO: false, DATOS: [], MENSAJE: "Hoja de ventas no configurada." };
-    
-    const ultimaFila = hoja.getLastRow();
-    if (ultimaFila < 2) return { EXITO: true, DATOS: [], MENSAJE: "No hay registros de ventas." };
-    
-    const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-    const registros = hoja.getRange(2, 1, ultimaFila - 1, hoja.getLastColumn()).getValues();
-    const lista = registros.map(fila => SEG_CONVERTIR_FILA_OBJETO(encabezados, fila));
-    
-    // Unir con CLI_MAESTRO para jalar la Razón Social real
-    const hojaClientes = ss.getSheetByName("CLI_MAESTRO");
-    if (hojaClientes) {
-      const cliEnc = hojaClientes.getRange(1, 1, 1, hojaClientes.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-      const cliRegs = hojaClientes.getLastRow() > 1 ? hojaClientes.getRange(2, 1, hojaClientes.getLastRow() - 1, hojaClientes.getLastColumn()).getValues() : [];
-      const mapaClientes = {};
-      
-      cliRegs.forEach(row => {
-        const c = SEG_CONVERTIR_FILA_OBJETO(cliEnc, row);
-        mapaClientes[c.ID_CLIENTE] = c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || (c.PRIMER_NOMBRE + " " + c.PRIMER_APELLIDO);
-      });
-      
-      lista.forEach(v => {
-        v.RAZON_SOCIAL_CLIENTE = mapaClientes[v.ID_CLIENTE] || "Tercero Desconocido (" + v.ID_CLIENTE + ")";
-      });
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "VENTAS", "VER");
     }
-    
+
+    const hoja = VEN_OBTENER_HOJA(VEN_CONFIG.HOJA_CABECERA);
+    const ulFila = hoja.getLastRow();
+    if (ulFila < 2) {
+      return { EXITO: true, DATOS: [], MENSAJE: "No hay transacciones de venta registradas." };
+    }
+
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const reg = hoja.getRange(2, 1, ulFila - 1, enc.length).getValues();
+
+    const lista = reg.map(fila => {
+      const obj = {};
+      enc.forEach((col, idx) => { obj[col] = fila[idx] !== undefined ? fila[idx] : ""; });
+      return obj;
+    }).reverse();
+
     return {
       EXITO: true,
-      DATOS: SEG_SANITIZAR_PARA_CLIENTE(lista),
-      MENSAJE: "Lista de transacciones de venta obtenida de forma exitosa."
+      DATOS: typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(lista) : JSON.parse(JSON.stringify(lista)),
+      MENSAJE: "Ventas listadas correctamente."
     };
   } catch (error) {
-    return { EXITO: false, DATOS: [], MENSAJE: "Error al listar ventas: " + error.toString() };
+    return { EXITO: false, DATOS: [], MENSAJE: "Error al consultar ventas: " + error.toString() };
   }
 }
 
 /**
- * Endpoint RPC seguro para consultar el detalle de una venta
+ * RPC: Registrar una nueva Venta / Factura / Remisión / Cotización en Sheets
+ */
+function VEN_GUARDAR_VENTA_WEB(datos, tokenSesion) {
+  try {
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "VENTAS", "CREAR");
+    }
+
+    if (!datos || !datos.ID_CLIENTE || !datos.ITEMS || datos.ITEMS.length === 0) {
+      throw new Error("Debe seleccionar un cliente y agregar al menos un ítem al detalle de la venta.");
+    }
+
+    const hojaCab = VEN_OBTENER_HOJA(VEN_CONFIG.HOJA_CABECERA);
+    const hojaDet = VEN_OBTENER_HOJA(VEN_CONFIG.HOJA_DETALLE);
+
+    const idVenta = datos.ID_VENTA || (VEN_CONFIG.PREFIJO_VENTA + "-" + String(Math.max(1, hojaCab.getLastRow())).padStart(VEN_CONFIG.DIGITOS_ID, "0"));
+    const ahora = new Date();
+    const usuarioEjecutor = (typeof Session !== "undefined" && Session.getActiveUser()) ? (Session.getActiveUser().getEmail() || "OPERADOR") : "OPERADOR";
+
+    const tipoDoc = String(datos.TIPO_DOCUMENTO || "FACTURA").toUpperCase();
+    const formaPago = String(datos.FORMA_PAGO || "CONTADO").toUpperCase();
+    const estadoInicial = datos.ESTADO || (tipoDoc === "COTIZACION" ? "COTIZADO" : (formaPago === "CREDITO" ? "PENDIENTE_CARTERA" : "PAGADA"));
+
+    // 1. Guardar Cabecera de Venta
+    const encCab = hojaCab.getRange(1, 1, 1, hojaCab.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const registroCab = encCab.map(col => {
+      switch (col) {
+        case "ID_VENTA": return idVenta;
+        case "FECHA": return datos.FECHA || ahora;
+        case "ID_CLIENTE": return datos.ID_CLIENTE;
+        case "RAZON_SOCIAL_CLIENTE": return datos.RAZON_SOCIAL_CLIENTE || datos.NOMBRE_CLIENTE || "CLIENTE GENERAL";
+        case "TIPO_DOCUMENTO": return tipoDoc;
+        case "NUM_DOCUMENTO": return datos.NUM_DOCUMENTO || idVenta;
+        case "ID_OBRA": return datos.ID_OBRA || "";
+        case "FORMA_PAGO": return formaPago;
+        case "PLAZO_DIAS": return Number(datos.PLAZO_DIAS || 30);
+        case "SUBTOTAL": return Number(datos.SUBTOTAL || 0);
+        case "VALOR_AIU": return Number(datos.VALOR_AIU || 0);
+        case "TOTAL_IVA": return Number(datos.TOTAL_IVA || 0);
+        case "TOTAL_RETENCIONES": return Number(datos.TOTAL_RETENCIONES || 0);
+        case "TOTAL": return Number(datos.TOTAL || 0);
+        case "ESTADO": return estadoInicial;
+        case "FECHA_CREACION": return ahora;
+        case "USUARIO_CREACION": return usuarioEjecutor;
+        case "OBSERVACIONES": return datos.OBSERVACIONES || "Registrado desde Módulo de Ventas V2";
+        default: return "";
+      }
+    });
+
+    hojaCab.appendRow(registroCab);
+
+    // 2. Guardar Detalle de Ítems
+    const encDet = hojaDet.getRange(1, 1, 1, hojaDet.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    datos.ITEMS.forEach((item, index) => {
+      const idDetalle = idVenta + "-D" + String(index + 1).padStart(3, "0");
+      const filaDet = encDet.map(col => {
+        switch (col) {
+          case "ID_DETALLE": return idDetalle;
+          case "ID_VENTA": return idVenta;
+          case "ID_PRODUCTO": return item.ID_PRODUCTO || "PROD-GEN";
+          case "CODIGO": return item.CODIGO || "";
+          case "DESCRIPCION": return item.DESCRIPCION || "Item de venta";
+          case "CANTIDAD": return Number(item.CANTIDAD || 1);
+          case "PRECIO_UNITARIO": return Number(item.PRECIO_UNITARIO || 0);
+          case "TARIFA_IVA": return String(item.TARIFA_IVA || "19%");
+          case "VALOR_IVA": return Number(item.VALOR_IVA || 0);
+          case "SUBTOTAL": return Number(item.SUBTOTAL || 0);
+          default: return "";
+        }
+      });
+      hojaDet.appendRow(filaDet);
+
+      // Descuento automático de Inventario Kardex si aplica
+      if (tipoDoc !== "COTIZACION" && typeof INV_REGISTRAR_MOVIMIENTO_KARDEX === "function" && item.ID_PRODUCTO) {
+        try {
+          INV_REGISTRAR_MOVIMIENTO_KARDEX({
+            ID_PRODUCTO: item.ID_PRODUCTO,
+            TIPO_MOVIMIENTO: "SALIDA_VENTA",
+            CANTIDAD: Number(item.CANTIDAD || 1),
+            DOCUMENTO_SOPORTE: idVenta,
+            OBSERVACION: "Venta a " + (datos.RAZON_SOCIAL_CLIENTE || datos.ID_CLIENTE)
+          });
+        } catch (errInv) { console.error("Aviso Kardex:", errInv.message); }
+      }
+    });
+
+    // 3. Registrar Cartera (CxC) si la venta es a Crédito
+    if (formaPago === "CREDITO" && tipoDoc !== "COTIZACION") {
+      VEN_REGISTRAR_CARTERA_CXC(idVenta, datos);
+    }
+
+    if (typeof SEG_REGISTRAR_AUDITORIA === "function") {
+      SEG_REGISTRAR_AUDITORIA({
+        ID_USUARIO: usuarioEjecutor,
+        USUARIO: usuarioEjecutor,
+        MODULO: "VENTAS",
+        ACCION: "CREAR",
+        TIPO_REGISTRO: tipoDoc,
+        ID_REGISTRO: idVenta,
+        DESCRIPCION: "Venta " + idVenta + " registrada por $" + datos.TOTAL + " a " + (datos.RAZON_SOCIAL_CLIENTE || datos.ID_CLIENTE),
+        RESULTADO: "EXITOSO"
+      });
+    }
+
+    return {
+      EXITO: true,
+      ID_VENTA: idVenta,
+      MENSAJE: "¡" + tipoDoc + " '" + idVenta + "' emitida y registrada en Sheets con éxito!"
+    };
+  } catch (error) {
+    return { EXITO: false, MENSAJE: "Error al procesar venta: " + error.toString() };
+  }
+}
+
+/**
+ * Helper interno para registrar la obligación en Cartera (CAR_CUENTAS_COBRAR)
+ */
+function VEN_REGISTRAR_CARTERA_CXC(idVenta, datos) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let hojaCar = ss.getSheetByName(VEN_CONFIG.HOJA_CARTERA);
+    if (!hojaCar) {
+      hojaCar = ss.insertSheet(VEN_CONFIG.HOJA_CARTERA);
+      hojaCar.appendRow(["ID_CARTERA", "ID_VENTA", "ID_CLIENTE", "FECHA_EMISION", "FECHA_VENCIMIENTO", "VALOR_DOCUMENTO", "ABONOS", "SALDO", "ESTADO"]);
+    }
+
+    const idCartera = "CXC-" + String(Math.max(1, hojaCar.getLastRow())).padStart(6, "0");
+    const plazoDias = Number(datos.PLAZO_DIAS || 30);
+    const fechaEmision = new Date();
+    const fechaVenc = new Date(fechaEmision.getTime() + (plazoDias * 24 * 60 * 60 * 1000));
+    const totalMonto = Number(datos.TOTAL || 0);
+
+    hojaCar.appendRow([
+      idCartera, idVenta, datos.ID_CLIENTE, fechaEmision, fechaVenc, totalMonto, 0, totalMonto, "PENDIENTE"
+    ]);
+  } catch (e) {
+    console.error("Aviso Cartera:", e.message);
+  }
+}
+
+/**
+ * RPC: Obtener el detalle completo (Cabecera + Ítems) de una venta específica
  */
 function VEN_OBTENER_DETALLE_VENTA_WEB(idVenta, tokenSesion) {
   try {
-    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "VENTAS", "VER");
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    
-    // 1. Obtener información de la cabecera de la venta
-    const hojaCab = ss.getSheetByName(VEN_CONFIG.HOJA_CABECERA);
-    if (!hojaCab) throw new Error("La hoja de cabecera de ventas no existe.");
-    
-    const ultCab = hojaCab.getLastRow();
-    let cabeceraObj = {};
-    if (ultCab >= 2) {
-      const encCab = hojaCab.getRange(1, 1, 1, hojaCab.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-      const regCab = hojaCab.getRange(2, 1, ultCab - 1, hojaCab.getLastColumn()).getValues();
-      const filaCab = regCab.find(f => String(f[0]) === String(idVenta));
-      if (filaCab) {
-        cabeceraObj = SEG_CONVERTIR_FILA_OBJETO(encCab, filaCab);
-        
-        // Unir con CLI_MAESTRO para jalar la Razón Social real
-        const hojaClientes = ss.getSheetByName("CLI_MAESTRO");
-        if (hojaClientes) {
-          const cliEnc = hojaClientes.getRange(1, 1, 1, hojaClientes.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-          const cliRegs = hojaClientes.getLastRow() > 1 ? hojaClientes.getRange(2, 1, hojaClientes.getLastRow() - 1, hojaClientes.getLastColumn()).getValues() : [];
-          const clienteFila = cliRegs.find(row => {
-            const c = SEG_CONVERTIR_FILA_OBJETO(cliEnc, row);
-            return String(c.ID_CLIENTE) === String(cabeceraObj.ID_CLIENTE);
-          });
-          if (clienteFila) {
-            const cObj = SEG_CONVERTIR_FILA_OBJETO(cliEnc, clienteFila);
-            cabeceraObj.RAZON_SOCIAL_CLIENTE = cObj.RAZON_SOCIAL || cObj.NOMBRE_COMERCIAL || (cObj.PRIMER_NOMBRE + " " + cObj.PRIMER_APELLIDO);
-          } else {
-            cabeceraObj.RAZON_SOCIAL_CLIENTE = "Tercero Desconocido (" + cabeceraObj.ID_CLIENTE + ")";
-          }
-        }
-      }
-    }
-    
-    // 2. Obtener detalles de la venta (artículos vendidos)
-    const hojaDet = ss.getSheetByName(VEN_CONFIG.HOJA_DETALLE);
-    if (!hojaDet) throw new Error("La hoja de detalle de ventas no existe.");
-    
-    const ultDet = hojaDet.getLastRow();
-    let filtrados = [];
-    if (ultDet >= 2) {
-      const encDet = hojaDet.getRange(1, 1, 1, hojaDet.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-      const regDet = hojaDet.getRange(2, 1, ultDet - 1, hojaDet.getLastColumn()).getValues();
-      filtrados = regDet
-        .filter(fila => String(fila[1]) === String(idVenta))
-        .map(fila => SEG_CONVERTIR_FILA_OBJETO(encDet, fila));
-    }
-      
+    if (!idVenta) throw new Error("ID_VENTA es requerido.");
+    const hojaCab = VEN_OBTENER_HOJA(VEN_CONFIG.HOJA_CABECERA);
+    const hojaDet = VEN_OBTENER_HOJA(VEN_CONFIG.HOJA_DETALLE);
+
+    const encCab = hojaCab.getRange(1, 1, 1, hojaCab.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const regCab = hojaCab.getRange(2, 1, Math.max(1, hojaCab.getLastRow() - 1), encCab.length).getValues();
+    const idxIdCab = encCab.indexOf("ID_VENTA");
+
+    const filaCab = regCab.find(r => String(r[idxIdCab]).trim() === String(idVenta).trim());
+    if (!filaCab) throw new Error("Venta '" + idVenta + "' no encontrada.");
+
+    const cabecera = {};
+    encCab.forEach((col, idx) => { cabecera[col] = filaCab[idx] !== undefined ? filaCab[idx] : ""; });
+
+    const encDet = hojaDet.getRange(1, 1, 1, hojaDet.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const regDet = hojaDet.getRange(2, 1, Math.max(1, hojaDet.getLastRow() - 1), encDet.length).getValues();
+    const idxIdDet = encDet.indexOf("ID_VENTA");
+
+    const items = regDet.filter(r => String(r[idxIdDet]).trim() === String(idVenta).trim()).map(r => {
+      const item = {};
+      encDet.forEach((col, idx) => { item[col] = r[idx] !== undefined ? r[idx] : ""; });
+      return item;
+    });
+
+    const resObj = { CABECERA: cabecera, ITEMS: items };
+
     return {
       EXITO: true,
-      DATOS: {
-        CABECERA: SEG_SANITIZAR_PARA_CLIENTE(cabeceraObj),
-        DETALLES: SEG_SANITIZAR_PARA_CLIENTE(filtrados)
-      },
-      MENSAJE: "Detalle de venta obtenido correctamente."
+      DATOS: typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(resObj) : JSON.parse(JSON.stringify(resObj)),
+      MENSAJE: "Detalle de venta obtenido exitosamente."
     };
   } catch (error) {
-    return { EXITO: false, DATOS: null, MENSAJE: "Error al obtener detalles: " + error.toString() };
+    return { EXITO: false, DATOS: null, MENSAJE: error.toString() };
   }
 }
 
-/**
- * Motor central de guardado y afectación de ventas
- */
-function VEN_GUARDAR_VENTA(cabecera, detalles, tokenSesion) {
-  if (!cabecera || !detalles || detalles.length === 0) {
-    throw new Error("La transacción de venta se encuentra incompleta o vacía.");
-  }
-  
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hojaCab = ss.getSheetByName(VEN_CONFIG.HOJA_CABECERA);
-  const hojaDet = ss.getSheetByName(VEN_CONFIG.HOJA_DETALLE);
-  if (!hojaCab || !hojaDet) throw new Error("Hojas físicas de ventas (VEN_CABECERA o VEN_DETALLE) no encontradas.");
-  
-  const idVenta = VEN_OBTENER_SIGUIENTE_ID();
-  const ahora = new Date();
-  
-  let subtotal = 0;
-  let descuento = 0;
-  let iva = 0;
-  
-  // Procesamiento de cálculos bajo normativa DIAN Colombia
-  const esVentaAIU = (cabecera.TIPO_DOCUMENTO === "FACTURA_AIU" || cabecera.TIPO_VENTA === "AIU");
-  
-  detalles.forEach(function(det) {
-    const cant = Number(det.CANTIDAD || 0);
-    const precio = Number(det.PRECIO_UNITARIO || 0);
-    const desc = Number(det.DESCUENTO || 0);
-    let pctIva = Number(String(det.IVA || "0").replace("%", "")) / 100;
-    
-    let lineaSub = cant * precio;
-    let lineaDesc = desc;
-    let lineaIva = 0;
-    
-    if (esVentaAIU) {
-      // Regla de AIU Colombia: El IVA se calcula EXCLUSIVAMENTE sobre la Utilidad (U)
-      const a_pct = Number(cabecera.AIU_A || 15) / 100;
-      const i_pct = Number(cabecera.AIU_I || 5) / 100;
-      const u_pct = Number(cabecera.AIU_U || 10) / 100;
-      
-      const subtotalAIU = lineaSub - lineaDesc;
-      const baseUtilidad = subtotalAIU * u_pct;
-      
-      lineaIva = baseUtilidad * 0.19; // El IVA del AIU es del 19% sobre la utilidad pactada
-    } else {
-      // IVA tradicional colombiano
-      lineaIva = (lineaSub - lineaDesc) * pctIva;
-    }
-    
-    subtotal += lineaSub;
-    descuento += lineaDesc;
-    iva += lineaIva;
-    
-    const idDetalle = "DET-" + Utilities.getUuid().substring(0, 8);
-    
-    // Escribir fila de VEN_DETALLE
-    hojaDet.appendRow([
-      idDetalle, 
-      idVenta, 
-      det.ID_PRODUCTO, 
-      det.DESCRIPCION || "", 
-      cant, 
-      det.ID_UNIDAD || "UND", 
-      precio, 
-      lineaDesc, 
-      lineaIva, 
-      (lineaSub - lineaDesc + lineaIva)
-    ]);
-    
-    // Descarga de Inventario (Kardex físico) de forma automatizada
-    try {
-      INV_REGISTRAR_MOVIMIENTO({
-        TIPO_MOVIMIENTO: "SALIDA",
-        ID_PRODUCTO: det.ID_PRODUCTO,
-        CANTIDAD: cant,
-        ID_OBRA: cabecera.ID_OBRA || "",
-        DOCUMENTO_ORIGEN: "VENTA",
-        ID_ORIGEN: idVenta,
-        COSTO_UNITARIO: 0, // El Kardex de salida calcula costo promedio ponderado automáticamente
-        OBSERVACION: "Salida automatizada por Facturación de Venta " + idVenta
-      }, tokenSesion);
-    } catch (err) {
-      console.warn("Inventario omitido u opcional para venta: " + idVenta + ". Detalle: " + err.toString());
-    }
-  });
-  
-  const total = subtotal - descuento + iva;
-  
-  cabecera.ID_VENTA = idVenta;
-  cabecera.FECHA = ahora;
-  cabecera.SUBTOTAL = subtotal;
-  cabecera.DESCUENTO = descuento;
-  cabecera.IVA = iva;
-  cabecera.TOTAL = total;
-  cabecera.ESTADO = "EMITIDA";
-  cabecera.FECHA_CREACION = ahora;
-  
-  // Calcular vencimiento de cartera según plazo comercial
-  const plazoDias = Number(cabecera.PLAZO_PAGO_DIAS || 0);
-  cabecera.FECHA_VENCIMIENTO = new Date(ahora.getTime() + (plazoDias * 24 * 60 * 60 * 1000));
-  
-  const encCab = hojaCab.getRange(1, 1, 1, hojaCab.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-  const filaCab = encCab.map(col => cabecera[col] !== undefined ? cabecera[col] : "");
-  hojaCab.appendRow(filaCab);
-  
-  // Disparar Cartera (Cuentas por Cobrar) en caliente si es a CRÉDITO
-  try {
-    if (cabecera.FORMA_PAGO === "CREDITO") {
-      CAR_CREAR_CUENTA_COBRAR(idVenta, cabecera.ID_CLIENTE, total);
-    }
-  } catch (err) {
-    console.warn("Cartera de cliente omitida u opcional para venta: " + idVenta + ". Detalle: " + err.toString());
-  }
-  
-  return { ok: true, idVenta: idVenta, total: total };
-}
-
-/**
- * Obtener consecutivo siguiente indexado de la cabecera
- */
-function VEN_OBTENER_SIGUIENTE_ID() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(VEN_CONFIG.HOJA_CABECERA);
-  const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) return VEN_CONFIG.PREFIJO_ID + "-000001";
-  
-  const ultimoID = hoja.getRange(ultimaFila, 1).getValue().toString();
-  const numero = parseInt(ultimoID.replace(VEN_CONFIG.PREFIJO_ID + "-", ""), 10);
-  if (isNaN(numero)) {
-    return VEN_CONFIG.PREFIJO_ID + "-000001";
-  }
-  return VEN_CONFIG.PREFIJO_ID + "-" + String(numero + 1).padStart(VEN_CONFIG.DIGITOS_ID, "0");
-}

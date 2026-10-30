@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 4.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nómina Específica Colombiana | MEGUDAN ERP</title>
+  <title>Nómina Específica Colombiana | ERP Empresarial</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -417,6 +417,13 @@
     setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
+  
+  function abrirModalEmpleadoById(idEmp) {
+    if (!idEmp) return;
+    var emp = EMPLEADOS_CACHE[idEmp];
+    if (emp) abrirModalEmpleado(emp);
+  }
+
   function abrirModalEmpleado(emp) {
     document.getElementById("emp_id_empleado").value = emp ? emp.ID_EMPLEADO : "";
     document.getElementById("emp_documento").value = emp ? emp.DOCUMENTO : "";
@@ -507,7 +514,7 @@
                            "<td>" + (e.TIPO_CONTRATO || 'INDEFINIDO') + " / " + (e.NIVEL_ARL || 'RIESGO 1') + "</td>" +
                            "<td><span class='badge " + (e.TIENE_AUX_TRANSPORTE === 'SI' ? 'badge-success' : 'badge-warning') + "'>" + (e.TIENE_AUX_TRANSPORTE || 'NO') + "</span></td>" +
                            "<td><span class='badge badge-success'>" + (e.ESTADO || 'ACTIVO') + "</span></td>" +
-                           "<td style='text-align:center;'><button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='abrirModalEmpleado(" + strEscaped + ")'>✏️ Editar</button></td>";
+                           '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="abrirModalEmpleadoById(\'' + e.ID_EMPLEADO + '\')">✏️ Editar</button></td>';
             tbody.appendChild(tr);
 
             if (selectLiq) {

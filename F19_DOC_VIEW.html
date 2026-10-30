@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documentos & Impresión PDF | MEGUDAN ERP</title>
+  <title>Documentos & Impresión PDF | ERP Empresarial</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -153,7 +153,7 @@
 
     lista.forEach(function(v) {
       var tr = document.createElement("tr");
-      var btnActionHtml = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento('\'' + v.ID_VENTA + '\'')">🖨️ Generar PDF Drive</button>';
+      var btnActionHtml = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento(\'' + v.ID_VENTA + '\')">🖨️ Generar PDF Drive</button>';
       
       tr.innerHTML = '<td><code>' + v.ID_VENTA + '</code></td>' +
                      '<td>' + (v.FECHA ? String(v.FECHA).substring(0,10) : 'Hoy') + '</td>' +
@@ -197,14 +197,14 @@
         } else {
           mostrarAlertaDoc("Error al generar PDF: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
           if (cellAction) {
-            cellAction.innerHTML = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento('\'' + idVenta + '\'')">🖨️ Reintentar PDF</button>';
+            cellAction.innerHTML = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento(\'' + idVenta + '\')">🖨️ Reintentar PDF</button>';
           }
         }
       })
       .withFailureHandler(function(err) {
         mostrarAlertaDoc("Fallo del servidor: " + err.message, "error");
         if (cellAction) {
-          cellAction.innerHTML = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento('\'' + idVenta + '\'')">🖨️ Reintentar PDF</button>';
+          cellAction.innerHTML = '<button class="button button-primary" style="padding:6px 12px; font-size:11px;" onclick="generarPdfDocumento(\'' + idVenta + '\')">🖨️ Reintentar PDF</button>';
         }
       })
       .DOC_GENERAR_PDF_VENTA_WEB(idVenta, TOKEN_SESION_PROY);

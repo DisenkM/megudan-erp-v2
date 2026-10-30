@@ -18,8 +18,8 @@ const NOM_CONFIG_CORE = {
   PREFIJO_EMPLEADO: "EMP",
   PREFIJO_LIQUIDACION: "NOM",
   DIGITOS_ID: 6,
-  SMMLV_2026: 1423500, // Valor base SMMLV 2026
-  AUX_TRANSPORTE_2026: 162000, // Valor base Auxilio de Transporte 2026
+  SMMLV_2026: 1750905, // Valor base SMMLV 2026
+  AUX_TRANSPORTE_2026: 249000, // Valor base Auxilio de Transporte 2026
   HORAS_MES_LABORALES: 230 // Jornada laboral mensual ajustada
 };
 

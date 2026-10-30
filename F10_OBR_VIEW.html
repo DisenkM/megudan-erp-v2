@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 2.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 3.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Obras y Proyectos | MEGUDAN ERP</title>
+  <title>Obras y Proyectos | ERP Empresarial</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -88,7 +88,7 @@
       <div class="header-icon">🏗️</div>
       <div>
         <h1>Gestión de Obras, Proyectos y Rentabilidad</h1>
-        <p>ERP Operativo · Control de Presupuestos, Materiales de Guadua, Mano de Obra y Análisis de Margen</p>
+        <p>ERP Operativo · Control de Presupuestos, Materiales, Mano de Obra y Análisis de Margen</p>
       </div>
     </div>
   </header>
@@ -198,7 +198,7 @@
       <div class="form-row">
         <div class="field">
           <label>Nombre del Proyecto / Obra *</label>
-          <input type="text" id="obr_nombre" class="input" placeholder="Ej: Estructura Guadua Hotel Campestre">
+          <input type="text" id="obr_nombre" class="input" placeholder="Ej: Proyecto Estructural / Obra Civil">
         </div>
         <div class="field">
           <label>Cliente / Contratante *</label>
@@ -209,7 +209,7 @@
       <div class="form-row">
         <div class="field">
           <label>Ubicación / Dirección *</label>
-          <input type="text" id="obr_ubicacion" class="input" placeholder="Ej: Vereda Regueros, Pitalito">
+          <input type="text" id="obr_ubicacion" class="input" placeholder="Ej: Zona Industrial / Sede Principal">
         </div>
         <div class="field">
           <label>Presupuesto Meta (COP) *</label>
@@ -326,11 +326,11 @@
                            "<td><code>" + (o.CODIGO_OBRA || 'S/D') + "</code></td>" +
                            "<td><strong>" + o.NOMBRE_OBRA + "</strong></td>" +
                            "<td>" + (o.RAZON_SOCIAL_CLIENTE || o.ID_CLIENTE) + "</td>" +
-                           "<td>" + (o.UBICACION || 'Pitalito') + "</td>" +
+                           "<td>" + (o.UBICACION || 'Ciudad Principal') + "</td>" +
                            "<td style='color:#b45309; font-weight:700;'>$" + Number(o.PRESUPUESTO || 0).toLocaleString('es-CO') + " COP</td>" +
                            "<td>" + (o.RESPONSABLE || 'SISTEMA') + "</td>" +
                            "<td><span class='badge " + badgeEst + "'>" + (o.ESTADO || 'ACTIVA') + "</span></td>" +
-                           "<td style='text-align:center;'><button class='button button-secondary' style='padding:4px 8px; font-size:11px;' onclick='verRentabilidadDirecta("" + o.ID_OBRA + "")'>📊 Auditar Costos</button></td>";
+                           '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="verRentabilidadDirecta(\'' + o.ID_OBRA + '\')">📊 Auditar Costos</button></td>';
             tbody.appendChild(tr);
 
             if (selectRen) {

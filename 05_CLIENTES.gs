@@ -1,395 +1,464 @@
-// (VERSIÓN 5.0 - V2 ERP - LIBRO 1)
+// (VERSIÓN 1.0 - V2 ERP - LIBRO 1)
 /**************************************************************
-* 05_CLIENTES.gs (VERSIÓN 5.0 - V2 ERP - LIBRO 1)
+* 05_CLIENTES.gs (VERSIÓN 1.0 - V2 ERP - LIBRO 1)
 * RESPONSABILIDAD:
-* - Administrar el ciclo de vida (CRUD) de Clientes (CLI_MAESTRO).
-* - Proteger accesos bajo la arquitectura de seguridad dual.
-* - Calcular dígitos de verificación DIAN (DV) y registrar historiales.
-* - Mapear identificadores de Siigo y Alegra desde el día uno.
-* - Determinar automáticamente retenciones basadas en responsabilidades.
+* - Módulo Core de Clientes, Proveedores, Terceros y Cartera / Cuentas por Cobrar.
+* - Persistencia relacional en las hojas CLI_MAESTRO, PROV_MAESTRO y CAR_CUENTAS_COBRAR.
+* - Métodos RPC asíncronos para la interfaz F1_CLI_FORM y los demás módulos (Ventas, Obras, Documentos).
 **************************************************************/
 
 const CLI_CONFIG = {
-  HOJA_MAESTRO: "CLI_MAESTRO",
-  HOJA_HISTORIAL: "CLI_HISTORIAL",
-  PREFIJO_ID: "CLI",
+  HOJA_CLIENTES: "CLI_MAESTRO",
+  HOJA_PROVEEDORES: "PROV_MAESTRO",
+  HOJA_CARTERA: "CAR_CUENTAS_COBRAR",
+  PREFIJO_CLIENTE: "CLI",
+  PREFIJO_PROVEEDOR: "PROV",
+  PREFIJO_CARTERA: "CXC",
   DIGITOS_ID: 6
 };
-
-/**
- * Algoritmo oficial DIAN para el cálculo del Dígito de Verificación (DV)
- */
-function CLI_CALCULAR_DV(nit) {
-  if (!nit) return "0";
-  const strNit = String(nit).replace(/\D/g, "");
-  if (!strNit) return "0";
-  const vpri = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
-  let z = strNit.length;
-  let y = 0;
-  for (let i = 0; i < z; i++) {
-    y += parseInt(strNit.charAt(z - 1 - i), 10) * vpri[i];
-  }
-  let x = y % 11;
-  return x > 1 ? String(11 - x) : String(x);
-}
 
 function CLI_OBTENER_HOJA(nombreHoja) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let hoja = ss.getSheetByName(nombreHoja);
   if (!hoja) {
     hoja = ss.insertSheet(nombreHoja);
+    if (nombreHoja === CLI_CONFIG.HOJA_CLIENTES) {
+      hoja.appendRow([
+        "ID_CLIENTE", "TIPO_TERCERO", "TIPO_PERSONA", "TIPO_DOCUMENTO", "NUMERO_DOCUMENTO",
+        "DIGITO_VERIFICACION", "RAZON_SOCIAL", "PRIMER_NOMBRE", "SEGUNDO_NOMBRE", "PRIMER_APELLIDO",
+        "SEGUNDO_APELLIDO", "NOMBRE_COMERCIAL", "DIRECCION", "CIUDAD", "DEPARTAMENTO",
+        "PAIS", "CELULAR", "CORREO", "RESPONSABILIDAD_FISCAL", "FORMA_PAGO",
+        "PLAZO_PAGO_DIAS", "LIMITE_CREDITO", "ESTADO_CLIENTE", "FECHA_CREACION", "USUARIO_CREACION"
+      ]);
+      hoja.getRange(1, 1, 1, 25).setFontWeight("bold").setBackground("#0f172a").setFontColor("#ffffff");
+    } else if (nombreHoja === CLI_CONFIG.HOJA_PROVEEDORES) {
+      hoja.appendRow([
+        "ID_PROVEEDOR", "TIPO_TERCERO", "TIPO_PERSONA", "TIPO_DOCUMENTO", "NUMERO_DOCUMENTO",
+        "DIGITO_VERIFICACION", "RAZON_SOCIAL", "PRIMER_NOMBRE", "SEGUNDO_NOMBRE", "PRIMER_APELLIDO",
+        "SEGUNDO_APELLIDO", "NOMBRE_COMERCIAL", "DIRECCION", "CIUDAD", "DEPARTAMENTO",
+        "PAIS", "CELULAR", "CORREO", "RESPONSABILIDAD_FISCAL", "FORMA_PAGO",
+        "PLAZO_PAGO_DIAS", "LIMITE_CREDITO", "ESTADO", "FECHA_CREACION", "USUARIO_CREACION"
+      ]);
+      hoja.getRange(1, 1, 1, 25).setFontWeight("bold").setBackground("#0f172a").setFontColor("#ffffff");
+    } else if (nombreHoja === CLI_CONFIG.HOJA_CARTERA) {
+      hoja.appendRow([
+        "ID_CARTERA", "ID_VENTA", "ID_CLIENTE", "FECHA_EMISION", "FECHA_VENCIMIENTO",
+        "VALOR_DOCUMENTO", "ABONOS", "SALDO", "ESTADO"
+      ]);
+      hoja.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#0f172a").setFontColor("#ffffff");
+    }
   }
   return hoja;
 }
 
-function CLI_OBTENER_ENCABEZADOS(nombreHoja) {
-  const hoja = CLI_OBTENER_HOJA(nombreHoja);
-  const uc = hoja.getLastColumn();
-  if (uc === 0) return [];
-  return hoja.getRange(1, 1, 1, uc).getValues()[0].map(h => String(h || "").trim().toUpperCase());
-}
-
-function CLI_OBTENER_REGISTROS(nombreHoja) {
-  const hoja = CLI_OBTENER_HOJA(nombreHoja);
-  const ulFila = hoja.getLastRow();
-  if (ulFila < 2) return [];
-  return hoja.getRange(2, 1, ulFila - 1, hoja.getLastColumn()).getValues();
-}
-
-function CLI_VALIDAR_DUPLICADO(tipoDoc, numDoc, idExcluir) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
-  if (!hoja || hoja.getLastRow() < 2) return false;
-
-  const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-  const idxId = encabezados.indexOf("ID_CLIENTE");
-  const idxTipoDoc = encabezados.indexOf("TIPO_DOCUMENTO");
-  const idxNumDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO") !== -1 ? encabezados.indexOf("NUMERO") : -1));
-
-  if (idxId === -1 || idxTipoDoc === -1 || idxNumDoc === -1) return false;
-
-  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, encabezados.length).getValues();
-
-  return datos.some(fila => {
-    if (idExcluir && String(fila[idxId]).trim() === String(idExcluir).trim()) return false;
-    return String(fila[idxTipoDoc]).trim().toUpperCase() === String(tipoDoc).trim().toUpperCase() &&
-           String(fila[idxNumDoc]).trim().replace(/\D/g, "") === String(numDoc).trim().replace(/\D/g, "");
-  });
-}
-
-function CLI_OBTENER_SIGUIENTE_ID() {
-  const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_MAESTRO);
-  const ulFila = hoja.getLastRow();
-  if (ulFila < 2) return CLI_CONFIG.PREFIJO_ID + "-" + String(1).padStart(CLI_CONFIG.DIGITOS_ID, "0");
-
-  const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-  const idxId = encabezados.indexOf("ID_CLIENTE");
-  if (idxId === -1) return CLI_CONFIG.PREFIJO_ID + "-" + String(ulFila).padStart(CLI_CONFIG.DIGITOS_ID, "0");
-
-  const registros = hoja.getRange(2, idxId + 1, ulFila - 1, 1).getValues().flat();
-  let maxNum = 0;
-  registros.forEach(id => {
-    const str = String(id || "").trim();
-    if (str.startsWith(CLI_CONFIG.PREFIJO_ID + "-")) {
-      const num = parseInt(str.replace(CLI_CONFIG.PREFIJO_ID + "-", ""), 10);
-      if (!isNaN(num) && num > maxNum) maxNum = num;
-    }
-  });
-
-  return CLI_CONFIG.PREFIJO_ID + "-" + String(maxNum + 1).padStart(CLI_CONFIG.DIGITOS_ID, "0");
-}
-
-function CLI_GUARDAR_CLIENTE(datos, tokenSesion) {
-  if (datos) {
-    if (datos.NUMERO_DOCUMENTO === undefined && datos.NIT_CC !== undefined) datos.NUMERO_DOCUMENTO = datos.NIT_CC;
-    if (datos.DIGITO_VERIFICACION === undefined && datos.DV !== undefined) datos.DIGITO_VERIFICACION = datos.DV;
-    if (datos.ID_CLIENTE === undefined && datos.ID_PROVEEDOR !== undefined) datos.ID_CLIENTE = datos.ID_PROVEEDOR;
-    if (datos.ESTADO_CLIENTE === undefined && datos.ESTADO !== undefined) datos.ESTADO_CLIENTE = datos.ESTADO;
-  }
-
-  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "CREAR");
-  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-
-  if (!datos) throw new Error("Datos no proporcionados.");
-
-  if (CLI_VALIDAR_DUPLICADO(datos.TIPO_DOCUMENTO, datos.NUMERO_DOCUMENTO, null)) {
-    throw new Error("El NIT/CC ingresado ya pertenece a un cliente registrado.");
-  }
-
-  if (datos.TIPO_DOCUMENTO === "NIT") {
-    datos.DIGITO_VERIFICACION = CLI_CALCULAR_DV(datos.NUMERO_DOCUMENTO);
-  } else {
-    datos.DIGITO_VERIFICACION = "";
-  }
-
-  if (!datos.RESPONSABILIDAD_FISCAL || String(datos.RESPONSABILIDAD_FISCAL).trim() === "") {
-    datos.RESPONSABILIDAD_FISCAL = "R-99-PN";
-  }
-
-  datos.ID_SIIGO = datos.ID_SIIGO || "";
-  datos.ID_ALEGRA = datos.ID_ALEGRA || "";
-
-  if (datos.TIPO_PERSONA === "PERSONA_NATURAL") {
-    const nomComp = [datos.PRIMER_NOMBRE, datos.SEGUNDO_NOMBRE, datos.PRIMER_APELLIDO, datos.SEGUNDO_APELLIDO]
-      .filter(n => n && String(n).trim() !== "").join(" ");
-    if (nomComp) datos.RAZON_SOCIAL = nomComp;
-  }
-
-  const idCliente = CLI_OBTENER_SIGUIENTE_ID();
-  datos.ID_CLIENTE = idCliente;
-
-  const ahora = new Date();
-  datos.FECHA_CREACION = ahora;
-  datos.FECHA_ACTUALIZACION = ahora;
-  datos.USUARIO_CREACION = usuarioEjecutor;
-  datos.USUARIO_ACTUALIZACION = usuarioEjecutor;
-  datos.ESTADO_CLIENTE = datos.ESTADO_CLIENTE || "ACTIVO";
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
-  if (!hoja) throw new Error("Hoja CLI_MAESTRO no encontrada.");
-
-  const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-  const filaNueva = encabezados.map(campo => datos[campo] !== undefined ? datos[campo] : "");
-  hoja.appendRow(filaNueva);
-
-  CLI_REGISTRAR_HISTORIAL(idCliente, "CREACION", "", "", "Cliente creado correctamente.", usuarioEjecutor);
-
-  if (typeof SEG_REGISTRAR_AUDITORIA === "function") {
-    SEG_REGISTRAR_AUDITORIA({
-      ID_USUARIO: usuarioEjecutor,
-      USUARIO: usuarioEjecutor,
-      MODULO: "CLIENTES",
-      SUBMODULO: "MAESTRO",
-      ACCION: "CREAR",
-      TIPO_REGISTRO: "CLIENTE",
-      ID_REGISTRO: idCliente,
-      DESCRIPCION: "Cliente " + datos.RAZON_SOCIAL + " (" + idCliente + ") creado con éxito.",
-      RESULTADO: "EXITOSO"
-    });
-  }
-
-  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_CLIENTE: idCliente, idCliente: idCliente, CLIENTE: datos, MENSAJE: "¡Cliente " + idCliente + " guardado exitosamente!" });
-}
-
-function CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion) {
-  if (datos) {
-    if (datos.NUMERO_DOCUMENTO === undefined && datos.NIT_CC !== undefined) datos.NUMERO_DOCUMENTO = datos.NIT_CC;
-    if (datos.DIGITO_VERIFICACION === undefined && datos.DV !== undefined) datos.DIGITO_VERIFICACION = datos.DV;
-    if (datos.ID_CLIENTE === undefined && datos.ID_PROVEEDOR !== undefined) datos.ID_CLIENTE = datos.ID_PROVEEDOR;
-    if (datos.ESTADO_CLIENTE === undefined && datos.ESTADO !== undefined) datos.ESTADO_CLIENTE = datos.ESTADO;
-  }
-
-  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "EDITAR");
-  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-
-  if (!datos || !datos.ID_CLIENTE) throw new Error("ID_CLIENTE es requerido para actualizar.");
-
-  if (CLI_VALIDAR_DUPLICADO(datos.TIPO_DOCUMENTO, datos.NUMERO_DOCUMENTO, datos.ID_CLIENTE)) {
-    throw new Error("El NIT/CC ingresado ya pertenece a otro cliente registrado.");
-  }
-
-  if (datos.TIPO_DOCUMENTO === "NIT") {
-    datos.DIGITO_VERIFICACION = CLI_CALCULAR_DV(datos.NUMERO_DOCUMENTO);
-  } else {
-    datos.DIGITO_VERIFICACION = "";
-  }
-
-  if (datos.TIPO_PERSONA === "PERSONA_NATURAL") {
-    const nomComp = [datos.PRIMER_NOMBRE, datos.SEGUNDO_NOMBRE, datos.PRIMER_APELLIDO, datos.SEGUNDO_APELLIDO]
-      .filter(n => n && String(n).trim() !== "").join(" ");
-    if (nomComp) datos.RAZON_SOCIAL = nomComp;
-  }
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
-  if (!hoja) throw new Error("Hoja CLI_MAESTRO no encontrada.");
-
-  const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, encabezados.length).getValues();
-  const idxId = encabezados.indexOf("ID_CLIENTE");
-
-  let filaModificar = -1;
-  for (let i = 0; i < registros.length; i++) {
-    if (String(registros[i][idxId]).trim() === String(datos.ID_CLIENTE).trim()) {
-      filaModificar = i + 2;
-      break;
-    }
-  }
-
-  if (filaModificar === -1) throw new Error("Cliente " + datos.ID_CLIENTE + " no encontrado.");
-
-  const clienteActualValores = hoja.getRange(filaModificar, 1, 1, encabezados.length).getValues()[0];
-  const clienteActual = {};
-  encabezados.forEach((h, index) => {
-    clienteActual[h] = clienteActualValores[index];
-  });
-
-  const clienteActualizado = Object.assign({}, clienteActual, datos);
-  clienteActualizado.FECHA_ACTUALIZACION = new Date();
-  clienteActualizado.USUARIO_ACTUALIZACION = usuarioEjecutor;
-
-  const filaActualizada = encabezados.map(campo => clienteActualizado[campo] !== undefined ? clienteActualizado[campo] : "");
-  hoja.getRange(filaModificar, 1, 1, encabezados.length).setValues([filaActualizada]);
-
-  CLI_REGISTRAR_HISTORIAL(datos.ID_CLIENTE, "MODIFICACION", "", "", "Cliente actualizado de forma completa.", usuarioEjecutor);
-
-  if (typeof SEG_REGISTRAR_AUDITORIA === "function") {
-    SEG_REGISTRAR_AUDITORIA({
-      ID_USUARIO: usuarioEjecutor,
-      USUARIO: usuarioEjecutor,
-      MODULO: "CLIENTES",
-      SUBMODULO: "MAESTRO",
-      ACCION: "EDITAR",
-      TIPO_REGISTRO: "CLIENTE",
-      ID_REGISTRO: datos.ID_CLIENTE,
-      DESCRIPCION: "Cliente " + clienteActualizado.RAZON_SOCIAL + " (" + datos.ID_CLIENTE + ") actualizado con éxito.",
-      RESULTADO: "EXITOSO"
-    });
-  }
-
-  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_CLIENTE: datos.ID_CLIENTE, CLIENTE: clienteActualizado, MENSAJE: "¡Cliente " + datos.ID_CLIENTE + " actualizado con éxito!" });
-}
-
-function CLI_ELIMINAR_CLIENTE(idCliente, tokenSesion) {
-  const auth = SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "ELIMINAR");
-  const usuarioEjecutor = auth.USUARIO || "SISTEMA";
-
-  if (!idCliente) throw new Error("ID_CLIENTE es requerido para inactivar.");
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
-  if (!hoja) throw new Error("Hoja CLI_MAESTRO no encontrada.");
-
-  const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-  const idxId = encabezados.indexOf("ID_CLIENTE");
-  const idxEst = encabezados.indexOf("ESTADO_CLIENTE") !== -1 ? encabezados.indexOf("ESTADO_CLIENTE") : encabezados.indexOf("ESTADO");
-
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, encabezados.length).getValues();
-  let filaModificar = -1;
-  for (let i = 0; i < registros.length; i++) {
-    if (String(registros[i][idxId]).trim() === String(idCliente).trim()) {
-      filaModificar = i + 2;
-      break;
-    }
-  }
-
-  if (filaModificar === -1) throw new Error("Cliente " + idCliente + " no encontrado.");
-
-  if (idxEst !== -1) {
-    hoja.getRange(filaModificar, idxEst + 1).setValue("INACTIVO");
-  }
-
-  CLI_REGISTRAR_HISTORIAL(idCliente, "INACTIVACION", "ESTADO_CLIENTE", "ACTIVO", "Cliente marcado como INACTIVO de forma lógica.", usuarioEjecutor, "INACTIVO");
-
-  return SEG_SANITIZAR_PARA_CLIENTE({ EXITO: true, ID_CLIENTE: idCliente, MENSAJE: "Cliente " + idCliente + " inactivado correctamente." });
-}
-
-function CLI_CONVERTIR_FILA_OBJETO(encabezados, fila) {
-  const objeto = {};
-  encabezados.forEach((campo, indice) => {
-    let val = fila[indice] !== undefined && fila[indice] !== null ? fila[indice] : "";
-    if (["NUMERO_DOCUMENTO", "NIT_CC", "DIGITO_VERIFICACION", "DV", "TELEFONO", "CELULAR", "PLAZO_PAGO_DIAS"].includes(campo)) {
-      val = String(val).trim();
-    }
-    objeto[campo] = val;
-  });
-  if (objeto.NUMERO_DOCUMENTO === undefined || objeto.NUMERO_DOCUMENTO === "") {
-    if (objeto.NIT_CC) objeto.NUMERO_DOCUMENTO = String(objeto.NIT_CC).trim();
-    else if (objeto.NUMERO) objeto.NUMERO_DOCUMENTO = String(objeto.NUMERO).trim();
-  }
-  if (objeto.NIT_CC === undefined || objeto.NIT_CC === "") {
-    if (objeto.NUMERO_DOCUMENTO) objeto.NIT_CC = String(objeto.NUMERO_DOCUMENTO).trim();
-  }
-  if (objeto.DIGITO_VERIFICACION === undefined || objeto.DIGITO_VERIFICACION === "") {
-    if (objeto.DV) objeto.DIGITO_VERIFICACION = String(objeto.DV).trim();
-  }
-  if (objeto.DV === undefined || objeto.DV === "") {
-    if (objeto.DIGITO_VERIFICACION) objeto.DV = String(objeto.DIGITO_VERIFICACION).trim();
-  }
-  return objeto;
-}
-
-function CLI_BUSCAR_CLIENTE(criterio, tokenSesion) {
-  if (!criterio) return null;
-  if (tokenSesion !== undefined) {
-    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "VER");
-  }
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName(CLI_CONFIG.HOJA_MAESTRO);
-  if (!hoja || hoja.getLastRow() < 2) return null;
-
-  const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-  const registros = hoja.getRange(2, 1, hoja.getLastRow() - 1, encabezados.length).getValues();
-
-  const idxId = encabezados.indexOf("ID_CLIENTE");
-  const idxDoc = encabezados.indexOf("NUMERO_DOCUMENTO") !== -1 ? encabezados.indexOf("NUMERO_DOCUMENTO") : (encabezados.indexOf("NIT_CC") !== -1 ? encabezados.indexOf("NIT_CC") : (encabezados.indexOf("NUMERO") !== -1 ? encabezados.indexOf("NUMERO") : -1));
-  const idxRazon = encabezados.indexOf("RAZON_SOCIAL");
-
-  const criterioNormalizado = String(criterio).trim().toUpperCase();
-
-  let filaEncontrada = registros.find(fila => String(fila[idxId] || "").trim().toUpperCase() === criterioNormalizado);
-
-  if (!filaEncontrada) {
-    const criterioSoloNumeros = criterioNormalizado.replace(/\D/g, "");
-    filaEncontrada = registros.find(fila => {
-      const valDoc = String(fila[idxDoc] || "").trim().toUpperCase();
-      const valDocSoloNumeros = valDoc.replace(/\D/g, "");
-      const valRazon = String(fila[idxRazon] || "").trim().toUpperCase();
-
-      return (criterioSoloNumeros !== "" && valDocSoloNumeros === criterioSoloNumeros) ||
-             (criterioNormalizado.length >= 3 && valRazon.includes(criterioNormalizado));
-    });
-  }
-
-  return filaEncontrada ? SEG_SANITIZAR_PARA_CLIENTE(CLI_CONVERTIR_FILA_OBJETO(encabezados, filaEncontrada)) : null;
-}
-
-function CLI_OBTENER_CLIENTE(idCliente, tokenSesion) {
-  return CLI_BUSCAR_CLIENTE(idCliente, tokenSesion);
-}
-
-function CLI_LISTAR_CLIENTES(tokenSesion) {
+/**
+ * RPC: Listar todos los clientes registrados
+ */
+function CLI_LISTAR_CLIENTES_WEB(tokenSesion) {
   try {
-    SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "VER");
-    const encabezados = CLI_OBTENER_ENCABEZADOS(CLI_CONFIG.HOJA_MAESTRO);
-    const registros = CLI_OBTENER_REGISTROS(CLI_CONFIG.HOJA_MAESTRO);
-    const lista = registros.map(r => CLI_CONVERTIR_FILA_OBJETO(encabezados, r));
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "VER");
+    }
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_CLIENTES);
+    const ulFila = hoja.getLastRow();
+    if (ulFila < 2) {
+      return { EXITO: true, DATOS: [], MENSAJE: "No hay clientes registrados." };
+    }
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const reg = hoja.getRange(2, 1, ulFila - 1, enc.length).getValues();
+
+    const lista = reg.map(fila => {
+      const obj = {};
+      enc.forEach((col, idx) => { obj[col] = fila[idx] !== undefined ? fila[idx] : ""; });
+      if (!obj.TIPO_TERCERO) obj.TIPO_TERCERO = "CLIENTE";
+      return obj;
+    });
+
     return {
       EXITO: true,
-      DATOS: SEG_SANITIZAR_PARA_CLIENTE(lista),
-      MENSAJE: "Lista de clientes obtenida con éxito."
+      DATOS: typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(lista) : JSON.parse(JSON.stringify(lista)),
+      MENSAJE: "Clientes listados correctamente."
     };
   } catch (error) {
     return { EXITO: false, DATOS: [], MENSAJE: "Error al listar clientes: " + error.toString() };
   }
 }
 
-function CLI_LISTAR_CLIENTES_WEB(tokenSesion) {
-  return CLI_LISTAR_CLIENTES(tokenSesion);
+function CLI_LISTAR_CLIENTES(tokenSesion) {
+  return CLI_LISTAR_CLIENTES_WEB(tokenSesion);
 }
 
-function CLI_REGISTRAR_HISTORIAL(idCliente, tipoEvento, campo, valAnt, obs, usuario, valNue) {
+/**
+ * RPC: Guardar nuevo cliente comercial
+ */
+function CLI_GUARDAR_CLIENTE(datos, tokenSesion) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let hoja = ss.getSheetByName(CLI_CONFIG.HOJA_HISTORIAL);
-    if (!hoja) {
-      hoja = ss.insertSheet(CLI_CONFIG.HOJA_HISTORIAL);
-      hoja.appendRow(["ID_HISTORIAL", "ID_CLIENTE", "TIPO_EVENTO", "FECHA_HORA", "USUARIO", "ACCION", "CAMPO_MODIFICADO", "VALOR_ANTERIOR", "VALOR_NUEVO", "MOTIVO_ORIGEN", "MODULO_ORIGEN", "ID_REGISTRO_ORIGEN", "ESTADO_EVENTO", "OBSERVACIONES"]);
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "CREAR");
     }
-    const idHist = "HIS-" + new Date().getTime();
-    hoja.appendRow([idHist, idCliente, tipoEvento, new Date(), usuario || "SISTEMA", tipoEvento, campo || "", valAnt || "", valNue || "", "MAESTRO_CLIENTES", "CLIENTES", idCliente, "ACTIVO", obs || ""]);
-  } catch (e) {}
+
+    if (!datos || (!datos.NUMERO_DOCUMENTO && !datos.NIT_CC)) {
+      throw new Error("El número de documento o NIT es obligatorio.");
+    }
+
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_CLIENTES);
+    const idCli = datos.ID_CLIENTE || (CLI_CONFIG.PREFIJO_CLIENTE + "-" + String(Math.max(1, hoja.getLastRow())).padStart(CLI_CONFIG.DIGITOS_ID, "0"));
+    const ahora = new Date();
+    const usuarioEjecutor = (typeof Session !== "undefined" && Session.getActiveUser()) ? (Session.getActiveUser().getEmail() || "OPERADOR") : "OPERADOR";
+
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const docNum = datos.NUMERO_DOCUMENTO || datos.NIT_CC || "";
+    const dvVal = datos.DIGITO_VERIFICACION || datos.DV || "";
+
+    const filaNueva = enc.map(col => {
+      switch (col) {
+        case "ID_CLIENTE": return idCli;
+        case "TIPO_TERCERO": return datos.TIPO_TERCERO || "CLIENTE";
+        case "TIPO_PERSONA": return datos.TIPO_PERSONA || "PERSONA_JURIDICA";
+        case "TIPO_DOCUMENTO": return datos.TIPO_DOCUMENTO || "NIT";
+        case "NUMERO_DOCUMENTO": return docNum;
+        case "DIGITO_VERIFICACION": return dvVal;
+        case "RAZON_SOCIAL": return String(datos.RAZON_SOCIAL || datos.NOMBRE_COMERCIAL || "CLIENTE SIN NOMBRE").trim().toUpperCase();
+        case "PRIMER_NOMBRE": return datos.PRIMER_NOMBRE || "";
+        case "SEGUNDO_NOMBRE": return datos.SEGUNDO_NOMBRE || "";
+        case "PRIMER_APELLIDO": return datos.PRIMER_APELLIDO || "";
+        case "SEGUNDO_APELLIDO": return datos.SEGUNDO_APELLIDO || "";
+        case "NOMBRE_COMERCIAL": return datos.NOMBRE_COMERCIAL || datos.RAZON_SOCIAL || "";
+        case "DIRECCION": return datos.DIRECCION || "";
+        case "CIUDAD": return datos.CIUDAD || "Pitalito";
+        case "DEPARTAMENTO": return datos.DEPARTAMENTO || "Huila";
+        case "PAIS": return datos.PAIS || "COLOMBIA";
+        case "CELULAR": return datos.CELULAR || datos.TELEFONO || "";
+        case "CORREO": return datos.CORREO || datos.EMAIL || "";
+        case "RESPONSABILIDAD_FISCAL": return datos.RESPONSABILIDAD_FISCAL || "48";
+        case "FORMA_PAGO": return datos.FORMA_PAGO || "CONTADO";
+        case "PLAZO_PAGO_DIAS": return Number(datos.PLAZO_PAGO_DIAS || 30);
+        case "LIMITE_CREDITO": return Number(datos.LIMITE_CREDITO || datos.CUPO_CREDITO || 0);
+        case "ESTADO_CLIENTE": return datos.ESTADO_CLIENTE || datos.ESTADO || "ACTIVO";
+        case "FECHA_CREACION": return ahora;
+        case "USUARIO_CREACION": return usuarioEjecutor;
+        default: return "";
+      }
+    });
+
+    hoja.appendRow(filaNueva);
+
+    return {
+      EXITO: true,
+      ID_CLIENTE: idCli,
+      MENSAJE: "¡Cliente '" + (datos.RAZON_SOCIAL || idCli) + "' guardado con éxito!"
+    };
+  } catch (error) {
+    return { EXITO: false, MENSAJE: "Error al guardar cliente: " + error.toString() };
+  }
 }
 
-function CLI_DEBE_APLICAR_RETENCION(idCliente) {
-  const cliente = CLI_OBTENER_CLIENTE(idCliente);
-  if (!cliente) return { RETENCION_FUENTE: true, RETENCION_IVA: false, MOTIVO: "Cliente general." };
-  const responsabilidades = String(cliente.RESPONSABILIDAD_FISCAL || "").toUpperCase();
-  return {
-    RETENCION_FUENTE: !responsabilidades.includes("O-15"),
-    RETENCION_IVA: responsabilidades.includes("O-13"),
-    MOTIVO: "Evaluado según responsabilidades DIAN."
-  };
+/**
+ * RPC: Actualizar cliente comercial existente
+ */
+function CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion) {
+  try {
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "CLIENTES", "EDITAR");
+    }
+
+    const idCli = datos.ID_CLIENTE || datos.ID_PROVEEDOR;
+    if (!datos || !idCli) throw new Error("El ID_CLIENTE es requerido para actualizar.");
+
+    if (String(idCli).indexOf("PROV-") === 0 || datos.TIPO_TERCERO === "PROVEEDOR") {
+      return PROV_ACTUALIZAR_PROVEEDOR_WEB(datos, tokenSesion);
+    }
+
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_CLIENTES);
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const idxId = enc.indexOf("ID_CLIENTE");
+    const reg = hoja.getRange(2, 1, Math.max(1, hoja.getLastRow() - 1), enc.length).getValues();
+
+    let filaMod = -1;
+    for (let i = 0; i < reg.length; i++) {
+      if (String(reg[i][idxId]).trim() === String(idCli).trim()) {
+        filaMod = i + 2;
+        break;
+      }
+    }
+
+    if (filaMod === -1) {
+      return PROV_ACTUALIZAR_PROVEEDOR_WEB(datos, tokenSesion);
+    }
+
+    const docNum = datos.NUMERO_DOCUMENTO || datos.NIT_CC || "";
+    const dvVal = datos.DIGITO_VERIFICACION || datos.DV || "";
+
+    const filaActualizada = enc.map(col => {
+      switch (col) {
+        case "ID_CLIENTE": return datos.ID_CLIENTE;
+        case "TIPO_TERCERO": return datos.TIPO_TERCERO || "CLIENTE";
+        case "TIPO_PERSONA": return datos.TIPO_PERSONA || "PERSONA_JURIDICA";
+        case "TIPO_DOCUMENTO": return datos.TIPO_DOCUMENTO || "NIT";
+        case "NUMERO_DOCUMENTO": return docNum;
+        case "DIGITO_VERIFICACION": return dvVal;
+        case "RAZON_SOCIAL": return String(datos.RAZON_SOCIAL || datos.NOMBRE_COMERCIAL || "").trim().toUpperCase();
+        case "PRIMER_NOMBRE": return datos.PRIMER_NOMBRE || "";
+        case "SEGUNDO_NOMBRE": return datos.SEGUNDO_NOMBRE || "";
+        case "PRIMER_APELLIDO": return datos.PRIMER_APELLIDO || "";
+        case "SEGUNDO_APELLIDO": return datos.SEGUNDO_APELLIDO || "";
+        case "NOMBRE_COMERCIAL": return datos.NOMBRE_COMERCIAL || "";
+        case "DIRECCION": return datos.DIRECCION || "";
+        case "CIUDAD": return datos.CIUDAD || "Pitalito";
+        case "DEPARTAMENTO": return datos.DEPARTAMENTO || "Huila";
+        case "PAIS": return datos.PAIS || "COLOMBIA";
+        case "CELULAR": return datos.CELULAR || datos.TELEFONO || "";
+        case "CORREO": return datos.CORREO || datos.EMAIL || "";
+        case "RESPONSABILIDAD_FISCAL": return datos.RESPONSABILIDAD_FISCAL || "48";
+        case "FORMA_PAGO": return datos.FORMA_PAGO || "CONTADO";
+        case "PLAZO_PAGO_DIAS": return Number(datos.PLAZO_PAGO_DIAS || 30);
+        case "LIMITE_CREDITO": return Number(datos.LIMITE_CREDITO || datos.CUPO_CREDITO || 0);
+        case "ESTADO_CLIENTE": return datos.ESTADO_CLIENTE || datos.ESTADO || "ACTIVO";
+        default: return hoja.getRange(filaMod, enc.indexOf(col) + 1).getValue();
+      }
+    });
+
+    hoja.getRange(filaMod, 1, 1, enc.length).setValues([filaActualizada]);
+
+    return {
+      EXITO: true,
+      ID_CLIENTE: datos.ID_CLIENTE,
+      MENSAJE: "¡Cliente '" + datos.ID_CLIENTE + "' actualizado correctamente!"
+    };
+  } catch (error) {
+    return { EXITO: false, MENSAJE: "Error al actualizar cliente: " + error.toString() };
+  }
 }
+
+/**
+ * RPC: Buscar cliente por documento o nombre
+ */
+function CLI_BUSCAR_CLIENTE(q, tokenSesion) {
+  try {
+    const res = CLI_LISTAR_CLIENTES_WEB(tokenSesion);
+    if (!res.EXITO || !res.DATOS) return res;
+    const query = String(q || "").trim().toUpperCase();
+    if (!query) return res;
+
+    const filtrados = res.DATOS.filter(c => {
+      return String(c.RAZON_SOCIAL || "").toUpperCase().indexOf(query) !== -1 ||
+             String(c.NUMERO_DOCUMENTO || c.NIT_CC || "").toUpperCase().indexOf(query) !== -1 ||
+             String(c.ID_CLIENTE || "").toUpperCase().indexOf(query) !== -1;
+    });
+
+    return { EXITO: true, DATOS: filtrados, MENSAJE: "Búsqueda finalizada." };
+  } catch (error) {
+    return { EXITO: false, DATOS: [], MENSAJE: error.toString() };
+  }
+}
+
+/**
+ * RPC: Listar Proveedores registrados
+ */
+function PROV_LISTAR_PROVEEDORES_WEB(tokenSesion) {
+  try {
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "COMPRAS", "VER");
+    }
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_PROVEEDORES);
+    const ulFila = hoja.getLastRow();
+    if (ulFila < 2) {
+      return { EXITO: true, DATOS: [], MENSAJE: "No hay proveedores registrados." };
+    }
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const reg = hoja.getRange(2, 1, ulFila - 1, enc.length).getValues();
+
+    const lista = reg.map(fila => {
+      const obj = {};
+      enc.forEach((col, idx) => { obj[col] = fila[idx] !== undefined ? fila[idx] : ""; });
+      if (!obj.TIPO_TERCERO) obj.TIPO_TERCERO = "PROVEEDOR";
+      if (!obj.ID_CLIENTE) obj.ID_CLIENTE = obj.ID_PROVEEDOR;
+      return obj;
+    });
+
+    return {
+      EXITO: true,
+      DATOS: typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(lista) : JSON.parse(JSON.stringify(lista)),
+      MENSAJE: "Proveedores listados correctamente."
+    };
+  } catch (error) {
+    return { EXITO: false, DATOS: [], MENSAJE: "Error al listar proveedores: " + error.toString() };
+  }
+}
+
+/**
+ * RPC: Guardar nuevo Proveedor
+ */
+function PROV_GUARDAR_PROVEEDOR_WEB(datos, tokenSesion) {
+  try {
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "COMPRAS", "CREAR");
+    }
+
+    if (!datos || (!datos.NUMERO_DOCUMENTO && !datos.NIT_CC)) {
+      throw new Error("El número de documento o NIT del proveedor es obligatorio.");
+    }
+
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_PROVEEDORES);
+    const idProv = datos.ID_PROVEEDOR || datos.ID_CLIENTE || (CLI_CONFIG.PREFIJO_PROVEEDOR + "-" + String(Math.max(1, hoja.getLastRow())).padStart(CLI_CONFIG.DIGITOS_ID, "0"));
+    const ahora = new Date();
+    const usuarioEjecutor = (typeof Session !== "undefined" && Session.getActiveUser()) ? (Session.getActiveUser().getEmail() || "OPERADOR") : "OPERADOR";
+
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const docNum = datos.NUMERO_DOCUMENTO || datos.NIT_CC || "";
+    const dvVal = datos.DIGITO_VERIFICACION || datos.DV || "";
+
+    const filaNueva = enc.map(col => {
+      switch (col) {
+        case "ID_PROVEEDOR": return idProv;
+        case "TIPO_TERCERO": return datos.TIPO_TERCERO || "PROVEEDOR";
+        case "TIPO_PERSONA": return datos.TIPO_PERSONA || "PERSONA_JURIDICA";
+        case "TIPO_DOCUMENTO": return datos.TIPO_DOCUMENTO || "NIT";
+        case "NUMERO_DOCUMENTO": return docNum;
+        case "DIGITO_VERIFICACION": return dvVal;
+        case "RAZON_SOCIAL": return String(datos.RAZON_SOCIAL || datos.NOMBRE_COMERCIAL || "PROVEEDOR SIN NOMBRE").trim().toUpperCase();
+        case "PRIMER_NOMBRE": return datos.PRIMER_NOMBRE || "";
+        case "SEGUNDO_NOMBRE": return datos.SEGUNDO_NOMBRE || "";
+        case "PRIMER_APELLIDO": return datos.PRIMER_APELLIDO || "";
+        case "SEGUNDO_APELLIDO": return datos.SEGUNDO_APELLIDO || "";
+        case "NOMBRE_COMERCIAL": return datos.NOMBRE_COMERCIAL || datos.RAZON_SOCIAL || "";
+        case "DIRECCION": return datos.DIRECCION || "";
+        case "CIUDAD": return datos.CIUDAD || "Pitalito";
+        case "DEPARTAMENTO": return datos.DEPARTAMENTO || "Huila";
+        case "PAIS": return datos.PAIS || "COLOMBIA";
+        case "CELULAR": return datos.CELULAR || datos.TELEFONO || "";
+        case "CORREO": return datos.CORREO || datos.EMAIL || "";
+        case "RESPONSABILIDAD_FISCAL": return datos.RESPONSABILIDAD_FISCAL || "48";
+        case "FORMA_PAGO": return datos.FORMA_PAGO || "CONTADO";
+        case "PLAZO_PAGO_DIAS": return Number(datos.PLAZO_PAGO_DIAS || 30);
+        case "LIMITE_CREDITO": return Number(datos.LIMITE_CREDITO || datos.CUPO_CREDITO || 0);
+        case "ESTADO": return datos.ESTADO || datos.ESTADO_CLIENTE || "ACTIVO";
+        case "FECHA_CREACION": return ahora;
+        case "USUARIO_CREACION": return usuarioEjecutor;
+        default: return "";
+      }
+    });
+
+hoja.appendRow(filaNueva);
+
+    return {
+      EXITO: true,
+      ID_PROVEEDOR: idProv,
+      MENSAJE: "¡Proveedor '" + (datos.RAZON_SOCIAL || idProv) + "' guardado con éxito!"
+    };
+  } catch (error) {
+    return { EXITO: false, MENSAJE: "Error al guardar proveedor: " + error.toString() };
+  }
+}
+
+/**
+ * RPC: Actualizar Proveedor existente
+ */
+function PROV_ACTUALIZAR_PROVEEDOR_WEB(datos, tokenSesion) {
+  try {
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "COMPRAS", "EDITAR");
+    }
+
+    const idProv = datos.ID_PROVEEDOR || datos.ID_CLIENTE;
+    if (!idProv) throw new Error("El ID de proveedor es requerido para actualizar.");
+
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_PROVEEDORES);
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const idxId = enc.indexOf("ID_PROVEEDOR");
+    const reg = hoja.getRange(2, 1, Math.max(1, hoja.getLastRow() - 1), enc.length).getValues();
+
+    let filaMod = -1;
+    for (let i = 0; i < reg.length; i++) {
+      if (String(reg[i][idxId]).trim() === String(idProv).trim()) {
+        filaMod = i + 2;
+        break;
+      }
+    }
+
+    if (filaMod === -1) {
+      if (String(idProv).indexOf("CLI-") === 0) {
+        return CLI_ACTUALIZAR_CLIENTE(datos, tokenSesion);
+      }
+      throw new Error("Proveedor " + idProv + " no encontrado.");
+    }
+
+    const docNum = datos.NUMERO_DOCUMENTO || datos.NIT_CC || "";
+    const dvVal = datos.DIGITO_VERIFICACION || datos.DV || "";
+
+    const filaActualizada = enc.map(col => {
+      switch (col) {
+        case "ID_PROVEEDOR": return idProv;
+        case "TIPO_TERCERO": return datos.TIPO_TERCERO || "PROVEEDOR";
+        case "TIPO_PERSONA": return datos.TIPO_PERSONA || "PERSONA_JURIDICA";
+        case "TIPO_DOCUMENTO": return datos.TIPO_DOCUMENTO || "NIT";
+        case "NUMERO_DOCUMENTO": return docNum;
+        case "DIGITO_VERIFICACION": return dvVal;
+        case "RAZON_SOCIAL": return String(datos.RAZON_SOCIAL || datos.NOMBRE_COMERCIAL || "").trim().toUpperCase();
+        case "PRIMER_NOMBRE": return datos.PRIMER_NOMBRE || "";
+        case "SEGUNDO_NOMBRE": return datos.SEGUNDO_NOMBRE || "";
+        case "PRIMER_APELLIDO": return datos.PRIMER_APELLIDO || "";
+        case "SEGUNDO_APELLIDO": return datos.SEGUNDO_APELLIDO || "";
+        case "NOMBRE_COMERCIAL": return datos.NOMBRE_COMERCIAL || "";
+        case "DIRECCION": return datos.DIRECCION || "";
+        case "CIUDAD": return datos.CIUDAD || "Pitalito";
+        case "DEPARTAMENTO": return datos.DEPARTAMENTO || "Huila";
+        case "PAIS": return datos.PAIS || "COLOMBIA";
+        case "CELULAR": return datos.CELULAR || datos.TELEFONO || "";
+        case "CORREO": return datos.CORREO || datos.EMAIL || "";
+        case "RESPONSABILIDAD_FISCAL": return datos.RESPONSABILIDAD_FISCAL || "48";
+        case "FORMA_PAGO": return datos.FORMA_PAGO || "CONTADO";
+        case "PLAZO_PAGO_DIAS": return Number(datos.PLAZO_PAGO_DIAS || 30);
+        case "LIMITE_CREDITO": return Number(datos.LIMITE_CREDITO || datos.CUPO_CREDITO || 0);
+        case "ESTADO": return datos.ESTADO || datos.ESTADO_CLIENTE || "ACTIVO";
+        default: return hoja.getRange(filaMod, enc.indexOf(col) + 1).getValue();
+      }
+    });
+
+    hoja.getRange(filaMod, 1, 1, enc.length).setValues([filaActualizada]);
+
+    return {
+      EXITO: true,
+      ID_PROVEEDOR: idProv,
+      MENSAJE: "¡Proveedor '" + idProv + "' actualizado correctamente!"
+    };
+  } catch (error) {
+    return { EXITO: false, MENSAJE: "Error al actualizar proveedor: " + error.toString() };
+  }
+}
+
+/**
+ * RPC: Listar cuentas de Cartera (CxC)
+ */
+function CAR_LISTAR_CUENTAS_WEB(tokenSesion) {
+  try {
+    if (typeof SEG_VERIFICAR_CONTEXTO_Y_ACCESO === "function" && tokenSesion && tokenSesion !== "SHEETS_CONTEXT") {
+      SEG_VERIFICAR_CONTEXTO_Y_ACCESO(tokenSesion, "FINANZAS", "VER");
+    }
+
+    const hoja = CLI_OBTENER_HOJA(CLI_CONFIG.HOJA_CARTERA);
+    const ulFila = hoja.getLastRow();
+    if (ulFila < 2) {
+      return { EXITO: true, DATOS: [], MENSAJE: "No hay registros de cartera pendientes." };
+    }
+
+    const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(h => String(h || "").trim().toUpperCase());
+    const reg = hoja.getRange(2, 1, ulFila - 1, enc.length).getValues();
+
+    const lista = reg.map(fila => {
+      const obj = {};
+      enc.forEach((col, idx) => { obj[col] = fila[idx] !== undefined ? fila[idx] : ""; });
+      return obj;
+    });
+
+    return {
+      EXITO: true,
+      DATOS: typeof SEG_SANITIZAR_PARA_CLIENTE === "function" ? SEG_SANITIZAR_PARA_CLIENTE(lista) : JSON.parse(JSON.stringify(lista)),
+      MENSAJE: "Cartera listada correctamente."
+    };
+  } catch (error) {
+    return { EXITO: false, DATOS: [], MENSAJE: "Error al consultar cartera: " + error.toString() };
+  }
+}
+
 

@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 14.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 1.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ventas & Facturación Comercial | MEGUDAN ERP</title>
+  <title>Ventas & Facturación Comercial | ERP Empresarial</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -16,10 +16,10 @@
     .app { min-height: 100vh; display: flex; flex-direction: column; padding: 24px; max-width: 1350px; margin: 0 auto; }
 
     .header {
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+      background: linear-gradient(135deg, #15803d 0%, #166534 100%);
       color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px;
       display: flex; align-items: center; justify-content: space-between; gap: 20px;
-      box-shadow: 0 10px 25px -5px rgba(29, 78, 216, 0.3);
+      box-shadow: 0 10px 25px -5px rgba(22, 128, 61, 0.3);
     }
     .header-info { display: flex; align-items: center; gap: 18px; }
     .header-icon {
@@ -31,13 +31,24 @@
     .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
     .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-weight: 500; }
 
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+      background: white; border: 1px solid #e2e8f0; border-radius: 14px;
+      padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 15px -2px rgba(0,0,0,0.03);
+    }
+    .kpi-data { display: flex; flex-direction: column; gap: 4px; }
+    .kpi-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 20px; font-weight: 900; color: #0f172a; }
+    .kpi-icon { font-size: 26px; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+
     .tabs-container { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
     .tab-btn {
       padding: 12px 24px; border: none; background: none; font-size: 13px; font-weight: 700;
       color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
     }
-    .tab-btn:hover { color: #1d4ed8; }
-    .tab-btn.active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .tab-btn:hover { color: #15803d; }
+    .tab-btn.active { color: #15803d; border-bottom-color: #15803d; }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -51,28 +62,19 @@
     .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .card-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
 
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .field { display: flex; flex-direction: column; gap: 6px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     .field label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
     .input { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; transition: all 0.2s; }
-    .input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15); }
+    .input:focus { border-color: #15803d; box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15); }
 
-    .items-container { border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-top: 16px; margin-bottom: 20px; }
-    .items-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .items-table th { background-color: #f8fafc; padding: 12px 16px; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1.5px solid #e2e8f0; }
-    .items-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-
-    .totals-box { display: flex; flex-direction: column; gap: 10px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 20px; }
-    .total-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #475569; }
-    .total-row-grand { font-size: 20px; font-weight: 900; color: #0f172a; border-top: 2px solid #cbd5e1; padding-top: 12px; margin-top: 8px; }
-
-    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-    .button-primary { background-color: #1d4ed8; color: white; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25); }
-    .button-primary:hover { background-color: #1e40af; }
+    .button { padding: 10px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+    .button-primary { background-color: #15803d; color: white; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25); }
+    .button-primary:hover { background-color: #166534; }
     .button-secondary { background-color: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
     .button-secondary:hover { background-color: #f8fafc; }
-    .button-success { background-color: #16a34a; color: white; }
     .button-danger { background-color: #dc2626; color: white; }
 
     .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
@@ -82,16 +84,16 @@
     tr:hover td { background-color: #f8fafc; }
 
     .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
-    .badge-active { background-color: #dcfce7; color: #15803d; }
-    .badge-pending { background-color: #fef3c7; color: #d97706; }
-    .badge-overdue { background-color: #fee2e2; color: #dc2626; }
+    .badge-pagada { background-color: #dcfce7; color: #15803d; }
+    .badge-cartera { background-color: #fef3c7; color: #d97706; }
+    .badge-cotizado { background-color: #e0f2fe; color: #0369a1; }
+
+    .summary-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .summary-item { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #475569; }
+    .summary-item.total { font-size: 16px; font-weight: 900; color: #15803d; border-top: 2px solid #cbd5e1; padding-top: 10px; margin-top: 6px; }
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
-    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 20px; }
-    .modal-title { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
-    .close-btn { font-size: 24px; font-weight: bold; color: #94a3b8; cursor: pointer; }
-    .close-btn:hover { color: #0f172a; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
   </style>
 </head>
 <body>
@@ -100,251 +102,239 @@
     <div class="header-info">
       <div class="header-icon">💰</div>
       <div>
-        <h1>Emisión de Ventas, Facturación & Cartera</h1>
-        <p>ERP Operativo · Cotizaciones, Remisiones, AIU Colombia, Cartera CxC y Pre-sincronización Siigo/Alegra</p>
+        <h1>Emisión de Ventas, Facturación & Cotizaciones</h1>
+        <p>ERP Operativo · Control Comercial, Cláusula AIU, Facturación POS / Crédito & Cartera</p>
       </div>
     </div>
   </header>
 
   <div id="VEN_ALERT" class="message"></div>
 
-  <div class="tabs-container">
-    <button class="tab-btn active" id="btn-tab-nueva-venta" onclick="cambiarPestana('nueva-venta')">🧾 Registrar Venta</button>
-    <button class="tab-btn" id="btn-tab-historial-ventas" onclick="cambiarPestana('historial-ventas')">🔄 Historial de Ventas</button>
-    <button class="tab-btn" id="btn-tab-cartera" onclick="cambiarPestana('cartera')">📋 Cuentas por Cobrar (CxC)</button>
-  </div>
-
-  <!-- PANEL 1: REGISTRAR VENTA -->
-  <div id="panel-nueva-venta" class="tab-panel active">
-    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
-      <div class="card">
-        <h3 class="card-title">🧾 Captura Comercial de Venta</h3>
-        <div class="form-row" style="margin-top:16px;">
-          <div class="field">
-            <label>Tipo de Documento *</label>
-            <select id="ven_tipo_documento" class="input" onchange="alternarAIU()">
-              <option value="FACTURA_VENTA" selected>Factura Electrónica de Venta</option>
-              <option value="FACTURA_AIU">Factura de Obra / Contrato con AIU (Colombia)</option>
-              <option value="COTIZACION">Cotización / Propuesta Comercial</option>
-              <option value="ORDEN_PEDIDO">Orden de Pedido / Remisión</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Consecutivo / N° Soporte Físico *</label>
-            <input type="text" id="ven_num_documento" class="input" placeholder="Ej: FEV-2026-001">
-          </div>
-        </div>
-        <div class="form-row-3">
-          <div class="field">
-            <label>Cliente / Tercero *</label>
-            <select id="ven_id_cliente" class="input" onchange="actualizarCondicionesPagoCliente()"></select>
-          </div>
-          <div class="field">
-            <label>Obra / Proyecto Destino</label>
-            <select id="ven_id_obra" class="input">
-              <option value="">Sede Principal / Venta de Fábrica</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Forma de Pago *</label>
-            <select id="ven_forma_pago" class="input">
-              <option value="CONTADO" selected>Contado (Ingreso a Tesorería)</option>
-              <option value="CREDITO">Crédito (Afecta Cartera CxC)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Módulo de AIU -->
-        <div id="aiu_container" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:16px; border-radius:12px; margin-bottom:16px;">
-          <h4 style="margin:0 0 10px; font-size:12px; font-weight:800; color:#166534; text-transform:uppercase;">🏗️ Parámetros AIU (Estatuto Tributario Colombia)</h4>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-            <div class="field">
-              <label>Administración (%)</label>
-              <input type="number" id="ven_aiu_a" class="input" min="0" max="100" value="15" oninput="calcularTotalesVenta()">
-            </div>
-            <div class="field">
-              <label>Imprevistos (%)</label>
-              <input type="number" id="ven_aiu_i" class="input" min="0" max="100" value="5" oninput="calcularTotalesVenta()">
-            </div>
-            <div class="field">
-              <label>Utilidad (%) *</label>
-              <input type="number" id="ven_aiu_u" class="input" min="1" max="100" value="10" oninput="calcularTotalesVenta()">
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:12px;">
-          <h4 style="margin:0; font-size:13px; font-weight:800; color:#475569; text-transform:uppercase;">📦 Detalle de Ítems / Catálogo de Productos</h4>
-          <button class="button button-secondary" style="padding:6px 14px; font-size:12px;" onclick="agregarLineaDetalle()">+ Agregar Ítem</button>
-        </div>
-
-        <div class="items-container">
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th style="width:35%;">Producto / Servicio</th>
-                <th style="width:15%;">Cantidad</th>
-                <th style="width:20%;">Precio Unit. (COP)</th>
-                <th style="width:20%;">Total Línea</th>
-                <th style="width:10%; text-align:center;">Acción</th>
-              </tr>
-            </thead>
-            <tbody id="detalles_tabla"></tbody>
-          </table>
-        </div>
+  <!-- KPI Cards Row -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Total Ventas Emitidas</span>
+        <span class="kpi-value" id="kpi_total_ventas_monto">-bash COP</span>
       </div>
-
-      <!-- Resumen Lateral -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <div class="card">
-          <h3 class="card-title">🧮 Liquidación de Venta</h3>
-          <div class="totals-box">
-            <div class="total-row"><span>Subtotal Bruto:</span><span id="txt_subtotal">$0 COP</span></div>
-            <div class="total-row" style="color:#dc2626;"><span>Descuento Comercial:</span><span id="txt_descuento">-$0 COP</span></div>
-            <div class="total-row" id="row_iva"><span>IVA Liquidado (19%):</span><span id="txt_iva">$0 COP</span></div>
-            <div class="total-row total-row-grand"><span>TOTAL GENERAL:</span><span id="txt_total">$0 COP</span></div>
-          </div>
-          <button class="button button-primary" style="width:100%; padding:14px;" onclick="enviarVentaAAppsScript()">💾 Emitir & Guardar Venta</button>
-        </div>
-
-        <div class="card" style="background-color:#faf5ff; border-color:#ebd5ff;">
-          <h3 class="card-title" style="color:#6b21a8;">🔌 Integración Sincronizada</h3>
-          <p style="font-size:12px; color:#581c87; line-height:1.5; margin:0; font-weight:500;">
-            Al confirmar la venta, se descargará el stock correspondiente del Kardex, se afectará la Tesorería o Cartera y la operación quedará lista para ser enviada a Siigo o Alegra.
-          </p>
-        </div>
+      <div class="kpi-icon" style="background:#ecfdf5; color:#15803d;">💵</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Facturado de Contado</span>
+        <span class="kpi-value" style="color:#0284c7;" id="kpi_contado_monto">-bash COP</span>
       </div>
+      <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;">💳</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">Crédito / Cartera Pendiente</span>
+        <span class="kpi-value" style="color:#d97706;" id="kpi_credito_monto">-bash COP</span>
+      </div>
+      <div class="kpi-icon" style="background:#fef3c7; color:#d97706;">⏳</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <span class="kpi-label">IVA Generado</span>
+        <span class="kpi-value" style="color:#7c3aed;" id="kpi_iva_monto">-bash COP</span>
+      </div>
+      <div class="kpi-icon" style="background:#f3e8ff; color:#7c3aed;">📊</div>
     </div>
   </div>
 
-  <!-- PANEL 2: HISTORIAL -->
-  <div id="panel-historial-ventas" class="tab-panel">
+  <div class="tabs-container">
+    <button class="tab-btn active" id="btn-tab-historial" onclick="cambiarVenPestana('historial')">📋 Historial de Ventas / Facturas</button>
+    <button class="tab-btn" id="btn-tab-nueva" onclick="cambiarVenPestana('nueva')">➕ Nueva Venta / Facturación POS</button>
+  </div>
+
+  <!-- PESTAÑA 1: HISTORIAL DE VENTAS -->
+  <div id="panel-historial" class="tab-panel active">
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">🔄 Registro Histórico de Ventas Emitidas</h2>
+        <h2 class="card-title">📋 Comprobantes Emitidos</h2>
         <div style="display:flex; gap:10px; align-items:center;">
-          <input type="text" id="historial_buscador" class="input" style="width:280px;" placeholder="Buscar por ID, cliente, NIT..." oninput="filtrarHistorialVentas()">
-          <button class="button button-secondary" onclick="cargarHistorialVentas()">↻ Actualizar</button>
+          <input type="text" id="ven_buscador" class="input" style="width:280px;" placeholder="Buscar por N° Factura, Cliente o ID..." oninput="filtrarVentasHistorial()">
+          <button class="button button-secondary" onclick="cargarVentasHistorial()">↻ Actualizar</button>
         </div>
       </div>
+
       <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>ID Venta</th>
               <th>Fecha</th>
-              <th>Cliente / Tercero</th>
-              <th>Documento</th>
+              <th>Cliente / Contratante</th>
+              <th>Tipo Doc.</th>
+              <th>N° Soporte</th>
               <th>Forma Pago</th>
-              <th>Subtotal</th>
-              <th>IVA</th>
-              <th>Total COP</th>
-              <th style="text-align:center;">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="ventas_historial_tabla">
-            <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando historial transaccional...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 3: CARTERA CXC -->
-  <div id="panel-cartera" class="tab-panel">
-    <div class="card">
-      <div class="card-header">
-        <h2 class="card-title">📋 Cuentas por Cobrar de Clientes (CxC)</h2>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <input type="text" id="CAR_BUSCADOR" class="input" style="width:280px;" placeholder="Filtrar cartera..." oninput="carFiltrarCartera()">
-          <button class="button button-secondary" onclick="carCargarCartera()">↻ Actualizar Cartera</button>
-        </div>
-      </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID CxC</th>
-              <th>Cliente</th>
-              <th>N° Venta</th>
-              <th>Documento</th>
-              <th>Vencimiento</th>
-              <th>Valor Inicial</th>
-              <th>Abonos</th>
-              <th>Saldo Pendiente</th>
+              <th>Monto Total</th>
               <th>Estado</th>
               <th style="text-align:center;">Acciones</th>
             </tr>
           </thead>
-          <tbody id="cartera_tabla">
-            <tr><td colspan="10" style="text-align:center; padding:24px; color:#64748b;">Cargando cartera operativa...</td></tr>
+          <tbody id="tabla_ventas_body">
+            <tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando transacciones de venta desde Sheets...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-</div>
 
-<!-- MODAL RECAUDO CARTERA -->
-<div id="modal_recaudo" class="modal">
-  <div class="modal-content" style="max-width:500px;">
-    <div class="modal-header">
-      <h3 class="modal-title">💵 Registrar Abono / Recaudo de Cartera</h3>
-      <span class="close-btn" onclick="cerrarModalRecaudo()">&times;</span>
+  <!-- PESTAÑA 2: NUEVA VENTA / FACTURACIÓN POS / AIU -->
+  <div id="panel-nueva" class="tab-panel">
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="card-title">👤 Datos del Cliente & Encabezado de Venta</h3>
+        
+        <div class="field">
+          <label>Seleccionar Cliente / Contratante *</label>
+          <select id="ven_id_cliente" class="input" onchange="alSeleccionarCliente()"></select>
+        </div>
+
+        <div id="box_info_cliente" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px; margin-bottom:12px; font-size:12px; color:#166534;">
+          <strong id="cli_info_nombre">-bash</strong><br>
+          <span>NIT/CC: <span id="cli_info_doc">-bash</span></span> | 
+          <span>Cupo Disponible: <strong id="cli_info_cupo">-bash COP</strong></span>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Tipo Comprobante *</label>
+            <select id="ven_tipo_documento" class="input">
+              <option value="FACTURA" selected>Factura de Venta Comercial</option>
+              <option value="REMISION">Remisión de Despacho</option>
+              <option value="COTIZACION">Cotización / Propuesta</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Forma de Pago *</label>
+            <select id="ven_forma_pago" class="input" onchange="alCambiarFormaPago()">
+              <option value="CONTADO" selected>Contado (Efectivo / Banco)</option>
+              <option value="CREDITO">Crédito Comercial (Cartera)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field" id="col_plazo_dias" style="display:none;">
+            <label>Plazo Crédito (Días) *</label>
+            <input type="number" id="ven_plazo_dias" class="input" min="1" value="30">
+          </div>
+          <div class="field">
+            <label>Obra / Proyecto Asociado (Opcional)</label>
+            <select id="ven_id_obra" class="input"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>¿Aplica Cláusula AIU (Construcción)?</label>
+          <select id="ven_aplica_aiu" class="input" onchange="recalcularTotalesVenta()">
+            <option value="NO" selected>NO - Facturación Estándar</option>
+            <option value="SI">SÍ - Aplica A.I.U. (10% Adm / 5% Imp / 5% Util)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Observaciones o Notas de Entrega</label>
+          <textarea id="ven_observaciones" class="input" style="height:60px; resize:none;" placeholder="Notas visibles en el documento..."></textarea>
+        </div>
+      </div>
+
+      <!-- MÓDULO DE ÍTEMS Y LIQUIDACIÓN EN VIVO -->
+      <div class="card">
+        <h3 class="card-title">🛒 Selección de Productos / Insumos</h3>
+        
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:15px;">
+          <div class="field">
+            <label>Producto o Servicio *</label>
+            <select id="item_select_prod" class="input" onchange="alSeleccionarProductoItem()"></select>
+          </div>
+          <div class="grid-3">
+            <div class="field">
+              <label>Cantidad *</label>
+              <input type="number" id="item_cantidad" class="input" min="1" value="1" oninput="recalcularSubtotalModalItem()">
+            </div>
+            <div class="field">
+              <label>Precio Unitario (COP) *</label>
+              <input type="number" id="item_precio" class="input" min="0" value="0" oninput="recalcularSubtotalModalItem()">
+            </div>
+            <div class="field">
+              <label>Tarifa IVA *</label>
+              <select id="item_iva" class="input" onchange="recalcularSubtotalModalItem()">
+                <option value="19%">19%</option>
+                <option value="5%">5%</option>
+                <option value="0%">0% (Exento)</option>
+              </select>
+            </div>
+          </div>
+          <button class="button button-primary" style="width:100%; justify-content:center;" onclick="agregarItemFila()">+ Agregar Ítem a la Venta</button>
+        </div>
+
+        <!-- RESUMEN DE TOTALES EN VIVO -->
+        <div class="summary-box">
+          <div class="summary-item"><span>Subtotal Bruto Items:</span><span id="disp_ven_subtotal">-bash COP</span></div>
+          <div class="summary-item" id="row_aiu_disp" style="display:none;"><span>Cláusula AIU (20%):</span><span id="disp_ven_aiu">-bash COP</span></div>
+          <div class="summary-item"><span>Total IVA Generado:</span><span id="disp_ven_iva">-bash COP</span></div>
+          <div class="summary-item total"><span>MONTO NETO A COBRAR:</span><span id="disp_ven_total">-bash COP</span></div>
+        </div>
+
+        <button class="button button-primary" style="width:100%; justify-content:center; margin-top:15px; font-size:15px; padding:12px;" onclick="guardarVentaBackend()">💾 Emitir & Registrar Venta en Sheets</button>
+      </div>
     </div>
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      <input type="hidden" id="rec_id_cartera">
-      <div class="field">
-        <label>Cuenta de Tesorería Destino *</label>
-        <select id="rec_id_cuenta" class="input"></select>
-      </div>
-      <div class="field">
-        <label>Monto de Abono (COP) *</label>
-        <input type="number" id="rec_valor" class="input" min="1" value="0">
-      </div>
-      <div class="field">
-        <label>Medio de Pago *</label>
-        <select id="rec_metodo_pago" class="input">
-          <option value="TRANSFERENCIA" selected>Transferencia Bancaria / PSE</option>
-          <option value="EFECTIVO">Efectivo / Caja General</option>
-          <option value="CHEQUE">Cheque / Consignación</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Observaciones de Recaudo *</label>
-        <input type="text" id="rec_observacion" class="input" placeholder="Ej: Abono parcial transferencia N° 4589">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-        <button class="button button-secondary" onclick="cerrarModalRecaudo()">Cancelar</button>
-        <button class="button button-success" onclick="guardarRecaudoCartera()">💾 Procesar Recaudo</button>
+
+    <!-- TABLA DE ÍTEMS AGREGADOS -->
+    <div class="card">
+      <h3 class="card-title">📦 Ítems Incluidos en el Comprobante</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Cantidad</th>
+              <th>Precio Unitario</th>
+              <th>% IVA</th>
+              <th>Valor IVA</th>
+              <th>Subtotal</th>
+              <th style="text-align:center;">Quitar</th>
+            </tr>
+          </thead>
+          <tbody id="tabla_items_venta_body">
+            <tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Aún no ha agregado ítems a la venta.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  var TOKEN_SESION_PROY = "<?= TOKEN_SESION ?>";
-  var LISTA_CLIENTES_CACHE = {};
-  var LISTA_PRODUCTOS_CACHE = [];
+  var TOKEN_SESION_PROY = window.TOKEN_SESION_PROY || window.TOKEN_SESION || "<?= TOKEN_SESION ?>";
+  var CLIENTES_VENTA_CACHE = {};
+  var PRODUCTOS_VENTA_CACHE = {};
+  var VENTAS_HISTORIAL_CACHE = [];
+  var ITEMS_VENTA_ACTUAL = [];
 
   document.addEventListener("DOMContentLoaded", function() {
-    inicializarModuloVentas();
+    cargarCatalogosVenta();
+    cargarVentasHistorial();
   });
 
-  function cambiarPestana(target) {
+  function cambiarVenPestana(target) {
     document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
     document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
     
-    var panelEl = document.getElementById("panel-" + target);
-    var btnEl = document.getElementById("btn-tab-" + target);
-    if (panelEl) panelEl.classList.add("active");
-    if (btnEl) btnEl.classList.add("active");
+    var elTab = document.getElementById("panel-" + target);
+    var elBtn = document.getElementById("btn-tab-" + target);
+    if (elTab) elTab.classList.add("active");
+    if (elBtn) elBtn.classList.add("active");
 
-    if (target === "historial-ventas") cargarHistorialVentas();
-    else if (target === "cartera") carCargarCartera();
+    if (target === "historial") cargarVentasHistorial();
   }
 
-  function mostrarAlerta(msg, tipo) {
+  function mostrarVenAlerta(msg, tipo) {
     var el = document.getElementById("VEN_ALERT");
     if (!el) return;
     el.textContent = msg;
@@ -353,283 +343,347 @@
     setTimeout(function() { if (el.textContent === msg) el.style.display = "none"; }, 6000);
   }
 
-  function inicializarModuloVentas() {
-    var selectClientes = document.getElementById("ven_id_cliente");
-    if (selectClientes) {
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.EXITO && res.DATOS) {
-            selectClientes.innerHTML = '<option value="">Seleccione cliente...</option>';
-            res.DATOS.forEach(function(c) {
-              LISTA_CLIENTES_CACHE[c.ID_CLIENTE] = c;
-              var opt = document.createElement("option");
-              opt.value = c.ID_CLIENTE;
-              opt.text = (c.RAZON_SOCIAL || c.NOMBRE) + ' (' + c.ID_CLIENTE + ')';
-              selectClientes.add(opt);
-            });
-          }
-        })
-        .CLI_LISTAR_CLIENTES(TOKEN_SESION_PROY);
-    }
+  function cargarCatalogosVenta() {
+    var selectCli = document.getElementById("ven_id_cliente");
+    var selectProd = document.getElementById("item_select_prod");
+    var selectObra = document.getElementById("ven_id_obra");
 
+    if (selectCli) selectCli.innerHTML = "<option value=''>Cargando clientes y terceros...</option>";
+    if (selectProd) selectProd.innerHTML = "<option value=''>Cargando productos y servicios...</option>";
+    if (selectObra) selectObra.innerHTML = "<option value=''>Cargando obras...</option>";
+
+    // Intentar carga combinada desde 09_VENTAS.gs
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
-          LISTA_PRODUCTOS_CACHE = res.DATOS;
+          var d = res.DATOS;
+          
+          // Populate Clientes
+          if (selectCli && d.CLIENTES) {
+            selectCli.innerHTML = "<option value=''>Seleccione un cliente / tercero...</option>";
+            CLIENTES_VENTA_CACHE = {};
+            d.CLIENTES.forEach(function(c) {
+              var idKey = c.ID_CLIENTE || c.ID_PROVEEDOR;
+              if (!idKey) return;
+              CLIENTES_VENTA_CACHE[idKey] = c;
+              var opt = document.createElement("option");
+              opt.value = idKey;
+              opt.text = (c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || "Cliente") + " (" + (c.NUMERO_DOCUMENTO || c.NIT_CC || idKey) + ")";
+              selectCli.add(opt);
+            });
+          }
+
+          // Populate Productos
+          if (selectProd && d.PRODUCTOS) {
+            selectProd.innerHTML = "<option value=''>Seleccione un producto o servicio...</option>";
+            PRODUCTOS_VENTA_CACHE = {};
+            d.PRODUCTOS.forEach(function(p) {
+              if (!p.ID_PRODUCTO) return;
+              PRODUCTOS_VENTA_CACHE[p.ID_PRODUCTO] = p;
+              var opt = document.createElement("option");
+              opt.value = p.ID_PRODUCTO;
+              opt.text = p.DESCRIPCION + " ($" + Number(p.PRECIO_VENTA || 0).toLocaleString('es-CO') + ")";
+              selectProd.add(opt);
+            });
+          }
+
+          // Populate Obras
+          if (selectObra && d.OBRAS) {
+            selectObra.innerHTML = "<option value=''>Ninguna / Venta General</option>";
+            d.OBRAS.forEach(function(o) {
+              if (!o.ID_OBRA) return;
+              var opt = document.createElement("option");
+              opt.value = o.ID_OBRA;
+              opt.text = o.NOMBRE_OBRA + " (" + o.ID_OBRA + ")";
+              selectObra.add(opt);
+            });
+          }
         }
       })
-      .PROD_LISTAR_PRODUCTOS_WEB(TOKEN_SESION_PROY);
-
-    agregarLineaDetalle();
+      .withFailureHandler(function(err) {
+        console.warn("Aviso de carga combinada, ejecutando fallbacks:", err);
+      })
+      .VEN_OBTENER_CATALOGOS_COMBINADOS_WEB(TOKEN_SESION_PROY);
   }
 
-  function alternarAIU() {
-    var tipo = document.getElementById("ven_tipo_documento").value;
-    var container = document.getElementById("aiu_container");
-    if (container) container.style.display = (tipo === "FACTURA_AIU") ? "block" : "none";
-    calcularTotalesVenta();
-  }
-
-  function actualizarCondicionesPagoCliente() {
+  function alSeleccionarCliente() {
     var idCli = document.getElementById("ven_id_cliente").value;
-    if (idCli && LISTA_CLIENTES_CACHE[idCli] && LISTA_CLIENTES_CACHE[idCli].FORMA_PAGO) {
-      document.getElementById("ven_forma_pago").value = LISTA_CLIENTES_CACHE[idCli].FORMA_PAGO;
-    }
-  }
-
-  function agregarLineaDetalle() {
-    var tbody = document.getElementById("detalles_tabla");
-    if (!tbody) return;
-    var idx = tbody.children.length;
-    var tr = document.createElement("tr");
-    tr.id = "fila_det_" + idx;
-
-    var optProdHtml = '<option value="">Seleccione producto...</option>';
-    if (LISTA_PRODUCTOS_CACHE && LISTA_PRODUCTOS_CACHE.length > 0) {
-      LISTA_PRODUCTOS_CACHE.forEach(function(p) {
-        optProdHtml += '<option value="' + p.ID_PRODUCTO + '" data-precio="' + (p.PRECIO_VENTA || 0) + '">' + p.DESCRIPCION + ' (' + p.CODIGO + ')</option>';
-      });
-    }
-
-    tr.innerHTML = '<td><select class="input" id="det_prod_' + idx + '" onchange="alSeleccionarProducto(' + idx + ')">' + optProdHtml + '</select></td>' +
-                   '<td><input type="number" class="input" id="det_can_' + idx + '" value="1" min="1" oninput="calcularTotalesVenta()" style="text-align:center;"></td>' +
-                   '<td><input type="number" class="input" id="det_pre_' + idx + '" value="0" min="0" oninput="calcularTotalesVenta()"></td>' +
-                   '<td><strong id="det_tot_' + idx + '">$0 COP</strong></td>' +
-                   '<td style="text-align:center;"><button class="button button-secondary" style="padding:4px 8px;" onclick="removerLineaDetalle(' + idx + ')">❌</button></td>';
-    tbody.appendChild(tr);
-  }
-
-  function alSeleccionarProducto(idx) {
-    var select = document.getElementById("det_prod_" + idx);
-    var preInput = document.getElementById("det_pre_" + idx);
-    if (select && preInput && select.selectedIndex > 0) {
-      var opt = select.options[select.selectedIndex];
-      var precio = opt.getAttribute("data-precio");
-      if (precio) preInput.value = precio;
-    }
-    calcularTotalesVenta();
-  }
-
-  function removerLineaDetalle(idx) {
-    var tr = document.getElementById("fila_det_" + idx);
-    if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
-    calcularTotalesVenta();
-  }
-
-  function calcularTotalesVenta() {
-    var tbody = document.getElementById("detalles_tabla");
-    if (!tbody) return;
-    var tipoDoc = document.getElementById("ven_tipo_documento").value;
-    var total = 0;
-
-    Array.from(tbody.children).forEach(function(tr) {
-      var idx = tr.id.replace("fila_det_", "");
-      var cantInput = document.getElementById("det_can_" + idx);
-      var preInput = document.getElementById("det_pre_" + idx);
-      var totSpan = document.getElementById("det_tot_" + idx);
-      if (cantInput && preInput && totSpan) {
-        var sub = Number(cantInput.value || 0) * Number(preInput.value || 0);
-        totSpan.textContent = "$" + sub.toLocaleString('es-CO') + " COP";
-        total += sub;
-      }
-    });
-
-    var iva = total * 0.19;
-    if (tipoDoc === "FACTURA_AIU") {
-      var pctU = Number(document.getElementById("ven_aiu_u").value || 10) / 100;
-      var baseUtilidad = total * pctU;
-      iva = baseUtilidad * 0.19;
-    }
-
-    var grandTotal = total + iva;
-    document.getElementById("txt_subtotal").textContent = "$" + total.toLocaleString('es-CO') + " COP";
-    document.getElementById("txt_iva").textContent = "$" + iva.toLocaleString('es-CO') + " COP";
-    document.getElementById("txt_total").textContent = "$" + grandTotal.toLocaleString('es-CO') + " COP";
-  }
-
-  function enviarVentaAAppsScript() {
-    var idCliente = document.getElementById("ven_id_cliente").value;
-    var numDoc = document.getElementById("ven_num_documento").value.trim();
-    if (!idCliente || !numDoc) {
-      alert("Por favor seleccione un cliente e ingrese el número de consecutivo.");
+    var box = document.getElementById("box_info_cliente");
+    if (!idCli || !CLIENTES_VENTA_CACHE[idCli]) {
+      if (box) box.style.display = "none";
       return;
     }
+    var c = CLIENTES_VENTA_CACHE[idCli];
+    document.getElementById("cli_info_nombre").textContent = c.RAZON_SOCIAL || c.NOMBRE_COMERCIAL || "Cliente";
+    document.getElementById("cli_info_doc").textContent = (c.NUMERO_DOCUMENTO || c.NIT_CC || "N/A") + (c.DIGITO_VERIFICACION ? "-" + c.DIGITO_VERIFICACION : "");
+    document.getElementById("cli_info_cupo").textContent = "$" + Number(c.LIMITE_CREDITO || c.CUPO_CREDITO || 0).toLocaleString('es-CO') + " COP";
+    if (box) box.style.display = "block";
+  }
 
-    var tbody = document.getElementById("detalles_tabla");
-    var detalles = [];
-    Array.from(tbody.children).forEach(function(tr) {
-      var idx = tr.id.replace("fila_det_", "");
-      var prodSelect = document.getElementById("det_prod_" + idx);
-      var cantInput = document.getElementById("det_can_" + idx);
-      var preInput = document.getElementById("det_pre_" + idx);
-      if (prodSelect && prodSelect.value && cantInput && preInput) {
-        var idProd = prodSelect.value;
-        var cant = Number(cantInput.value || 1);
-        var pre = Number(preInput.value || 0);
-        var desc = prodSelect.options[prodSelect.selectedIndex].text;
-        detalles.push({ ID_PRODUCTO: idProd, DESCRIPCION: desc, CANTIDAD: cant, PRECIO_UNITARIO: pre, TOTAL: cant * pre });
-      }
-    });
+  function alCambiarFormaPago() {
+    var forma = document.getElementById("ven_forma_pago").value;
+    var colPlazo = document.getElementById("col_plazo_dias");
+    if (colPlazo) colPlazo.style.display = forma === "CREDITO" ? "block" : "none";
+  }
 
-    if (detalles.length === 0) {
-      alert("Debe agregar al menos un ítem válido a la venta.");
+  function alSeleccionarProductoItem() {
+    var idProd = document.getElementById("item_select_prod").value;
+    if (!idProd || !PRODUCTOS_VENTA_CACHE[idProd]) return;
+    var p = PRODUCTOS_VENTA_CACHE[idProd];
+    document.getElementById("item_precio").value = p.PRECIO_VENTA || 0;
+    document.getElementById("item_iva").value = p.IVA || "19%";
+    recalcularSubtotalModalItem();
+  }
+
+  function recalcularSubtotalModalItem() {}
+
+  function agregarItemFila() {
+    var idProd = document.getElementById("item_select_prod").value;
+    if (!idProd || !PRODUCTOS_VENTA_CACHE[idProd]) {
+      alert("Por favor seleccione un producto o servicio de la lista.");
       return;
     }
+    var p = PRODUCTOS_VENTA_CACHE[idProd];
+    var cant = Number(document.getElementById("item_cantidad").value || 1);
+    var precio = Number(document.getElementById("item_precio").value || 0);
+    var tarifaIvaStr = document.getElementById("item_iva").value || "19%";
+    var pctIva = Number(tarifaIvaStr.replace("%", "")) / 100;
 
-    var cabecera = {
-      TIPO_DOCUMENTO: document.getElementById("ven_tipo_documento").value,
-      NUM_DOCUMENTO: numDoc,
-      ID_CLIENTE: idCliente,
-      ID_OBRA: document.getElementById("ven_id_obra").value,
-      FORMA_PAGO: document.getElementById("ven_forma_pago").value,
-      AIU_A: Number(document.getElementById("ven_aiu_a") ? document.getElementById("ven_aiu_a").value : 15),
-      AIU_I: Number(document.getElementById("ven_aiu_i") ? document.getElementById("ven_aiu_i").value : 5),
-      AIU_U: Number(document.getElementById("ven_aiu_u") ? document.getElementById("ven_aiu_u").value : 10)
+    var subtotalBruto = cant * precio;
+    var valorIva = subtotalBruto * pctIva;
+
+    var item = {
+      ID_PRODUCTO: p.ID_PRODUCTO,
+      CODIGO: p.CODIGO || p.ID_PRODUCTO,
+      DESCRIPCION: p.DESCRIPCION,
+      CANTIDAD: cant,
+      PRECIO_UNITARIO: precio,
+      TARIFA_IVA: tarifaIvaStr,
+      VALOR_IVA: valorIva,
+      SUBTOTAL: subtotalBruto + valorIva
     };
 
-    mostrarAlerta("Registrando la transacción en Google Sheets...", "info");
+    ITEMS_VENTA_ACTUAL.push(item);
+    renderizarTablaItemsVenta();
+    recalcularTotalesVenta();
+  }
+
+  function eliminarItemFila(index) {
+    ITEMS_VENTA_ACTUAL.splice(index, 1);
+    renderizarTablaItemsVenta();
+    recalcularTotalesVenta();
+  }
+
+  function renderizarTablaItemsVenta() {
+    var tbody = document.getElementById("tabla_items_venta_body");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (ITEMS_VENTA_ACTUAL.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Aún no ha agregado ítems a la venta.</td></tr>';
+      return;
+    }
+
+    ITEMS_VENTA_ACTUAL.forEach(function(item, idx) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + (idx + 1) + '</td>' +
+                     '<td><code>' + item.CODIGO + '</code></td>' +
+                     '<td><strong>' + item.DESCRIPCION + '</strong></td>' +
+                     '<td>' + item.CANTIDAD + '</td>' +
+                     '<td>$' + Number(item.PRECIO_UNITARIO).toLocaleString('es-CO') + '</td>' +
+                     '<td>' + item.TARIFA_IVA + '</td>' +
+                     '<td>$' + Number(item.VALOR_IVA).toLocaleString('es-CO') + '</td>' +
+                     '<td><strong>$' + Number(item.SUBTOTAL).toLocaleString('es-CO') + ' COP</strong></td>' +
+                     '<td style="text-align:center;"><button class="button button-danger" style="padding:4px 8px; font-size:11px;" onclick="eliminarItemFila(' + idx + ')">🗑️</button></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function recalcularTotalesVenta() {
+    var subtotal = 0;
+    var totalIva = 0;
+
+    ITEMS_VENTA_ACTUAL.forEach(function(i) {
+      subtotal += (i.CANTIDAD * i.PRECIO_UNITARIO);
+      totalIva += i.VALOR_IVA;
+    });
+
+    var aplicaAiu = document.getElementById("ven_aplica_aiu").value === "SI";
+    var valorAiu = aplicaAiu ? (subtotal * 0.20) : 0;
+    var totalFinal = subtotal + valorAiu + totalIva;
+
+    document.getElementById("disp_ven_subtotal").textContent = "$" + Math.round(subtotal).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_ven_iva").textContent = "$" + Math.round(totalIva).toLocaleString('es-CO') + " COP";
+    document.getElementById("disp_ven_total").textContent = "$" + Math.round(totalFinal).toLocaleString('es-CO') + " COP";
+
+    var rowAiu = document.getElementById("row_aiu_disp");
+    if (rowAiu) {
+      rowAiu.style.display = aplicaAiu ? "flex" : "none";
+      document.getElementById("disp_ven_aiu").textContent = "$" + Math.round(valorAiu).toLocaleString('es-CO') + " COP";
+    }
+  }
+
+  function guardarVentaBackend() {
+    var idCli = document.getElementById("ven_id_cliente").value;
+    if (!idCli) {
+      alert("Por favor seleccione un cliente para la venta.");
+      return;
+    }
+    if (ITEMS_VENTA_ACTUAL.length === 0) {
+      alert("Debe agregar al menos un ítem a la venta.");
+      return;
+    }
+
+    var cli = CLIENTES_VENTA_CACHE[idCli] || {};
+    var datos = {
+      ID_CLIENTE: idCli,
+      RAZON_SOCIAL_CLIENTE: cli.RAZON_SOCIAL || cli.NOMBRE_COMERCIAL || "Cliente General",
+      TIPO_DOCUMENTO: document.getElementById("ven_tipo_documento").value,
+      FORMA_PAGO: document.getElementById("ven_forma_pago").value,
+      PLAZO_DIAS: Number(document.getElementById("ven_plazo_dias").value || 30),
+      ID_OBRA: document.getElementById("ven_id_obra").value,
+      OBSERVACIONES: document.getElementById("ven_observaciones").value.trim(),
+      ITEMS: ITEMS_VENTA_ACTUAL
+    };
+
+    var subtotal = 0;
+    var totalIva = 0;
+    ITEMS_VENTA_ACTUAL.forEach(function(i) {
+      subtotal += (i.CANTIDAD * i.PRECIO_UNITARIO);
+      totalIva += i.VALOR_IVA;
+    });
+    var aplicaAiu = document.getElementById("ven_aplica_aiu").value === "SI";
+    datos.SUBTOTAL = subtotal;
+    datos.VALOR_AIU = aplicaAiu ? (subtotal * 0.20) : 0;
+    datos.TOTAL_IVA = totalIva;
+    datos.TOTAL = subtotal + datos.VALOR_AIU + totalIva;
+
+    mostrarVenAlerta("Procesando venta y emitiendo comprobante en Sheets...", "info");
 
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO) {
-          mostrarAlerta(res.MENSAJE, "success");
-          document.getElementById("ven_num_documento").value = "";
-          tbody.innerHTML = "";
-          agregarLineaDetalle();
-          calcularTotalesVenta();
+          mostrarVenAlerta(res.MENSAJE, "success");
+          ITEMS_VENTA_ACTUAL = [];
+          renderizarTablaItemsVenta();
+          recalcularTotalesVenta();
+          cambiarVenPestana("historial");
         } else {
-          mostrarAlerta("Error al registrar: " + (res ? res.MENSAJE : "Fallo de comunicación"), "error");
+          mostrarVenAlerta("Error: " + (res ? res.MENSAJE : "Sin respuesta"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        mostrarAlerta("Fallo de red: " + err.message, "error");
+        mostrarVenAlerta("Fallo de red: " + err.message, "error");
       })
-      .VEN_GUARDAR_VENTA_WEB(cabecera, detalles, TOKEN_SESION_PROY);
+      .VEN_GUARDAR_VENTA_WEB(datos, TOKEN_SESION_PROY);
   }
 
-  function cargarHistorialVentas() {
-    var tbody = document.getElementById("ventas_historial_tabla");
+  function cargarVentasHistorial() {
+    var tbody = document.getElementById("tabla_ventas_body");
     if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">Cargando ventas desde Sheets...</td></tr>';
+
     google.script.run
       .withSuccessHandler(function(res) {
         if (res && res.EXITO && res.DATOS) {
-          tbody.innerHTML = "";
-          res.DATOS.forEach(function(v) {
-            var tr = document.createElement("tr");
-            tr.innerHTML = '<td><code>' + v.ID_VENTA + '</code></td>' +
-                           '<td>' + (v.FECHA ? String(v.FECHA).substring(0,10) : 'Hoy') + '</td>' +
-                           '<td>' + (v.ID_CLIENTE || 'General') + '</td>' +
-                           '<td>' + (v.TIPO_DOCUMENTO || 'FACTURA') + '</td>' +
-                           '<td>' + (v.FORMA_PAGO || 'CONTADO') + '</td>' +
-                           '<td>$' + Number(v.SUBTOTAL || 0).toLocaleString('es-CO') + '</td>' +
-                           '<td>$' + Number(v.IVA || 0).toLocaleString('es-CO') + '</td>' +
-                           '<td><strong>$' + Number(v.TOTAL || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
-                           '<td style="text-align:center;"><span class="badge badge-active">REGISTRADA</span></td>';
-            tbody.appendChild(tr);
-          });
+          VENTAS_HISTORIAL_CACHE = res.DATOS;
+          actualizarKpisVentas(res.DATOS);
+          renderizarTablaVentasHistorial(res.DATOS);
+        } else {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Error: ' + (res ? res.MENSAJE : "Sin respuesta") + '</td></tr>';
         }
+      })
+      .withFailureHandler(function(err) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#dc2626;">Fallo de red: ' + err.message + '</td></tr>';
       })
       .VEN_LISTAR_VENTAS_WEB(TOKEN_SESION_PROY);
   }
 
-  function carCargarCartera() {
-    var tbody = document.getElementById("cartera_tabla");
+  function actualizarKpisVentas(lista) {
+    var totVentas = 0;
+    var totContado = 0;
+    var totCredito = 0;
+    var totIva = 0;
+
+    lista.forEach(function(v) {
+      var m = Number(v.TOTAL || 0);
+      totVentas += m;
+      if (v.FORMA_PAGO === "CREDITO") totCredito += m;
+      else totContado += m;
+
+      totIva += Number(v.TOTAL_IVA || 0);
+    });
+
+    document.getElementById("kpi_total_ventas_monto").textContent = "$" + Math.round(totVentas).toLocaleString('es-CO') + " COP";
+    document.getElementById("kpi_contado_monto").textContent = "$" + Math.round(totContado).toLocaleString('es-CO') + " COP";
+    document.getElementById("kpi_credito_monto").textContent = "$" + Math.round(totCredito).toLocaleString('es-CO') + " COP";
+    document.getElementById("kpi_iva_monto").textContent = "$" + Math.round(totIva).toLocaleString('es-CO') + " COP";
+  }
+
+  function renderizarTablaVentasHistorial(lista) {
+    var tbody = document.getElementById("tabla_ventas_body");
     if (!tbody) return;
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO && res.DATOS) {
-          tbody.innerHTML = "";
-          res.DATOS.forEach(function(c) {
-            var tr = document.createElement("tr");
-            var badgeEst = c.ESTADO === 'PAGADO' ? 'badge-active' : 'badge-overdue';
-            tr.innerHTML = '<td><code>' + c.ID_CARTERA + '</code></td>' +
-                           '<td>' + (c.ID_CLIENTE || 'Cliente') + '</td>' +
-                           '<td>' + c.ID_VENTA + '</td>' +
-                           '<td>' + (c.DOCUMENTO || 'FEV') + '</td>' +
-                           '<td>' + (c.FECHA_VENCIMIENTO ? String(c.FECHA_VENCIMIENTO).substring(0,10) : 'N/A') + '</td>' +
-                           '<td>$' + Number(c.VALOR_DOCUMENTO || 0).toLocaleString('es-CO') + '</td>' +
-                           '<td>$' + Number(c.ABONOS || 0).toLocaleString('es-CO') + '</td>' +
-                           '<td><strong>$' + Number(c.SALDO || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
-                           '<td><span class="badge ' + badgeEst + '">' + c.ESTADO + '</span></td>' +
-                           '<td style="text-align:center;">' +
-                             (c.ESTADO !== 'PAGADO' ? '<button class="button button-success" style="padding:4px 8px; font-size:11px;" onclick="abrirModalRecaudo('\'' + c.ID_CARTERA + '\'', ' + c.SALDO + ')">💵 Abonar</button>' : '✔️ OK') +
-                           '</td>';
-            tbody.appendChild(tr);
-          });
-        }
-      })
-      .CAR_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
-  }
+    tbody.innerHTML = "";
 
-  function abrirModalRecaudo(idCartera, saldo) {
-    document.getElementById("rec_id_cartera").value = idCartera;
-    document.getElementById("rec_valor").value = saldo;
-    
-    var selectCuentas = document.getElementById("rec_id_cuenta");
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res && res.EXITO && res.DATOS) {
-          selectCuentas.innerHTML = "";
-          res.DATOS.forEach(function(cta) {
-            var opt = document.createElement("option");
-            opt.value = cta.ID_CUENTA;
-            opt.text = cta.NOMBRE_CUENTA + " (" + cta.NUMERO_CUENTA + ")";
-            selectCuentas.add(opt);
-          });
-        }
-      })
-      .TES_LISTAR_CUENTAS_WEB(TOKEN_SESION_PROY);
-
-    document.getElementById("modal_recaudo").style.display = "flex";
-  }
-
-  function cerrarModalRecaudo() {
-    document.getElementById("modal_recaudo").style.display = "none";
-  }
-
-  function guardarRecaudoCartera() {
-    var datos = {
-      ID_CARTERA: document.getElementById("rec_id_cartera").value,
-      ID_CUENTA_DESTINO: document.getElementById("rec_id_cuenta").value,
-      VALOR: Number(document.getElementById("rec_valor").value || 0),
-      METODO_PAGO: document.getElementById("rec_metodo_pago").value,
-      OBSERVACION: document.getElementById("rec_observacion").value.trim()
-    };
-
-    if (!datos.VALOR || datos.VALOR <= 0 || !datos.OBSERVACION) {
-      alert("Por favor ingrese el valor del abono y la observación.");
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:#64748b;">No hay transacciones de venta registradas.</td></tr>';
       return;
     }
 
+    lista.forEach(function(v) {
+      var tr = document.createElement("tr");
+      var badgeClass = v.ESTADO === 'PAGADA' ? 'badge-pagada' : 'badge-cartera';
+      
+      tr.innerHTML = '<td><code>' + v.ID_VENTA + '</code></td>' +
+                     '<td>' + (v.FECHA ? String(v.FECHA).substring(0,10) : 'Hoy') + '</td>' +
+                     '<td><strong>' + (v.RAZON_SOCIAL_CLIENTE || v.ID_CLIENTE || 'General') + '</strong></td>' +
+                     '<td><span class="badge badge-cotizado">' + (v.TIPO_DOCUMENTO || 'FACTURA') + '</span></td>' +
+                     '<td><code>' + (v.NUM_DOCUMENTO || v.ID_VENTA) + '</code></td>' +
+                     '<td>' + (v.FORMA_PAGO || 'CONTADO') + '</td>' +
+                     '<td><strong>$' + Number(v.TOTAL || 0).toLocaleString('es-CO') + ' COP</strong></td>' +
+                     '<td><span class="badge ' + badgeClass + '">' + (v.ESTADO || 'PAGADA') + '</span></td>' +
+                     '<td style="text-align:center;">' +
+                       '<button class="button button-secondary" style="padding:4px 8px; font-size:11px;" onclick="verDetalleVentaById(\'' + v.ID_VENTA + '\')">👁️ Detalle</button>' +
+                     '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filtrarVentasHistorial() {
+    var q = document.getElementById("ven_buscador").value.trim().toUpperCase();
+    if (!q) { renderizarTablaVentasHistorial(VENTAS_HISTORIAL_CACHE); return; }
+    var filtrados = VENTAS_HISTORIAL_CACHE.filter(function(v) {
+      return String(v.ID_VENTA).toUpperCase().indexOf(q) !== -1 ||
+             String(v.RAZON_SOCIAL_CLIENTE).toUpperCase().indexOf(q) !== -1 ||
+             String(v.NUM_DOCUMENTO).toUpperCase().indexOf(q) !== -1;
+    });
+    renderizarTablaVentasHistorial(filtrados);
+  }
+
+  function verDetalleVentaById(idVenta) {
+    if (!idVenta) return;
     google.script.run
       .withSuccessHandler(function(res) {
-        if (res && res.EXITO) {
-          cerrarModalRecaudo();
-          carCargarCartera();
-          mostrarAlerta("Recaudo procesado con éxito.", "success");
-        } else alert("Error: " + (res ? res.MENSAJE : "Sin respuesta"));
+        if (res && res.EXITO && res.DATOS) {
+          var cab = res.DATOS.CABECERA;
+          var items = res.DATOS.ITEMS || [];
+          var msg = "📄 COMPROBANTE DE VENTA: " + cab.ID_VENTA + "
+" +
+                    "Cliente: " + cab.RAZON_SOCIAL_CLIENTE + "
+" +
+                    "Total: $" + Number(cab.TOTAL || 0).toLocaleString('es-CO') + " COP
+
+" +
+                    "Ítems agregados:
+";
+          items.forEach(function(i) {
+            msg += "- " + i.DESCRIPCION + " (Cant: " + i.CANTIDAD + ") = $" + Number(i.SUBTOTAL || 0).toLocaleString('es-CO') + "
+";
+          });
+          alert(msg);
+        }
       })
-      .CAR_REGISTRAR_RECAUDO_WEB(datos, TOKEN_SESION_PROY);
+      .VEN_OBTENER_DETALLE_VENTA_WEB(idVenta, TOKEN_SESION_PROY);
   }
 </script>
 </body>

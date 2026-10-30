@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 7.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 8.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catálogo de Productos y Servicios | MEGUDAN ERP</title>
+  <title>Catálogo de Productos y Servicios | ERP Empresarial</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -87,7 +87,7 @@
       <div class="header-icon">📦</div>
       <div>
         <h1>Catálogo de Productos y Servicios</h1>
-        <p>ERP Operativo · Gestión e integración en vivo del Catálogo Comercial de MEGUDAN</p>
+        <p>ERP Operativo · Gestión e integración en vivo del Catálogo Comercial</p>
       </div>
     </div>
   </header>
@@ -157,7 +157,7 @@
       
       <div class="field">
         <label for="prod_descripcion">Descripción del Item *</label>
-        <input type="text" id="prod_descripcion" class="input" placeholder="Ej: Caña de Guadua Inmunizada 4m">
+        <input type="text" id="prod_descripcion" class="input" placeholder="Ej: Producto / Ítem Comercial">
       </div>
       
       <div class="field">
@@ -240,7 +240,7 @@
       
       <div class="field">
         <label for="ser_descripcion">Descripción del Servicio *</label>
-        <input type="text" id="ser_descripcion" class="input" placeholder="Ej: Servicio de Consultoría en Guadua o Diseño de Obra">
+        <input type="text" id="ser_descripcion" class="input" placeholder="Ej: Servicio de Consultoría o Asesoría Técnica">
       </div>
       
       <div class="field">
@@ -354,7 +354,7 @@
       var stringEscaped = JSON.stringify(p).replace(/"/g, '&quot;');
       
       var urlDirecta = resolverUrlImagenDirecta(p.IMAGEN_URL);
-      var imgHtml = urlDirecta ? '<img src="' + urlDirecta + '" class="product-img" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Sin+Img';">' : '<span style="font-size:24px; display:block; text-align:center;">🪵</span>';
+      var imgHtml = urlDirecta ? '<img src="' + urlDirecta + '" class="product-img" onerror="this.onerror=null; this.src=\'https://placehold.co/100x100?text=Sin+Img\';">' : '<span style="font-size:24px; display:block; text-align:center;">🪵</span>';
       var badgeTypeClass = p.TIPO_PRODUCTO === "SERVICIO" ? "badge badge-service" : "badge badge-type";
 
       tr.innerHTML = '<td><strong>' + p.ID_PRODUCTO + '</strong></td>' +
@@ -367,9 +367,22 @@
                      '<td>' + (p.IVA || "0%") + '</td>' +
                      '<td>' + (p.CONTROL_INVENTARIO || "SÍ") + '</td>' +
                      '<td><span class="badge ' + badgeEstado + '">' + p.ESTADO + '</span></td>' +
-                     '<td style="text-align: center; white-space: nowrap;"><button class="button button-secondary button-action" onclick="editarItem('\'' + stringEscaped + '\'')">✏️ Editar</button></td>';
+                     '<td style="text-align: center; white-space: nowrap;"><button class="button button-secondary button-action" onclick="editarItemById(\'' + p.ID_PRODUCTO + '\')">✏️ Editar</button></td>';
       tbody.appendChild(tr);
     });
+  }
+
+  
+  function editarItemById(idProd) {
+    if (!idProd) return;
+    var p = LISTA_PRODUCTOS.find(function(item) { return String(item.ID_PRODUCTO).trim() === String(idProd).trim(); });
+    if (p) {
+      if (p.TIPO_PRODUCTO === "SERVICIO") {
+        abrirModalServicio(p);
+      } else {
+        abrirModalProducto(p);
+      }
+    }
   }
 
   function prodFiltrar() {

@@ -1,11 +1,11 @@
-<!-- (VERSIÓN 28.0 - V2 ERP - LIBRO 1) -->
+<!-- (VERSIÓN 33.0 - V2 ERP - LIBRO 1) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | MEGUDAN ERP</title>
+  <title>Dashboard | ERP Empresarial</title>
   <style>
     :root {
       --bg-app: #0f172a;
@@ -146,24 +146,62 @@
       background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px;
       padding: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03);
     }
-    .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
     .notes-title { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
-    .notes-actions { display: flex; gap: 10px; align-items: center; }
+    .notes-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     
-    .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    .note-card {
-      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
-      padding: 16px; display: flex; flex-direction: column; gap: 10px;
-      transition: all 0.2s ease; position: relative;
+    .notes-kpi-bar {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px;
     }
-    .note-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .note-card.tag-operativo { border-left: 4px solid #10b981; }
-    .note-card.tag-pendiente { border-left: 4px solid #ef4444; }
-    .note-header-row { display: flex; justify-content: space-between; align-items: center; }
-    .note-tag { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #e2e8f0; color: #475569; text-transform: uppercase; }
+    .note-kpi-card {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;
+      display: flex; flex-direction: column; gap: 2px; text-align: left;
+    }
+    .note-kpi-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .note-kpi-num { font-size: 18px; font-weight: 900; color: #0f172a; }
+
+    .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+    .note-card {
+      background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px;
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      transition: all 0.2s ease; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+    .note-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    
+    /* Categorías y Colores */
+    .note-card.tag-pendiente { border-left: 5px solid #ef4444; background: #fffdfd; }
+    .note-card.tag-operativo { border-left: 5px solid #2563eb; background: #fbfdff; }
+    .note-card.tag-recordatorio { border-left: 5px solid #f59e0b; background: #fffdf5; }
+    .note-card.tag-realizada { border-left: 5px solid #10b981; background: #f0fdf4; }
+    .note-card.tag-auditada { border-left: 5px solid #8b5cf6; background: #faf5ff; }
+
+    .note-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .note-tag { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    
+    .badge-tag-pendiente { background: #fee2e2; color: #dc2626; }
+    .badge-tag-operativo { background: #dbeafe; color: #1d4ed8; }
+    .badge-tag-recordatorio { background: #fef3c7; color: #b45309; }
+    .badge-tag-realizada { background: #dcfce7; color: #15803d; }
+    .badge-tag-auditada { background: #f3e8ff; color: #6b21a8; }
+
     .note-content { font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-    .note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; margin-top: 5px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
-    .note-btn-del { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+    .note-img-thumb { width: 100%; max-height: 160px; object-fit: cover; border-radius: 10px; border: 1px solid #cbd5e1; margin-top: 4px; cursor: pointer; transition: opacity 0.2s; }
+    .note-img-thumb:hover { opacity: 0.88; }
+    
+    .note-audit-trail { font-size: 10px; font-weight: 700; color: #64748b; background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 6px; display: flex; flex-direction: column; gap: 2px; }
+
+    .note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; margin-top: 5px; border-top: 1px solid #f1f5f9; padding-top: 8px; flex-wrap: wrap; gap: 6px; }
+    
+    .note-actions-btn { display: flex; gap: 6px; align-items: center; }
+    .btn-note-action { background: none; border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-note-action:hover { background: #f1f5f9; }
+    .btn-note-done { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
+    .btn-note-done:hover { background: #10b981; color: #ffffff; }
+    .btn-note-audit { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
+    .btn-note-audit:hover { background: #8b5cf6; color: #ffffff; }
+    .note-btn-edit { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 11px; font-weight: 700; padding: 3px 6px; border-radius: 4px; }
+    .note-btn-edit:hover { background: rgba(37, 99, 235, 0.1); }
+    .note-btn-del { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 11px; font-weight: 700; padding: 3px 6px; border-radius: 4px; }
     .note-btn-del:hover { background: rgba(239, 68, 68, 0.1); }
 
     .input-note-new {
@@ -196,10 +234,10 @@
   <aside class="sidebar">
     <div>
       <div class="sidebar-header">
-        <div class="sidebar-brand-icon">M</div>
+        <div class="sidebar-brand-icon" id="sidebar-logo-icon">M</div>
         <div class="sidebar-logo">
-          MEGUDAN
-          <span>ERP V2 OPERATIVO</span>
+          <span id="sidebar-empresa-nombre">MI EMPRESA</span>
+          <span id="sidebar-empresa-slogan">ERP V2 OPERATIVO</span>
         </div>
       </div>
       <nav class="sidebar-nav">
@@ -210,8 +248,13 @@
       </nav>
     </div>
     <div class="sidebar-footer">
-      <div class="user-profile">
-        <div class="user-avatar" id="avatar-letras">U</div>
+      <button class="btn-settings" onclick="abrirModalPersonalizacion()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#38bdf8; width:100%; padding:9px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+        <span>⚙️</span> Personalizar Perfil & Empresa
+      </button>
+      <div class="user-profile" onclick="abrirModalPersonalizacion()" style="cursor:pointer;" title="Clic para personalizar perfil e identidad de empresa">
+        <div class="user-avatar" id="avatar-container" style="width:38px; height:38px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+          <span id="avatar-letras">U</span>
+        </div>
         <div class="user-info">
           <span class="user-name" id="user-display">Cargando...</span>
           <span class="user-role" id="role-display">Verificando...</span>
@@ -237,43 +280,66 @@
         <div class="welcome-card">
           <div class="welcome-text">
             <h2>¡Te damos la bienvenida al ERP V2!</h2>
-            <p>
-              Panel gerencial unificado de MEGUDAN CONSTRUCCIONES SOSTENIBLES SAS.
-              Selecciona cualquier módulo en la barra lateral para operar según los permisos asignados a tu usuario.
+            <p id="welcome-empresa-desc">
+              Panel gerencial unificado. Selecciona cualquier módulo en la barra lateral para operar según los permisos asignados a tu usuario.
             </p>
           </div>
-          <div class="welcome-icon">🌲</div>
+          <div class="welcome-icon" id="welcome-logo-container" title="Identidad Corporativa">🏢</div>
         </div>
 
         <!-- MÓDULO DE APUNTES Y NOTAS RÁPIDAS EN INICIO -->
         <div class="notes-section">
           <div class="notes-header">
-            <h3 class="notes-title">📒 Bitácora & Bloc de Apuntes Operativos</h3>
+            <h3 class="notes-title">📒 Bitácora & Bloc de Apuntes Operativos con Evidencias</h3>
             <div class="notes-actions">
               <select id="note_category_filter" class="btn btn-secondary" style="padding: 7px 12px;" onchange="filtrarNotasLocales()">
                 <option value="TODAS">Todas las Categorías</option>
-                <option value="OPERATIVO">🟢 Operativas</option>
-                <option value="PENDIENTE">🔴 Pendientes</option>
+                <option value="PENDIENTE">🔴 Pendientes Urgentes</option>
+                <option value="OPERATIVO">🔵 Operativos / Obras</option>
                 <option value="RECORDATORIO">🟡 Recordatorios</option>
+                <option value="REALIZADA">🟢 Tareas Realizadas</option>
+                <option value="AUDITADA">🟣 Tareas Auditadas</option>
               </select>
-              <button class="btn btn-primary" onclick="toggleFormNuevaNota()">+ Nueva Nota</button>
+              <button class="btn btn-primary" onclick="toggleFormNuevaNota()">+ Nueva Nota / Captura</button>
             </div>
           </div>
 
-          <!-- Formulario para agregar nueva nota -->
+          <!-- KPI Bar Bitácora -->
+          <div class="notes-kpi-bar">
+            <div class="note-kpi-card">
+              <span class="note-kpi-title">📋 Total Apuntes</span>
+              <span class="note-kpi-num" id="kpi_notes_total">0</span>
+            </div>
+            <div class="note-kpi-card" style="border-left:4px solid #ef4444;">
+              <span class="note-kpi-title" style="color:#dc2626;">🔴 Pendientes</span>
+              <span class="note-kpi-num" style="color:#dc2626;" id="kpi_notes_pendientes">0</span>
+            </div>
+            <div class="note-kpi-card" style="border-left:4px solid #10b981;">
+              <span class="note-kpi-title" style="color:#15803d;">🟢 Realizadas</span>
+              <span class="note-kpi-num" style="color:#15803d;" id="kpi_notes_realizadas">0</span>
+            </div>
+            <div class="note-kpi-card" style="border-left:4px solid #8b5cf6;">
+              <span class="note-kpi-title" style="color:#6b21a8;">🟣 Auditadas</span>
+              <span class="note-kpi-num" style="color:#6b21a8;" id="kpi_notes_auditadas">0</span>
+            </div>
+          </div>
+
+          <!-- Formulario para agregar / editar nota -->
           <div id="form_nueva_nota" style="display:none; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:20px;">
+            <input type="hidden" id="edit_note_id" value="">
             <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:10px;">
-              <input type="text" id="new_note_title" class="btn btn-secondary" style="text-align:left; font-size:13px;" placeholder="Título del Apunte / Nota...">
+              <input type="text" id="new_note_title" class="btn btn-secondary" style="text-align:left; font-size:13px;" placeholder="Título del Apunte / Tarea...">
               <select id="new_note_tag" class="btn btn-secondary">
-                <option value="RECORDATORIO">🟡 Recordatorio</option>
-                <option value="OPERATIVO">🟢 Operativo</option>
                 <option value="PENDIENTE">🔴 Pendiente Urgente</option>
+                <option value="OPERATIVO" selected>🔵 Operativo / Obra</option>
+                <option value="RECORDATORIO">🟡 Recordatorio</option>
               </select>
             </div>
             <textarea id="new_note_content" class="input-note-new" placeholder="Escriba los detalles, anotaciones de obra o pendientes aquí..."></textarea>
+            <input type="text" id="new_note_image" class="btn btn-secondary" style="text-align:left; font-size:12px; width:100%; margin-bottom:12px;" placeholder="URL de Captura de Pantalla / Evidencia (Enlace Drive o Web)...">
             <div style="display:flex; justify-content:flex-end; gap:10px;">
               <button class="btn btn-secondary" onclick="toggleFormNuevaNota()">Cancelar</button>
-              <button class="btn btn-success" onclick="guardarNuevaNotaLocal()">💾 Guardar Nota</button>
+              <button class="btn btn-success" id="btn_submit_note" onclick="guardarNuevaNotaLocal()">💾 Guardar Apunte</button>
             </div>
           </div>
 
@@ -283,7 +349,104 @@
       </div>
 
       <div id="contenedor-principal" class="module-container"></div>
+      <!-- MODAL MULTI-TAB: PERSONALIZAR PERFIL Y EMPRESA -->
+  <div id="modal_personalizacion_empresa_perfil" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#ffffff; border-radius:20px; width:100%; max-width:620px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4); overflow:hidden; border:1px solid #e2e8f0; display:flex; flex-direction:column;">
+      <div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#ffffff; padding:20px 24px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:24px;">⚙️</span>
+          <div>
+            <h3 style="margin:0; font-size:17px; font-weight:800; color:#ffffff;">Personalización de Perfil & Empresa</h3>
+            <p style="margin:2px 0 0; font-size:12px; color:#38bdf8;">Configure la identidad visual y los datos de su cuenta</p>
+          </div>
+        </div>
+        <button onclick="cerrarModalPersonalizacion()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; font-weight:800;">✕</button>
+      </div>
+
+      <!-- Pestañas Modal -->
+      <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 20px;">
+        <button id="btn-tab-perfil-modal" onclick="cambiarPestanaModalPersonalizacion('perfil')" style="padding:12px 20px; font-size:13px; font-weight:700; border:none; background:none; cursor:pointer; color:#2563eb; border-bottom:3px solid #2563eb;">👤 Mi Perfil de Usuario</button>
+        <button id="btn-tab-empresa-modal" onclick="cambiarPestanaModalPersonalizacion('empresa')" style="padding:12px 20px; font-size:13px; font-weight:700; border:none; background:none; cursor:pointer; color:#64748b; border-bottom:3px solid transparent;">🏢 Identidad de Empresa (Branding)</button>
+      </div>
+
+      <div style="padding:24px; overflow-y:auto; max-height:70vh;">
+        <!-- ALERTA MODAL -->
+        <div id="modal_pers_alert" style="display:none; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:600; margin-bottom:16px;"></div>
+
+        <!-- PESTAÑA 1: PERFIL DE USUARIO -->
+        <div id="panel-modal-perfil" style="display:block;">
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Nombre Completo del Usuario *</label>
+              <input type="text" id="pers_user_nombre" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="Ej: Mario Pérez">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Correo Electrónico Corporativo *</label>
+              <input type="email" id="pers_user_correo" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="ejemplo@empresa.com">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">URL Foto de Perfil / Avatar (Enlace Drive o Web)</label>
+              <input type="text" id="pers_user_foto" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="https://drive.google.com/file/d/ID/view o URL https://...">
+              <small style="font-size:11px; color:#64748b; margin-top:2px; display:block;">Soporta enlaces compartidos de Google Drive o imágenes web públicas.</small>
+            </div>
+            <div style="border-top:1px solid #f1f5f9; padding-top:12px; margin-top:6px;">
+              <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Cambiar Contraseña (Opcional)</label>
+              <input type="password" id="pers_user_pass" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="Dejar en blanco si no desea cambiarla">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+              <button class="btn btn-secondary" onclick="cerrarModalPersonalizacion()">Cancelar</button>
+              <button class="btn btn-primary" onclick="guardarPerfilUsuarioModal()">💾 Guardar Mi Perfil</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 2: IDENTIDAD DE EMPRESA -->
+        <div id="panel-modal-empresa" style="display:none;">
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Nombre Comercial *</label>
+                <input type="text" id="pers_emp_comercial" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="Ej: MI EMPRESA">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Razón Social Legal *</label>
+                <input type="text" id="pers_emp_razon" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="Ej: MI EMPRESA S.A.S.">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">URL Logo / Isotipo de la Empresa (Drive o Web)</label>
+              <input type="text" id="pers_emp_logo" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="https://drive.google.com/file/d/ID/view o URL imagen">
+            </div>
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Slogan / Subtítulo</label>
+                <input type="text" id="pers_emp_slogan" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="Ej: CONSTRUCCIONES SOSTENIBLES">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">NIT / Identificación</label>
+                <input type="text" id="pers_emp_nit" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="900000000-1">
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Teléfono / Contacto</label>
+                <input type="text" id="pers_emp_telefono" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="3110000000">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Dirección Principal</label>
+                <input type="text" id="pers_emp_direccion" class="btn btn-secondary" style="width:100%; text-align:left; padding:10px; margin-top:4px;" placeholder="Calle 4 # 12-30">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+              <button class="btn btn-secondary" onclick="cerrarModalPersonalizacion()">Cancelar</button>
+              <button class="btn btn-success" onclick="guardarEmpresaModal()">💾 Guardar Identidad Empresa</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
   </div>
 </div>
 
@@ -303,16 +466,78 @@
     cargarNotasERP();
   });
 
-  function configurarPerfilUsuario() {
-    if (USUARIO) {
-      document.getElementById("user-display").textContent = USUARIO;
-      document.getElementById("avatar-letras").textContent = USUARIO.substring(0,2).toUpperCase();
+  var EMPRESA_CACHE = {};
+  var PERFIL_CACHE = {};
+
+  function resolverUrlDriveDirecta(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== "string") return "";
+    var urlTrim = rawUrl.trim();
+    if (!urlTrim) return "";
+    if (urlTrim.indexOf("drive.google.com") !== -1) {
+      var match = urlTrim.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || urlTrim.match(/id=([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return "https://lh3.googleusercontent.com/d/" + match[1];
+      }
     }
-    
+    return urlTrim;
+  }
+
+  function configurarPerfilUsuario() {
     google.script.run
       .withSuccessHandler(function(contexto) {
         if (contexto && contexto.VALIDO) {
-          document.getElementById("role-display").textContent = contexto.ROL.NOMBRE_ROL || "USUARIO";
+          PERFIL_CACHE = contexto.PERFIL_USUARIO || {};
+          EMPRESA_CACHE = contexto.EMPRESA || {};
+
+          // 1. Renderizar Perfil de Usuario
+          var nomMostrar = PERFIL_CACHE.NOMBRE_COMPLETO || contexto.USUARIO || "Usuario";
+          var elUserDisp = document.getElementById("user-display");
+          if (elUserDisp) elUserDisp.textContent = nomMostrar;
+
+          var elRoleDisp = document.getElementById("role-display");
+          if (elRoleDisp) elRoleDisp.textContent = (contexto.ROL ? contexto.ROL.NOMBRE_ROL : "USUARIO") || "USUARIO";
+
+          var avatarContainer = document.getElementById("avatar-container");
+          var fotoUrl = resolverUrlDriveDirecta(PERFIL_CACHE.FOTO_URL || PERFIL_CACHE.AVATAR_URL || "");
+          if (fotoUrl && avatarContainer) {
+            avatarContainer.innerHTML = '<img src="' + fotoUrl + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">';
+          } else if (avatarContainer) {
+            avatarContainer.innerHTML = '<span id="avatar-letras">' + nomMostrar.substring(0,2).toUpperCase() + '</span>';
+          }
+
+          // 2. Renderizar Identidad de Empresa
+          var nomEmpresa = EMPRESA_CACHE.NOMBRE_COMERCIAL || EMPRESA_CACHE.RAZON_SOCIAL || "MI EMPRESA";
+          var sloganEmpresa = EMPRESA_CACHE.SLOGAN || "ERP V2 OPERATIVO";
+          var logoUrl = resolverUrlDriveDirecta(EMPRESA_CACHE.LOGO_URL || "");
+
+          var elNomEmp = document.getElementById("sidebar-empresa-nombre");
+          if (elNomEmp) elNomEmp.textContent = nomEmpresa;
+
+          var elSloganEmp = document.getElementById("sidebar-empresa-slogan");
+          if (elSloganEmp) elSloganEmp.textContent = sloganEmpresa;
+
+          var iconContainer = document.getElementById("sidebar-logo-icon");
+          if (logoUrl && iconContainer) {
+            iconContainer.innerHTML = '<img src="' + logoUrl + '" style="width:100%; height:100%; border-radius:10px; object-fit:cover;">';
+          } else if (iconContainer) {
+            iconContainer.textContent = nomEmpresa.substring(0,1).toUpperCase();
+          }
+
+          // Renderizar Isotipo de Empresa en la Welcome Card (reemplaza al arbolito 🌲)
+          var welcomeLogo = document.getElementById("welcome-logo-container");
+          if (welcomeLogo) {
+            if (logoUrl) {
+              welcomeLogo.innerHTML = '<img src="' + logoUrl + '" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" onerror="this.onerror=null; this.parentElement.textContent=\'🏢\';">';
+              welcomeLogo.style.background = "#ffffff";
+              welcomeLogo.style.padding = "4px";
+            } else {
+              welcomeLogo.textContent = nomEmpresa.substring(0,1).toUpperCase();
+            }
+          }
+          var elDesc = document.getElementById("welcome-empresa-desc");
+          if (elDesc && EMPRESA_CACHE.RAZON_SOCIAL) {
+            elDesc.textContent = "Panel gerencial unificado de " + EMPRESA_CACHE.RAZON_SOCIAL + ". Selecciona cualquier módulo en la barra lateral para operar según los permisos asignados a tu usuario.";
+          }
         }
       })
       .SEG_OBTENER_CONTEXTO_SEGURIDAD(TOKEN_SESION);
@@ -323,6 +548,139 @@
         console.error("Fallo de compilación de menú dinámico: ", err.message);
       })
       .SEG_OBTENER_MENU_NIVEL(TOKEN_SESION);
+  }
+
+  /* =========================================================
+   * GESTIÓN DE PERSONALIZACIÓN DE PERFIL Y EMPRESA (MODAL)
+   * ========================================================= */
+  function abrirModalPersonalizacion() {
+    document.getElementById("pers_user_nombre").value = PERFIL_CACHE.NOMBRE_COMPLETO || USUARIO || "";
+    document.getElementById("pers_user_correo").value = PERFIL_CACHE.CORREO || "";
+    document.getElementById("pers_user_foto").value = PERFIL_CACHE.FOTO_URL || PERFIL_CACHE.AVATAR_URL || "";
+    document.getElementById("pers_user_pass").value = "";
+
+    document.getElementById("pers_emp_comercial").value = EMPRESA_CACHE.NOMBRE_COMERCIAL || "";
+    document.getElementById("pers_emp_razon").value = EMPRESA_CACHE.RAZON_SOCIAL || "";
+    document.getElementById("pers_emp_logo").value = EMPRESA_CACHE.LOGO_URL || "";
+    document.getElementById("pers_emp_slogan").value = EMPRESA_CACHE.SLOGAN || "";
+    document.getElementById("pers_emp_nit").value = EMPRESA_CACHE.NIT || "";
+    document.getElementById("pers_emp_telefono").value = EMPRESA_CACHE.TELEFONO || "";
+    document.getElementById("pers_emp_direccion").value = EMPRESA_CACHE.DIRECCION || "";
+
+    ocultarAlertaModalPers();
+    cambiarPestanaModalPersonalizacion('perfil');
+    document.getElementById("modal_personalizacion_empresa_perfil").style.display = "flex";
+  }
+
+  function cerrarModalPersonalizacion() {
+    document.getElementById("modal_personalizacion_empresa_perfil").style.display = "none";
+  }
+
+  function cambiarPestanaModalPersonalizacion(tab) {
+    var pPerfil = document.getElementById("panel-modal-perfil");
+    var pEmpresa = document.getElementById("panel-modal-empresa");
+    var btnPerfil = document.getElementById("btn-tab-perfil-modal");
+    var btnEmpresa = document.getElementById("btn-tab-empresa-modal");
+
+    if (tab === 'perfil') {
+      pPerfil.style.display = "block";
+      pEmpresa.style.display = "none";
+      btnPerfil.style.color = "#2563eb";
+      btnPerfil.style.borderBottom = "3px solid #2563eb";
+      btnEmpresa.style.color = "#64748b";
+      btnEmpresa.style.borderBottom = "3px solid transparent";
+    } else {
+      pPerfil.style.display = "none";
+      pEmpresa.style.display = "block";
+      btnEmpresa.style.color = "#2563eb";
+      btnEmpresa.style.borderBottom = "3px solid #2563eb";
+      btnPerfil.style.color = "#64748b";
+      btnPerfil.style.borderBottom = "3px solid transparent";
+    }
+  }
+
+  function mostrarAlertaModalPers(msg, tipo) {
+    var el = document.getElementById("modal_pers_alert");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "block";
+    if (tipo === "success") {
+      el.style.background = "#ecfdf5"; el.style.color = "#15803d"; el.style.border = "1px solid #a7f3d0";
+    } else if (tipo === "error") {
+      el.style.background = "#fef2f2"; el.style.color = "#dc2626"; el.style.border = "1px solid #fecaca";
+    } else {
+      el.style.background = "#eff6ff"; el.style.color = "#1d4ed8"; el.style.border = "1px solid #bfdbfe";
+    }
+  }
+
+  function ocultarAlertaModalPers() {
+    var el = document.getElementById("modal_pers_alert");
+    if (el) el.style.display = "none";
+  }
+
+  function guardarPerfilUsuarioModal() {
+    var datos = {
+      NOMBRE_COMPLETO: document.getElementById("pers_user_nombre").value.trim(),
+      CORREO: document.getElementById("pers_user_correo").value.trim(),
+      FOTO_URL: document.getElementById("pers_user_foto").value.trim(),
+      CONTRASENA_NUEVA: document.getElementById("pers_user_pass").value.trim()
+    };
+
+    if (!datos.NOMBRE_COMPLETO) {
+      mostrarAlertaModalPers("Por favor ingrese su nombre completo.", "error");
+      return;
+    }
+
+    mostrarAlertaModalPers("Guardando cambios de perfil...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarAlertaModalPers(res.MENSAJE || "¡Perfil guardado!", "success");
+          configurarPerfilUsuario();
+          setTimeout(cerrarModalPersonalizacion, 1500);
+        } else {
+          mostrarAlertaModalPers(res ? res.MENSAJE : "Error al guardar perfil", "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlertaModalPers("Error: " + err.message, "error");
+      })
+      .SEG_GUARDAR_PERFIL_USUARIO_WEB(datos, TOKEN_SESION);
+  }
+
+  function guardarEmpresaModal() {
+    var datos = {
+      NOMBRE_COMERCIAL: document.getElementById("pers_emp_comercial").value.trim(),
+      RAZON_SOCIAL: document.getElementById("pers_emp_razon").value.trim(),
+      LOGO_URL: document.getElementById("pers_emp_logo").value.trim(),
+      SLOGAN: document.getElementById("pers_emp_slogan").value.trim(),
+      NIT: document.getElementById("pers_emp_nit").value.trim(),
+      TELEFONO: document.getElementById("pers_emp_telefono").value.trim(),
+      DIRECCION: document.getElementById("pers_emp_direccion").value.trim()
+    };
+
+    if (!datos.NOMBRE_COMERCIAL || !datos.RAZON_SOCIAL) {
+      mostrarAlertaModalPers("Por favor complete los campos obligatorios (*).", "error");
+      return;
+    }
+
+    mostrarAlertaModalPers("Actualizando identidad de la empresa...", "info");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.EXITO) {
+          mostrarAlertaModalPers(res.MENSAJE || "¡Empresa actualizada!", "success");
+          configurarPerfilUsuario();
+          setTimeout(cerrarModalPersonalizacion, 1500);
+        } else {
+          mostrarAlertaModalPers(res ? res.MENSAJE : "Error al guardar empresa", "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        mostrarAlertaModalPers("Error: " + err.message, "error");
+      })
+      .SEG_GUARDAR_CONFIGURACION_EMPRESA_WEB(datos, TOKEN_SESION);
   }
 
   function renderizarMenuDinamico(res) {
@@ -375,7 +733,7 @@
   var NOTAS_CACHE = [];
 
   function cargarNotasERP() {
-    var guardadas = localStorage.getItem("MEGUDAN_ERP_NOTAS");
+    var guardadas = localStorage.getItem("ERP_NOTAS_OPERATIVAS") || localStorage.getItem("MEGUDAN_ERP_NOTAS");
     if (guardadas) {
       try {
         NOTAS_CACHE = JSON.parse(guardadas);
@@ -384,8 +742,8 @@
     
     if (!NOTAS_CACHE || NOTAS_CACHE.length === 0) {
       NOTAS_CACHE = [
-        { id: 1, titulo: "Bienvenida & Instrucciones", tag: "OPERATIVO", contenido: "Usa este espacio para tomar apuntes de reuniones, clientes o pendientes del día a día en MEGUDAN.", fecha: new Date().toLocaleDateString() },
-        { id: 2, titulo: "Verificación de Inventarios", tag: "RECORDATORIO", contenido: "Recuerda revisar los saldos del Kardex de Guadua Inmunizada antes del cierre quincenal.", fecha: new Date().toLocaleDateString() }
+        { id: 1, titulo: "Bienvenida & Instrucciones", tag: "OPERATIVO", estado: "OPERATIVO", contenido: "Usa este espacio para tomar apuntes de reuniones, clientes o pendientes del día a día.", imagen_url: "", fecha: new Date().toLocaleDateString() },
+        { id: 2, titulo: "Verificación de Inventarios", tag: "PENDIENTE", estado: "PENDIENTE", contenido: "Recuerda revisar los saldos del Kardex de almacén antes del cierre quincenal.", imagen_url: "", fecha: new Date().toLocaleDateString() }
       ];
       guardarNotasStorage();
     }
@@ -393,45 +751,130 @@
   }
 
   function guardarNotasStorage() {
-    localStorage.setItem("MEGUDAN_ERP_NOTAS", JSON.stringify(NOTAS_CACHE));
+    localStorage.setItem("ERP_NOTAS_OPERATIVAS", JSON.stringify(NOTAS_CACHE));
+    actualizarKpisBitacora();
+  }
+
+  function actualizarKpisBitacora() {
+    var elTot = document.getElementById("kpi_notes_total");
+    var elPen = document.getElementById("kpi_notes_pendientes");
+    var elReal = document.getElementById("kpi_notes_realizadas");
+    var elAud = document.getElementById("kpi_notes_auditadas");
+
+    if (!elTot) return;
+
+    var total = NOTAS_CACHE.length;
+    var pendientes = NOTAS_CACHE.filter(function(n) { return n.tag === "PENDIENTE" || n.estado === "PENDIENTE"; }).length;
+    var realizadas = NOTAS_CACHE.filter(function(n) { return n.tag === "REALIZADA" || n.estado === "REALIZADA"; }).length;
+    var auditadas = NOTAS_CACHE.filter(function(n) { return n.tag === "AUDITADA" || n.estado === "AUDITADA"; }).length;
+
+    elTot.textContent = total;
+    elPen.textContent = pendientes;
+    elReal.textContent = realizadas;
+    elAud.textContent = auditadas;
   }
 
   function toggleFormNuevaNota() {
     var form = document.getElementById("form_nueva_nota");
-    if (form) form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+    if (!form) return;
+    var estaOculto = (form.style.display === "none" || form.style.display === "");
+    if (estaOculto) {
+      form.style.display = "block";
+    } else {
+      form.style.display = "none";
+      document.getElementById("edit_note_id").value = "";
+      document.getElementById("new_note_title").value = "";
+      document.getElementById("new_note_content").value = "";
+      document.getElementById("new_note_image").value = "";
+      var btnSubmit = document.getElementById("btn_submit_note");
+      if (btnSubmit) btnSubmit.textContent = "💾 Guardar Apunte";
+    }
+  }
+
+  function editarNotaLocal(id) {
+    var nota = NOTAS_CACHE.find(function(n) { return n.id === id; });
+    if (!nota) return;
+
+    var form = document.getElementById("form_nueva_nota");
+    if (form) form.style.display = "block";
+
+    document.getElementById("edit_note_id").value = nota.id;
+    document.getElementById("new_note_title").value = nota.titulo || "";
+    document.getElementById("new_note_tag").value = nota.tag || "OPERATIVO";
+    document.getElementById("new_note_content").value = nota.contenido || "";
+    document.getElementById("new_note_image").value = nota.imagen_url || "";
+
+    var btnSubmit = document.getElementById("btn_submit_note");
+    if (btnSubmit) btnSubmit.textContent = "✏️ Actualizar Apunte";
+
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function guardarNuevaNotaLocal() {
+    var idEdit = document.getElementById("edit_note_id").value;
     var tit = document.getElementById("new_note_title").value.trim() || "Nota sin título";
-    var tag = document.getElementById("new_note_tag").value || "RECORDATORIO";
+    var tag = document.getElementById("new_note_tag").value || "OPERATIVO";
     var txt = document.getElementById("new_note_content").value.trim();
+    var imgRaw = document.getElementById("new_note_image").value.trim();
     
     if (!txt) {
       alert("Por favor ingrese el contenido de la nota.");
       return;
     }
     
-    var nuevaNota = {
-      id: Date.now(),
-      titulo: tit,
-      tag: tag,
-      contenido: txt,
-      fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().substring(0,5)
-    };
-    
-    NOTAS_CACHE.unshift(nuevaNota);
+    if (idEdit) {
+      var idNum = Number(idEdit);
+      var idx = NOTAS_CACHE.findIndex(function(n) { return n.id === idNum || String(n.id) === String(idEdit); });
+      if (idx !== -1) {
+        NOTAS_CACHE[idx].titulo = tit;
+        NOTAS_CACHE[idx].tag = tag;
+        NOTAS_CACHE[idx].estado = tag;
+        NOTAS_CACHE[idx].contenido = txt;
+        NOTAS_CACHE[idx].imagen_url = resolverUrlDriveDirecta(imgRaw);
+        NOTAS_CACHE[idx].fecha_editado = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().substring(0,5);
+      }
+    } else {
+      var nuevaNota = {
+        id: Date.now(),
+        titulo: tit,
+        tag: tag,
+        estado: tag,
+        contenido: txt,
+        imagen_url: resolverUrlDriveDirecta(imgRaw),
+        fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().substring(0,5),
+        usuario: USUARIO_ACTUAL || USUARIO || "OPERADOR"
+      };
+      NOTAS_CACHE.unshift(nuevaNota);
+    }
+
     guardarNotasStorage();
-    renderizarNotasGrid(NOTAS_CACHE);
-    
-    document.getElementById("new_note_title").value = "";
-    document.getElementById("new_note_content").value = "";
+    filtrarNotasLocales();
     toggleFormNuevaNota();
   }
 
+  function cambiarEstadoNotaLocal(id, nuevoEstado) {
+    var nota = NOTAS_CACHE.find(function(n) { return n.id === id; });
+    if (!nota) return;
+
+    nota.tag = nuevoEstado;
+    nota.estado = nuevoEstado;
+    if (nuevoEstado === "REALIZADA") {
+      nota.fecha_realizada = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().substring(0,5);
+      nota.usuario_realizo = USUARIO_ACTUAL || USUARIO || "OPERADOR";
+    } else if (nuevoEstado === "AUDITADA") {
+      nota.fecha_auditoria = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().substring(0,5);
+      nota.usuario_audito = USUARIO_ACTUAL || USUARIO || "SUPERADMIN";
+    }
+
+    guardarNotasStorage();
+    filtrarNotasLocales();
+  }
+
   function eliminarNotaLocal(id) {
+    if (!confirm("¿Desea eliminar esta nota de la bitácora?")) return;
     NOTAS_CACHE = NOTAS_CACHE.filter(function(n) { return n.id !== id; });
     guardarNotasStorage();
-    renderizarNotasGrid(NOTAS_CACHE);
+    filtrarNotasLocales();
   }
 
   function filtrarNotasLocales() {
@@ -439,12 +882,13 @@
     if (filtro === "TODAS") {
       renderizarNotasGrid(NOTAS_CACHE);
     } else {
-      var filtradas = NOTAS_CACHE.filter(function(n) { return n.tag === filtro; });
+      var filtradas = NOTAS_CACHE.filter(function(n) { return n.tag === filtro || n.estado === filtro; });
       renderizarNotasGrid(filtradas);
     }
   }
 
   function renderizarNotasGrid(lista) {
+    actualizarKpisBitacora();
     var container = document.getElementById("notes_grid_container");
     if (!container) return;
     container.innerHTML = "";
@@ -456,18 +900,41 @@
     
     lista.forEach(function(n) {
       var card = document.createElement("div");
-      var tagClass = n.tag === "OPERATIVO" ? "tag-operativo" : (n.tag === "PENDIENTE" ? "tag-pendiente" : "");
-      card.className = "note-card " + tagClass;
+      var tagLower = (n.tag || "OPERATIVO").toLowerCase();
+      card.className = "note-card tag-" + tagLower;
       
+      var badgeClass = "badge-tag-" + tagLower;
+      var imgHtml = n.imagen_url ? '<img src="' + n.imagen_url + '" class="note-img-thumb" title="Clic para ampliar" onclick="window.open(\'' + n.imagen_url + '\', \'_blank\')">' : '';
+
+      var auditTrailHtml = "";
+      if (n.fecha_realizada) {
+        auditTrailHtml += '<span>✓ Realizada por ' + (n.usuario_realizo || 'Operador') + ' el ' + n.fecha_realizada + '</span>';
+      }
+      if (n.fecha_auditoria) {
+        auditTrailHtml += '<span>🟣 Auditada por ' + (n.usuario_audito || 'SuperAdmin') + ' el ' + n.fecha_auditoria + '</span>';
+      }
+
+      var auditBox = auditTrailHtml ? '<div class="note-audit-trail">' + auditTrailHtml + '</div>' : '';
+
+      var btnDone = (n.tag !== "REALIZADA" && n.tag !== "AUDITADA") ? '<button class="btn-note-action btn-note-done" onclick="cambiarEstadoNotaLocal(' + n.id + ', \'REALIZADA\')">✓ Checkout</button>' : '';
+      var btnAudit = (n.tag !== "AUDITADA") ? '<button class="btn-note-action btn-note-audit" onclick="cambiarEstadoNotaLocal(' + n.id + ', \'AUDITADA\')">🟣 Auditar</button>' : '';
+
       card.innerHTML = 
         '<div class="note-header-row">' +
           '<strong style="font-size:13px; color:#0f172a;">' + n.titulo + '</strong>' +
-          '<span class="note-tag">' + n.tag + '</span>' +
+          '<span class="note-tag ' + badgeClass + '">' + n.tag + '</span>' +
         '</div>' +
         '<div class="note-content">' + n.contenido + '</div>' +
+        imgHtml +
+        auditBox +
         '<div class="note-footer">' +
           '<span>' + (n.fecha || '') + '</span>' +
-          '<button class="note-btn-del" onclick="eliminarNotaLocal(' + n.id + ')">🗑️ Eliminar</button>' +
+          '<div class="note-actions-btn">' +
+            btnDone +
+            btnAudit +
+            '<button class="note-btn-edit" onclick="editarNotaLocal(' + n.id + ')" title="Editar apunte">✏️</button>' +
+            '<button class="note-btn-del" onclick="eliminarNotaLocal(' + n.id + ')">🗑️</button>' +
+          '</div>' +
         '</div>';
       container.appendChild(card);
     });
@@ -531,12 +998,13 @@
   }
 
   function vigilarSesionERP() {
-    setInterval(function() {
+    function ejecutarVigilanciaSesion() {
       if (TOKEN_SESION === "SHEETS_CONTEXT") return;
       google.script.run
         .withSuccessHandler(function(res) {
           var dot = document.getElementById("session-dot");
           var timeText = document.getElementById("session-time");
+          if (!dot || !timeText) return;
           if (!res) {
             dot.className = "status-dot status-warning";
             timeText.textContent = "Conexión Incompleta";
@@ -550,11 +1018,16 @@
           }
         })
         .withFailureHandler(function() {
-          document.getElementById("session-dot").className = "status-dot status-warning";
-          document.getElementById("session-time").textContent = "Sin Conexión con Sheets";
+          var dot = document.getElementById("session-dot");
+          var timeText = document.getElementById("session-time");
+          if (dot) dot.className = "status-dot status-warning";
+          if (timeText) timeText.textContent = "Sin Conexión con Sheets";
         })
         .SEG_VALIDAR_SESION(TOKEN_SESION, true);
-    }, 60000);
+    }
+
+    ejecutarVigilanciaSesion();
+    setInterval(ejecutarVigilanciaSesion, 60000);
   }
 
   function abrirModulo(modulo) {

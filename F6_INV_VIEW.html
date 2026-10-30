@@ -5,7 +5,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Existencias de Inventario | MEGUDAN ERP</title>
+  <title>Existencias de Inventario | ERP Empresarial</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -344,7 +344,7 @@
       else if (qty <= 15) badgeClass = "badge-alert";
 
       var urlDirecta = resolverUrlImagenDirecta(item.IMAGEN_URL);
-      var imgHtml = urlDirecta ? '<img src="' + urlDirecta + '" class="product-img" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Sin+Img';">' : '<span style="font-size:24px; display:block; text-align:center;">🪵</span>';
+      var imgHtml = urlDirecta ? '<img src="' + urlDirecta + '" class="product-img" onerror="this.onerror=null; this.src=\'https://placehold.co/100x100?text=Sin+Img\';">' : '<span style="font-size:24px; display:block; text-align:center;">🪵</span>';
 
       tr.innerHTML = '<td><strong>' + (item.ID_SALDO || "N/A") + '</strong></td>' +
                      '<td style="text-align:center; vertical-align:middle;">' + imgHtml + '</td>' +
